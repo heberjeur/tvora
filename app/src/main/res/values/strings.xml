@@ -128,6 +128,19 @@
     <string name="language_french">French</string>
     <string name="language_english">English</string>
 
+    <string name="settings_translation_title">TV Program Translation</string>
+    <string name="settings_translation_auto">Auto-translate programs</string>
+    <string name="settings_translation_auto_desc">Translate titles and synopses with on-device AI</string>
+    <string name="settings_translation_wifi_only">Download via Wi-Fi only</string>
+    <string name="settings_translation_wifi_only_desc">Avoid mobile data usage for offline language packs</string>
+    <string name="settings_translation_offline_packs">Offline Language Packs</string>
+    <string name="settings_translation_pack_english">English offline pack</string>
+    <string name="settings_translation_status_downloaded">Installed • ~30 MB</string>
+    <string name="settings_translation_status_not_downloaded">Not downloaded • ~30 MB</string>
+    <string name="settings_translation_status_downloading">Downloading pack…</string>
+    <string name="settings_translation_delete">Delete offline pack</string>
+    <string name="settings_translation_download">Download offline pack</string>
+
     <string name="settings_notifications_title">Notifications</string>
     <string name="settings_notifications_enable">Enable Notifications</string>
     <string name="settings_notification_sound">Notification Sound</string>

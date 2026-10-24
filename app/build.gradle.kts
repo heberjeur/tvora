@@ -107,6 +107,8 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.mlkit.translate)
 
     testImplementation(libs.junit)
     testImplementation("xmlpull:xmlpull:1.1.3.4a")
