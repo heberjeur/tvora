@@ -128,19 +128,6 @@
     <string name="language_french">Français</string>
     <string name="language_english">Anglais</string>
 
-    <string name="settings_translation_title">Traduction des programmes TV</string>
-    <string name="settings_translation_auto">Traduire automatiquement les programmes</string>
-    <string name="settings_translation_auto_desc">Traduit les titres et résumés via l\'IA locale</string>
-    <string name="settings_translation_wifi_only">Télécharger en Wi-Fi uniquement</string>
-    <string name="settings_translation_wifi_only_desc">Évite l\'utilisation des données mobiles pour les packs</string>
-    <string name="settings_translation_offline_packs">Packs de langue hors-ligne</string>
-    <string name="settings_translation_pack_english">Pack hors-ligne Anglais</string>
-    <string name="settings_translation_status_downloaded">Installé • ~30 Mo</string>
-    <string name="settings_translation_status_not_downloaded">Non téléchargé • ~30 Mo</string>
-    <string name="settings_translation_status_downloading">Téléchargement en cours…</string>
-    <string name="settings_translation_delete">Supprimer le pack hors-ligne</string>
-    <string name="settings_translation_download">Télécharger le pack hors-ligne</string>
-
     <string name="settings_notifications_title">Notifications</string>
     <string name="settings_notifications_enable">Activer les notifications</string>
     <string name="settings_notification_sound">Son de notification</string>

@@ -91,10 +91,6 @@ fun SettingsScreen(
     val cacheSizeText by viewModel.cacheSizeText.collectAsStateWithLifecycle()
     val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
     val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
-    val autoTranslateEnabled by viewModel.autoTranslateEnabled.collectAsStateWithLifecycle()
-    val translateWifiOnly by viewModel.translateWifiOnly.collectAsStateWithLifecycle()
-    val isEnglishModelDownloaded by viewModel.isEnglishModelDownloaded.collectAsStateWithLifecycle()
-    val isDownloadingEnglishModel by viewModel.isDownloadingEnglishModel.collectAsStateWithLifecycle()
     val displayTimezone by viewModel.displayTimezone.collectAsStateWithLifecycle()
     val notificationSound by viewModel.notificationSound.collectAsStateWithLifecycle()
     val vibrationEnabled by viewModel.vibrationEnabled.collectAsStateWithLifecycle()
@@ -256,16 +252,8 @@ fun SettingsScreen(
 
             LanguageSettingsSection(
                 appLanguage = appLanguage,
-                autoTranslateEnabled = autoTranslateEnabled,
-                translateWifiOnly = translateWifiOnly,
-                isEnglishModelDownloaded = isEnglishModelDownloaded,
-                isDownloadingEnglishModel = isDownloadingEnglishModel,
                 activity = activity,
-                onSetLanguage = viewModel::setLanguage,
-                onSetAutoTranslate = viewModel::setAutoTranslateEnabled,
-                onSetTranslateWifiOnly = viewModel::setTranslateWifiOnly,
-                onDownloadEnglishModel = viewModel::downloadEnglishModel,
-                onDeleteEnglishModel = viewModel::deleteEnglishModel
+                onSetLanguage = viewModel::setLanguage
             )
 
             TimezoneSettingsSection(

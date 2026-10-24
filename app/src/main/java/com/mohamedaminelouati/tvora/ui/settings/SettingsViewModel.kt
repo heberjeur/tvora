@@ -40,22 +40,12 @@ import com.mohamedaminelouati.tvora.domain.repository.EpgRepository
 class SettingsViewModel @Inject constructor(
     private val userPreferences: UserPreferences,
     private val epgRepository: EpgRepository,
-    private val translationManager: com.mohamedaminelouati.tvora.domain.translation.TranslationManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
 
     val appLanguage: StateFlow<String> = userPreferences.appLanguage
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "fr")
-
-    val autoTranslateEnabled: StateFlow<Boolean> = userPreferences.autoTranslateEnabled
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-
-    val translateWifiOnly: StateFlow<Boolean> = userPreferences.translateWifiOnly
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-
-    val isEnglishModelDownloaded: StateFlow<Boolean> = translationManager.isEnglishModelDownloaded
-    val isDownloadingEnglishModel: StateFlow<Boolean> = translationManager.isDownloadingEnglishModel
 
     val accentColor: StateFlow<String> = userPreferences.accentColor
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "#E50914")
@@ -154,10 +144,6 @@ class SettingsViewModel @Inject constructor(
     fun setLanguage(langCode: String, activity: Activity?) {
         viewModelScope.launch {
             userPreferences.setAppLanguage(langCode)
-            if (langCode == "en") {
-                val wifiOnly = userPreferences.translateWifiOnly.first()
-                translationManager.downloadEnglishModel(wifiOnly)
-            }
             val locale = Locale.forLanguageTag(langCode)
             Locale.setDefault(locale)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -169,31 +155,6 @@ class SettingsViewModel @Inject constructor(
                 context.resources.updateConfiguration(config, context.resources.displayMetrics)
             }
             activity?.recreate()
-        }
-    }
-
-    fun setAutoTranslateEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            userPreferences.setAutoTranslateEnabled(enabled)
-        }
-    }
-
-    fun setTranslateWifiOnly(enabled: Boolean) {
-        viewModelScope.launch {
-            userPreferences.setTranslateWifiOnly(enabled)
-        }
-    }
-
-    fun downloadEnglishModel() {
-        viewModelScope.launch {
-            val wifiOnly = userPreferences.translateWifiOnly.first()
-            translationManager.downloadEnglishModel(wifiOnly)
-        }
-    }
-
-    fun deleteEnglishModel() {
-        viewModelScope.launch {
-            translationManager.deleteEnglishModel()
         }
     }
 

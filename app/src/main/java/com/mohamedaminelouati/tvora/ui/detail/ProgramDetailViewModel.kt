@@ -13,16 +13,12 @@ import com.mohamedaminelouati.tvora.domain.model.Program
 import com.mohamedaminelouati.tvora.domain.model.Reminder
 import com.mohamedaminelouati.tvora.domain.repository.EpgRepository
 import com.mohamedaminelouati.tvora.domain.repository.ReminderRepository
-import com.mohamedaminelouati.tvora.domain.translation.TranslationManager
 import com.mohamedaminelouati.tvora.receiver.ReminderReceiver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -38,44 +34,13 @@ class ProgramDetailViewModel @Inject constructor(
     private val reminderRepository: ReminderRepository,
     private val epgRepository: EpgRepository,
     private val userPreferences: UserPreferences,
-    private val translationManager: TranslationManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val programId: Long = checkNotNull(savedStateHandle["programId"])
 
-    private val rawProgram: StateFlow<Program?> = epgRepository.getProgramById(programId)
+    val program: StateFlow<Program?> = epgRepository.getProgramById(programId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    private val _program = MutableStateFlow<Program?>(null)
-    val program: StateFlow<Program?> = _program.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            combine(
-                rawProgram,
-                userPreferences.appLanguage,
-                userPreferences.autoTranslateEnabled
-            ) { prog, lang, autoTranslate ->
-                Triple(prog, lang, autoTranslate)
-            }.collect { (prog, lang, autoTranslate) ->
-                if (prog == null) {
-                    _program.value = null
-                    return@collect
-                }
-                _program.value = prog
-                if (lang == "en" && autoTranslate) {
-                    val translation = translationManager.translateProgram(prog.id, prog.title, prog.description)
-                    if (translation != null) {
-                        _program.value = prog.copy(
-                            title = translation.first,
-                            description = translation.second
-                        )
-                    }
-                }
-            }
-        }
-    }
 
     val reminder: StateFlow<Reminder?> = reminderRepository.getReminderForProgram(programId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -86,7 +51,7 @@ class ProgramDetailViewModel @Inject constructor(
     val defaultReminderRecurrence: StateFlow<String> = userPreferences.reminderRecurrence
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "once")
 
-    val upcomingBroadcasts: StateFlow<List<Program>> = rawProgram.flatMapLatest { prog ->
+    val upcomingBroadcasts: StateFlow<List<Program>> = program.flatMapLatest { prog ->
         if (prog != null && prog.title.isNotBlank()) {
             epgRepository.getUpcomingBroadcasts(prog.title).map { list ->
                 com.mohamedaminelouati.tvora.util.SeriesUtils.normalizeEpisodes(list)

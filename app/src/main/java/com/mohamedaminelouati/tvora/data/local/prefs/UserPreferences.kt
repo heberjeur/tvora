@@ -48,8 +48,6 @@ class UserPreferences @Inject constructor(
     private val keyFavoriteChannelsOrder = stringPreferencesKey("favorite_channels_order")
     private val keyWidgetTheme = stringPreferencesKey("widget_theme")
     private val keyWidgetShowProgress = booleanPreferencesKey("widget_show_progress")
-    private val keyAutoTranslateEnabled = booleanPreferencesKey("auto_translate_enabled")
-    private val keyTranslateWifiOnly = booleanPreferencesKey("translate_wifi_only")
 
     val showCsaRatings: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[keyShowCsaRatings] ?: true
@@ -57,14 +55,6 @@ class UserPreferences @Inject constructor(
 
     val showChannelNumbers: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[keyShowChannelNumbers] ?: true
-    }
-
-    val autoTranslateEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[keyAutoTranslateEnabled] ?: true
-    }
-
-    val translateWifiOnly: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[keyTranslateWifiOnly] ?: true
     }
 
     val accentColor: Flow<String> = context.dataStore.data.map { preferences ->
@@ -401,18 +391,6 @@ class UserPreferences @Inject constructor(
     suspend fun setWidgetShowProgress(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[keyWidgetShowProgress] = enabled
-        }
-    }
-
-    suspend fun setAutoTranslateEnabled(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[keyAutoTranslateEnabled] = enabled
-        }
-    }
-
-    suspend fun setTranslateWifiOnly(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[keyTranslateWifiOnly] = enabled
         }
     }
 }

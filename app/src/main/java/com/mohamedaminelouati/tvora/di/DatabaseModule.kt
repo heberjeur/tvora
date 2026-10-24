@@ -38,9 +38,5 @@ object DatabaseModule {
     fun provideReminderDao(database: TvoraDatabase): ReminderDao = database.reminderDao()
 
     @Provides
-    fun provideProgramTranslationDao(database: TvoraDatabase): com.mohamedaminelouati.tvora.data.local.db.ProgramTranslationDao =
-        database.programTranslationDao()
-
-    @Provides
     fun provideSyncMetadataDao(database: TvoraDatabase): SyncMetadataDao = database.syncMetadataDao()
 }
