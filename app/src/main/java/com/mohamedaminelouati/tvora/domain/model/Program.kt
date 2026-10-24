@@ -6,7 +6,6 @@ data class Program(
     val startTimestamp: Long,
     val stopTimestamp: Long,
     val title: String,
-    val originalTitle: String = title,
     val subTitle: String? = null,
     val description: String = "",
     val secondaryDescription: String? = null,

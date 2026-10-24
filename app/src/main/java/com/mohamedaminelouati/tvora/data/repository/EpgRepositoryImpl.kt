@@ -37,7 +37,6 @@ import java.io.IOException
 import java.time.LocalDate
 import java.time.ZoneId
 import com.mohamedaminelouati.tvora.data.local.prefs.UserPreferences
-import com.mohamedaminelouati.tvora.domain.translation.TranslationManager
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -50,8 +49,7 @@ class EpgRepositoryImpl @Inject constructor(
     private val downloader: XmltvDownloader,
     private val parser: XmltvParser,
     private val connectivityObserver: ConnectivityObserver,
-    private val userPreferences: UserPreferences,
-    private val translationManager: TranslationManager
+    private val userPreferences: UserPreferences
 ) : EpgRepository {
 
     private val _syncProgress = MutableStateFlow(SyncProgress())
@@ -73,7 +71,7 @@ class EpgRepositoryImpl @Inject constructor(
     override fun getNowPlaying(): Flow<List<Program>> {
         val now = System.currentTimeMillis()
         return programDao.getNowPlaying(now).map { list ->
-            translationManager.translatePrograms(list.map { it.toDomain() })
+            list.map { it.toDomain() }
         }
     }
 
@@ -83,39 +81,37 @@ class EpgRepositoryImpl @Inject constructor(
         dayEnd: Long
     ): Flow<List<Program>> {
         return programDao.getProgramsForChannel(channelId, dayStart, dayEnd).map { list ->
-            translationManager.translatePrograms(list.map { it.toDomain() })
+            list.map { it.toDomain() }
         }
     }
 
     override fun getProgramById(programId: Long): Flow<Program?> {
-        return programDao.getProgramById(programId).map { entity ->
-            entity?.toDomain()?.let { translationManager.translateProgram(it) }
-        }
+        return programDao.getProgramById(programId).map { it?.toDomain() }
     }
 
     override fun searchPrograms(query: String): Flow<List<Program>> {
         return programDao.searchPrograms(query).map { list ->
-            translationManager.translatePrograms(list.map { it.toDomain() })
+            list.map { it.toDomain() }
         }
     }
 
     override fun getUpcomingBroadcasts(title: String): Flow<List<Program>> {
         val now = System.currentTimeMillis()
         return programDao.getUpcomingBroadcasts(title, now).map { list ->
-            translationManager.translatePrograms(list.map { it.toDomain() })
+            list.map { it.toDomain() }
         }
     }
 
     override fun getProgramsByTitle(title: String): Flow<List<Program>> {
         return programDao.getProgramsByTitle(title).map { list ->
-            translationManager.translatePrograms(list.map { it.toDomain() })
+            list.map { it.toDomain() }
         }
     }
 
     override fun getProgramsByCategory(category: String): Flow<List<Program>> {
         val fromTime = System.currentTimeMillis() - 2 * 3600 * 1000L
         return programDao.getProgramsByCategory(category, fromTime).map { list ->
-            translationManager.translatePrograms(list.map { it.toDomain() })
+            list.map { it.toDomain() }
         }
     }
 
@@ -128,26 +124,26 @@ class EpgRepositoryImpl @Inject constructor(
         val now = System.currentTimeMillis() - 2 * 3600 * 1000L
         val fromTime = if (dayStart > 0L) minOf(now, dayStart) else now
         return programDao.getFilteredPrograms(category, channelId, dayStart, dayEnd, fromTime).map { list ->
-            translationManager.translatePrograms(list.map { it.toDomain() })
+            list.map { it.toDomain() }
         }
     }
 
     override fun getProgramsByTimeRange(startTime: Long, endTime: Long): Flow<List<Program>> {
         return programDao.getProgramsByTimeRange(startTime, endTime).map { list ->
-            translationManager.translatePrograms(list.map { it.toDomain() })
+            list.map { it.toDomain() }
         }
     }
 
     override fun getAllActivePrograms(): Flow<List<Program>> {
         val fromTime = System.currentTimeMillis() - 2 * 3600 * 1000L
         return programDao.getAllActivePrograms(fromTime).map { list ->
-            translationManager.translatePrograms(list.map { it.toDomain() })
+            list.map { it.toDomain() }
         }
     }
 
     override fun getProgramsByPerson(personName: String): Flow<List<Program>> {
         return programDao.getProgramsByPerson(personName).map { list ->
-            translationManager.translatePrograms(list.map { it.toDomain() })
+            list.map { it.toDomain() }
         }
     }
 
