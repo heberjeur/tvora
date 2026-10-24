@@ -8,7 +8,7 @@ enum class ChannelPackage(
     COMMUNITY_ENRICHED(
         id = "community_enriched",
         feedFileName = "epg_tnt.xml.gz",
-        feedUrl = "https://heberjeur.github.io/tv-guide/epg_tnt.xml.gz"
+        feedUrl = "https://heberjeur.github.io/tvora/epg_tnt.xml.gz"
     );
 
     companion object {

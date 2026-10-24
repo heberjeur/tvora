@@ -198,7 +198,7 @@ class EpgRepositoryImpl @Inject constructor(
 
             val candidateUrls = listOf(
                 channelPackage.feedUrl,
-                "https://raw.githubusercontent.com/heberjeur/tv-guide/gh-pages/epg_tnt.xml.gz"
+                "https://raw.githubusercontent.com/heberjeur/tvora/gh-pages/epg_tnt.xml.gz"
             )
 
             var lastException: Exception? = null

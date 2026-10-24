@@ -1,5 +1,5 @@
 {
-  "name": "tv-guide-epg-extractor",
+  "name": "tvora-epg-extractor",
   "version": "1.0.0",
   "description": "Automated rich XMLTV EPG generator for French TV channels",
   "main": "src/generate.js",

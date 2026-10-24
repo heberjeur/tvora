@@ -28,7 +28,7 @@ const DAYS_TO_FETCH = 11;
 function buildXml(channels, programs) {
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
   xml += '<!DOCTYPE tv SYSTEM "xmltv.dtd">\n';
-  xml += '<tv source-info-name="TVora TNT+ Extractor" source-info-url="https://github.com/heberjeur/tv-guide">\n';
+  xml += '<tv source-info-name="TVora TNT+ Extractor" source-info-url="https://github.com/heberjeur/tvora">\n';
 
   for (const channel of channels) {
     xml += `  <channel id="${escapeXml(channel.id)}">\n`;
