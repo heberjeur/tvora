@@ -64,7 +64,7 @@ class UserPreferences @Inject constructor(
     }
 
     val translateWifiOnly: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[keyTranslateWifiOnly] ?: true
+        preferences[keyTranslateWifiOnly] ?: false
     }
 
     val accentColor: Flow<String> = context.dataStore.data.map { preferences ->

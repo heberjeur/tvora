@@ -87,8 +87,8 @@ class ProgramDetailViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "once")
 
     val upcomingBroadcasts: StateFlow<List<Program>> = rawProgram.flatMapLatest { prog ->
-        if (prog != null && prog.title.isNotBlank()) {
-            epgRepository.getUpcomingBroadcasts(prog.title).map { list ->
+        if (prog != null && prog.originalTitle.isNotBlank()) {
+            epgRepository.getUpcomingBroadcasts(prog.originalTitle).map { list ->
                 com.mohamedaminelouati.tvora.util.SeriesUtils.normalizeEpisodes(list)
             }
         } else {
