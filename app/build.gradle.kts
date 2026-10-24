@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.music4music.tvguide"
+    namespace = "com.mohamedaminelouati.tvora"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.music4music.tvguide"
+        applicationId = "com.mohamedaminelouati.tvora"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -109,6 +109,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     testImplementation(libs.junit)
+    testImplementation("xmlpull:xmlpull:1.1.3.4a")
+    testImplementation("net.sf.kxml:kxml2:2.3.0")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

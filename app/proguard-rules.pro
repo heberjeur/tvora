@@ -4,8 +4,8 @@
     @androidx.room.* <methods>;
 }
 
--keep class com.music4music.tvguide.data.local.entity.** { *; }
--keep class com.music4music.tvguide.domain.model.** { *; }
+-keep class com.mohamedaminelouati.tvora.data.local.entity.** { *; }
+-keep class com.mohamedaminelouati.tvora.domain.model.** { *; }
 
 -keepclassmembers enum * {
     public static **[] values();

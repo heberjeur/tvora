@@ -1,4 +1,4 @@
-# TV Guide EPG Extractor
+# TVora EPG Extractor
 
 Automated electronic program guide (EPG) generator for French TV channels.
 

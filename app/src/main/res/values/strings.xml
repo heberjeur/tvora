@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TV Guide</string>
+    <string name="app_name">TVora — Programme TV France</string>
     <string name="tab_now">Now Playing</string>
     <string name="tab_programs">Programs</string>
     <string name="tab_guide">Guide</string>
@@ -32,7 +32,7 @@
     <string name="category_other">Other</string>
     <string name="category_empty">No programs found for this category.</string>
 
-    <string name="sync_state_downloading">Downloading TV guide...</string>
+    <string name="sync_state_downloading">Downloading TVora guide...</string>
     <string name="sync_state_parsing">Saving programs...</string>
     <string name="sync_state_caching_images">Caching thumbnails...</string>
     <string name="sync_state_success">Guide updated: %1$d programs</string>
@@ -300,9 +300,9 @@
     <string name="widget_show_progress_desc">Show time elapsed on running programs</string>
     <string name="widget_action_update">Refresh widgets now</string>
     <string name="widget_updated_toast">Widgets refreshed</string>
-    <string name="widget_now_title">TV Guide - On TV now</string>
-    <string name="widget_favorites_title">TV Guide - Favorite channels</string>
-    <string name="widget_today_title">TV Guide - Tonight on TV</string>
+    <string name="widget_now_title">TVora - On TV now</string>
+    <string name="widget_favorites_title">TVora - Favorite channels</string>
+    <string name="widget_today_title">TVora - Tonight on TV</string>
     <string name="widget_no_programs">No program available</string>
     <string name="widget_no_favorites">No favorite channels configured</string>
     <string name="widget_now_label">On TV Now</string>

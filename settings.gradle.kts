@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "TV Guide"
+rootProject.name = "TVora"
 include(":app")

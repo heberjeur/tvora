@@ -1,0 +1,122 @@
+package com.mohamedaminelouati.tvora.ui.channels
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.mohamedaminelouati.tvora.data.local.prefs.UserPreferences
+import com.mohamedaminelouati.tvora.domain.model.Channel
+import com.mohamedaminelouati.tvora.domain.model.ChannelPackage
+import com.mohamedaminelouati.tvora.domain.repository.EpgRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@OptIn(ExperimentalCoroutinesApi::class)
+@HiltViewModel
+class ChannelListViewModel @Inject constructor(
+    private val epgRepository: EpgRepository,
+    private val userPreferences: UserPreferences
+) : ViewModel() {
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    fun refresh(force: Boolean = true) {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            epgRepository.syncEpg(ChannelPackage.COMMUNITY_ENRICHED, forceRefresh = force)
+            _isRefreshing.value = false
+        }
+    }
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    val isGridMode: StateFlow<Boolean> = userPreferences.isChannelGridMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    private val allChannels: StateFlow<List<Channel>> = epgRepository.getChannels(ChannelPackage.COMMUNITY_ENRICHED)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private data class ChannelPreferences(
+        val hiddenChannels: Set<String>,
+        val favoriteChannels: Set<String>,
+        val favoriteChannelsOrder: List<String>,
+        val channelSortOrder: String
+    )
+
+    private val channelPrefsFlow = combine(
+        userPreferences.hiddenChannels,
+        userPreferences.favoriteChannels,
+        userPreferences.favoriteChannelsOrder,
+        userPreferences.channelSortOrder
+    ) { hidden, favorites, favOrder, sortOrder ->
+        ChannelPreferences(hidden, favorites, favOrder, sortOrder)
+    }
+
+    val filteredChannels: StateFlow<List<Channel>> = combine(
+        allChannels,
+        _searchQuery,
+        channelPrefsFlow
+    ) { channels, query, prefs ->
+        val filtered = channels.filter { channel ->
+            val notHidden = !prefs.hiddenChannels.contains(channel.id)
+            val matchesQuery = query.isBlank() ||
+                channel.displayName.contains(query, ignoreCase = true) ||
+                (channel.channelNumber > 0 && channel.channelNumber.toString() == query.trim())
+            notHidden && matchesQuery
+        }.map { channel ->
+            val isFav = com.mohamedaminelouati.tvora.data.local.ChannelCatalog.isFavorite(channel.id, prefs.favoriteChannels) || channel.isFavorite
+            if (channel.isFavorite != isFav) channel.copy(isFavorite = isFav) else channel
+        }
+
+        when (prefs.channelSortOrder) {
+            "popular" -> filtered.sortedWith(
+                compareBy<Channel> { com.mohamedaminelouati.tvora.data.local.ChannelCatalog.getPopularityRank(it.id) }
+                    .thenBy { if (it.channelNumber > 0) 0 else 1 }
+                    .thenBy { it.channelNumber }
+                    .thenBy { it.displayName }
+            )
+            "favorites", "favorites_first" -> filtered.sortedWith(
+                compareBy<Channel> {
+                    val idx = prefs.favoriteChannelsOrder.indexOfFirst { favId ->
+                        com.mohamedaminelouati.tvora.data.local.ChannelCatalog.normalizeId(favId) == com.mohamedaminelouati.tvora.data.local.ChannelCatalog.normalizeId(it.id)
+                    }
+                    if (idx >= 0) idx else Int.MAX_VALUE
+                }.thenBy { if (it.channelNumber > 0) 0 else 1 }
+                .thenBy { it.channelNumber }
+                .thenBy { it.displayName }
+            )
+            "name" -> filtered.sortedWith(compareBy { it.displayName })
+            else -> filtered.sortedWith(
+                compareBy<Channel> { if (it.channelNumber > 0) 0 else 1 }
+                    .thenBy { it.channelNumber }
+                    .thenBy { it.displayName }
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun toggleGridMode() {
+        viewModelScope.launch {
+            userPreferences.setChannelGridMode(!isGridMode.value)
+        }
+    }
+
+    fun toggleFavorite(channelId: String, currentFavorite: Boolean) {
+        viewModelScope.launch {
+            userPreferences.toggleFavoriteChannel(channelId)
+            epgRepository.toggleFavoriteChannel(channelId, !currentFavorite)
+        }
+    }
+}

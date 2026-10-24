@@ -1,6 +1,6 @@
-# TV Guide
+# TVora — Programme TV France
 
-A native, offline-first Android TV Guide application for French television channels. Designed with zero tracking, zero cookies, zero WebViews, and strict adherence to open-source privacy standards (F-Droid and Google Play compliant).
+A native, offline-first Android TVora application for French television channels. Designed with zero tracking, zero cookies, zero WebViews, and strict adherence to open-source privacy standards (F-Droid and Google Play compliant).
 
 ## Features
 - **100% Offline-First**: All EPG schedules, channels, programs, and episode descriptions are stored locally in SQLite via Room.
@@ -20,7 +20,7 @@ A native, offline-first Android TV Guide application for French television chann
 
 ## Project Structure
 ```
-TV Guide/
+TVora/
 ├── app/                  # Android application module
 │   ├── src/main/java/    # Clean architecture: data, domain, ui
 │   └── src/main/res/     # Resources, themes, drawables, strings
