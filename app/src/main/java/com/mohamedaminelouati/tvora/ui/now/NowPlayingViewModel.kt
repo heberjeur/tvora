@@ -128,8 +128,9 @@ class NowPlayingViewModel @Inject constructor(
 
     private val rawProgramsFlow = combine(
         _manualRefreshTrigger,
-        displayZoneFlow
-    ) { _, zone ->
+        displayZoneFlow,
+        userPreferences.appLanguage
+    ) { _, zone, _ ->
         zone
     }.flatMapLatest { zone ->
         val originZone = com.mohamedaminelouati.tvora.util.TimezoneUtils.ORIGIN_ZONE

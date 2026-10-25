@@ -1,6 +1,7 @@
 package com.mohamedaminelouati.tvora.data.repository
 
 import android.content.Context
+import androidx.room.withTransaction
 import coil.imageLoader
 import coil.request.CachePolicy
 import coil.request.ImageRequest
@@ -9,6 +10,9 @@ import com.mohamedaminelouati.tvora.data.connectivity.ConnectivityObserver
 import com.mohamedaminelouati.tvora.data.local.db.ChannelDao
 import com.mohamedaminelouati.tvora.data.local.db.ProgramDao
 import com.mohamedaminelouati.tvora.data.local.db.SyncMetadataDao
+import com.mohamedaminelouati.tvora.data.local.db.TvoraDatabase
+import com.mohamedaminelouati.tvora.data.local.entity.ChannelEntity
+import com.mohamedaminelouati.tvora.data.local.entity.ProgramEntity
 import com.mohamedaminelouati.tvora.data.local.entity.SyncMetadataEntity
 import com.mohamedaminelouati.tvora.data.mapper.toDomain
 import com.mohamedaminelouati.tvora.data.remote.XmltvDownloader
@@ -20,13 +24,16 @@ import com.mohamedaminelouati.tvora.domain.model.SyncProgress
 import com.mohamedaminelouati.tvora.domain.model.SyncState
 import com.mohamedaminelouati.tvora.domain.repository.EpgRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.joinAll
@@ -34,7 +41,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
+import java.io.BufferedInputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
 import java.time.LocalDate
 import java.time.ZoneId
 import com.mohamedaminelouati.tvora.data.local.prefs.UserPreferences
@@ -44,6 +58,7 @@ import javax.inject.Singleton
 @Singleton
 class EpgRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val database: TvoraDatabase,
     private val channelDao: ChannelDao,
     private val programDao: ProgramDao,
     private val syncMetadataDao: SyncMetadataDao,
@@ -53,7 +68,20 @@ class EpgRepositoryImpl @Inject constructor(
     private val userPreferences: UserPreferences
 ) : EpgRepository {
 
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _syncProgress = MutableStateFlow(SyncProgress())
+
+    init {
+        repositoryScope.launch {
+            userPreferences.appLanguage.distinctUntilChanged().collect { lang ->
+                val lastLang = userPreferences.lastSyncedLanguage.first()
+                val cachedCount = programDao.getProgramCount()
+                if (cachedCount == 0 || (lastLang != null && lastLang != lang)) {
+                    preloadFeed(ChannelPackage.COMMUNITY_ENRICHED, lang)
+                }
+            }
+        }
+    }
 
     override fun getSyncProgress(): StateFlow<SyncProgress> = _syncProgress.asStateFlow()
 
@@ -166,19 +194,20 @@ class EpgRepositoryImpl @Inject constructor(
             val currentLanguage = userPreferences.appLanguage.first()
             val lastLanguage = userPreferences.lastSyncedLanguage.first() ?: "fr"
             val languageChanged = lastLanguage != currentLanguage
-            val effectiveForceRefresh = forceRefresh || languageChanged
+            val effectiveForceRefresh = forceRefresh
 
             var cachedCount = programDao.getProgramCount()
 
             if (cachedCount == 0 || languageChanged) {
                 _syncProgress.value = SyncProgress(state = SyncState.PARSING)
-                preloadFromAssetsIfEmpty(channelPackage, currentLanguage)
+                preloadFeed(channelPackage, currentLanguage)
                 cachedCount = programDao.getProgramCount()
             }
 
             val metadata = syncMetadataDao.getSyncMetadataDirect(channelPackage.id)
-            val fourHoursMillis = 4 * 60 * 60 * 1000L
-            val isStale = metadata == null || (now - metadata.lastSyncTimestamp) > fourHoursMillis
+            val syncFrequencyHours = userPreferences.syncFrequencyHours.first().coerceIn(1, 48)
+            val staleThresholdMillis = syncFrequencyHours * 3600 * 1000L
+            val isStale = metadata == null || (now - metadata.lastSyncTimestamp) > staleThresholdMillis
 
             if (!effectiveForceRefresh && !isStale && cachedCount > 0) {
                 _syncProgress.value = SyncProgress(
@@ -238,19 +267,26 @@ class EpgRepositoryImpl @Inject constructor(
                         state = SyncState.PARSING
                     )
 
-                    var totalPrograms = 0
-                    var isFirstBatch = true
+                    val cacheFile = File(context.filesDir, "epg_feed_${currentLanguage}.xml.gz")
+                    val tmpCacheFile = File(context.filesDir, "epg_feed_${currentLanguage}.tmp")
 
-                    stream.use { input ->
-                        parser.parse(input, channelPackage.id) { channels, programs ->
-                            if (isFirstBatch) {
-                                isFirstBatch = false
-                                if (effectiveForceRefresh) {
-                                    programDao.clearAll()
-                                }
-                            }
+                    GZIPOutputStream(FileOutputStream(tmpCacheFile)).use { gzipOut ->
+                        stream.copyTo(gzipOut)
+                    }
+                    if (tmpCacheFile.exists() && tmpCacheFile.length() > 0) {
+                        if (cacheFile.exists()) {
+                            cacheFile.delete()
+                        }
+                        tmpCacheFile.renameTo(cacheFile)
+                    }
+
+                    val allChannels = mutableListOf<ChannelEntity>()
+                    val allPrograms = mutableListOf<ProgramEntity>()
+
+                    GZIPInputStream(FileInputStream(cacheFile)).use { parsedInput ->
+                        parser.parse(parsedInput, channelPackage.id) { channels, programs ->
                             if (channels.isNotEmpty()) {
-                                channelDao.insertChannels(channels)
+                                allChannels.addAll(channels)
                                 channels.forEach { c ->
                                     val icon = ChannelCatalog.getLogoUrl(c.id) ?: c.iconUrl
                                     if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
@@ -259,39 +295,8 @@ class EpgRepositoryImpl @Inject constructor(
                                 }
                             }
                             if (programs.isNotEmpty()) {
-                                val enrichedPrograms = if (effectiveForceRefresh) {
-                                    programs
-                                } else {
-                                    programs.map { incoming ->
-                                        val existing = programDao.getProgramByChannelAndStart(incoming.channelId, incoming.startTimestamp)
-                                        if (existing != null) {
-                                            val incomingTruncated = incoming.description.endsWith("...") || incoming.description.endsWith("…")
-                                            val existingFull = !existing.description.endsWith("...") && !existing.description.endsWith("…") && existing.description.length > incoming.description.length
-                                            val bestDesc = if (incomingTruncated && existingFull) existing.description else incoming.description
-                                            val bestSecondary = incoming.secondaryDescription ?: existing.secondaryDescription
-                                            val bestSeason = incoming.seasonNumber ?: existing.seasonNumber
-                                            val bestEpisode = incoming.episodeNumber ?: existing.episodeNumber
-                                            val bestYear = incoming.productionYear ?: existing.productionYear
-                                            val bestSeriesYear = incoming.seriesYear ?: existing.seriesYear
-                                            val bestCountry = incoming.country ?: existing.country
-                                            incoming.copy(
-                                                id = existing.id,
-                                                description = bestDesc,
-                                                secondaryDescription = bestSecondary,
-                                                seasonNumber = bestSeason,
-                                                episodeNumber = bestEpisode,
-                                                productionYear = bestYear,
-                                                seriesYear = bestSeriesYear,
-                                                country = bestCountry
-                                            )
-                                        } else {
-                                            incoming
-                                        }
-                                    }
-                                }
-                                programDao.insertPrograms(enrichedPrograms)
-                                totalPrograms += enrichedPrograms.size
-                                enrichedPrograms.forEach { p ->
+                                allPrograms.addAll(programs)
+                                programs.forEach { p ->
                                     val icon = p.iconUrl
                                     if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
                                         imageList.add(icon)
@@ -300,6 +305,18 @@ class EpgRepositoryImpl @Inject constructor(
                             }
                         }
                     }
+
+                    database.withTransaction {
+                        programDao.clearAll()
+                        if (allChannels.isNotEmpty()) {
+                            channelDao.insertChannels(allChannels)
+                        }
+                        if (allPrograms.isNotEmpty()) {
+                            programDao.insertPrograms(allPrograms)
+                        }
+                    }
+
+                    val totalPrograms = allPrograms.size
 
                     syncMetadataDao.insertSyncMetadata(
                         SyncMetadataEntity(
@@ -361,85 +378,100 @@ class EpgRepositoryImpl @Inject constructor(
 
     override suspend fun preloadFromAssets(channelPackage: ChannelPackage, lang: String): Unit =
         withContext(Dispatchers.IO + NonCancellable) {
-            preloadFromAssetsIfEmpty(channelPackage, lang)
+            preloadFeed(channelPackage, lang)
         }
 
-    private suspend fun preloadFromAssetsIfEmpty(channelPackage: ChannelPackage, lang: String) {
-        try {
-            val preferredAsset = channelPackage.getFeedFileName(lang)
-            val rawStream = try {
-                context.assets.open(preferredAsset)
-            } catch (e: java.io.IOException) {
+    private fun openFeedStream(channelPackage: ChannelPackage, lang: String): InputStream? {
+        val diskCache = File(context.filesDir, "epg_feed_${lang}.xml.gz")
+        if (diskCache.exists() && diskCache.length() > 0) {
+            try {
+                return GZIPInputStream(FileInputStream(diskCache))
+            } catch (_: Exception) {
+            }
+        }
+        val preferredAsset = channelPackage.getFeedFileName(lang)
+        val rawStream = try {
+            context.assets.open(preferredAsset)
+        } catch (_: IOException) {
+            try {
+                context.assets.open(channelPackage.feedFileName)
+            } catch (_: IOException) {
                 try {
-                    context.assets.open(channelPackage.feedFileName)
-                } catch (gzException: java.io.IOException) {
-                    try {
-                        context.assets.open("epg_tnt.xml")
-                    } catch (xmlException: java.io.IOException) {
-                        null
-                    }
+                    context.assets.open("epg_tnt.xml")
+                } catch (_: IOException) {
+                    null
                 }
-            } ?: return
-            val buffered = if (rawStream is java.io.BufferedInputStream) rawStream else java.io.BufferedInputStream(rawStream)
-            buffered.mark(2)
-            val header = ByteArray(2)
-            val count = buffered.read(header)
-            buffered.reset()
-            val isGzip = count == 2 && header[0] == 0x1f.toByte() && header[1] == 0x8b.toByte()
-            val assetStream = if (isGzip) java.util.zip.GZIPInputStream(buffered) else buffered
+            }
+        } ?: return null
 
-            var totalPrograms = 0
-            val imageList = mutableListOf<String>()
-            var isFirstBatch = true
+        val buffered = if (rawStream is BufferedInputStream) rawStream else BufferedInputStream(rawStream)
+        buffered.mark(2)
+        val header = ByteArray(2)
+        val count = buffered.read(header)
+        buffered.reset()
+        val isGzip = count == 2 && header[0] == 0x1f.toByte() && header[1] == 0x8b.toByte()
+        return if (isGzip) GZIPInputStream(buffered) else buffered
+    }
 
-            assetStream.use { input ->
-                parser.parse(input, channelPackage.id) { channels, programs ->
-                    if (isFirstBatch) {
-                        isFirstBatch = false
-                        programDao.clearAll()
-                    }
-                    if (channels.isNotEmpty()) {
-                        channelDao.insertChannels(channels)
-                        channels.forEach { c ->
-                            val icon = ChannelCatalog.getLogoUrl(c.id) ?: c.iconUrl
-                            if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
-                                imageList.add(icon)
-                            }
+    private suspend fun preloadFeed(channelPackage: ChannelPackage, lang: String) {
+        val stream = openFeedStream(channelPackage, lang) ?: return
+        val allChannels = mutableListOf<ChannelEntity>()
+        val allPrograms = mutableListOf<ProgramEntity>()
+        val imageList = mutableListOf<String>()
+
+        stream.use { input ->
+            parser.parse(input, channelPackage.id) { batchChannels, batchPrograms ->
+                if (batchChannels.isNotEmpty()) {
+                    allChannels.addAll(batchChannels)
+                    batchChannels.forEach { c ->
+                        val icon = ChannelCatalog.getLogoUrl(c.id) ?: c.iconUrl
+                        if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
+                            imageList.add(icon)
                         }
                     }
-                    if (programs.isNotEmpty()) {
-                        programDao.insertPrograms(programs)
-                        totalPrograms += programs.size
-                        programs.forEach { p ->
-                            val icon = p.iconUrl
-                            if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
-                                imageList.add(icon)
-                            }
+                }
+                if (batchPrograms.isNotEmpty()) {
+                    allPrograms.addAll(batchPrograms)
+                    batchPrograms.forEach { p ->
+                        val icon = p.iconUrl
+                        if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
+                            imageList.add(icon)
                         }
                     }
                 }
             }
-
-            val now = System.currentTimeMillis()
-            syncMetadataDao.insertSyncMetadata(
-                SyncMetadataEntity(
-                    packageId = channelPackage.id,
-                    lastSyncTimestamp = now,
-                    etag = "bundled_asset",
-                    programCount = totalPrograms,
-                    isSuccess = true
-                )
-            )
-
-            userPreferences.setLastSyncedLanguage(lang)
-            _syncProgress.value = SyncProgress(
-                state = SyncState.IDLE,
-                programCount = totalPrograms,
-                lastSyncTimestamp = now
-            )
-        } catch (e: Exception) {
-            android.util.Log.e("EpgRepository", "Failed to preload from assets", e)
         }
+
+        database.withTransaction {
+            programDao.clearAll()
+            if (allChannels.isNotEmpty()) {
+                channelDao.insertChannels(allChannels)
+            }
+            if (allPrograms.isNotEmpty()) {
+                programDao.insertPrograms(allPrograms)
+            }
+        }
+
+        val now = System.currentTimeMillis()
+        syncMetadataDao.insertSyncMetadata(
+            SyncMetadataEntity(
+                packageId = channelPackage.id,
+                lastSyncTimestamp = now,
+                etag = "cached_feed",
+                programCount = allPrograms.size,
+                isSuccess = true
+            )
+        )
+
+        userPreferences.setLastSyncedLanguage(lang)
+        _syncProgress.value = SyncProgress(
+            state = SyncState.IDLE,
+            programCount = allPrograms.size,
+            lastSyncTimestamp = now
+        )
+
+        imageList.addAll(ChannelCatalog.getAllLogoUrls())
+        prefetchImages(imageList)
     }
 
     private suspend fun prefetchImages(urls: List<String>) {
