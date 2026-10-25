@@ -244,10 +244,22 @@ class CategoriesViewModel @Inject constructor(
 
     private fun extractSubCategories(program: Program, parent: TvCategory): List<String> {
         val parentSearch = parent.searchKeyword.lowercase()
+        val parentTerms = when (parent) {
+            TvCategory.MOVIES -> setOf("film", "movie", "cinema", "cinéma")
+            TvCategory.SERIES -> setOf("série", "serie", "series")
+            TvCategory.ENTERTAINMENT -> setOf("divertissement", "entertainment")
+            TvCategory.SPORT -> setOf("sport", "sports")
+            TvCategory.NEWS -> setOf("info", "news", "journal")
+            TvCategory.DOCUMENTARY -> setOf("documentaire", "documentary")
+            TvCategory.KIDS -> setOf("jeunesse", "kids", "children")
+            TvCategory.MUSIC -> setOf("musique", "music")
+            TvCategory.OTHER -> setOf("autre", "other")
+        }
         return program.contentCategories.filter { cat ->
             val c = cat.trim().lowercase()
             c.isNotEmpty() &&
                 c != parentSearch &&
+                !parentTerms.contains(c) &&
                 c != "autre" &&
                 c != "other"
         }

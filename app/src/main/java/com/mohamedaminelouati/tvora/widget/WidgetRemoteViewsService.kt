@@ -11,10 +11,12 @@ import com.mohamedaminelouati.tvora.data.local.entity.ProgramEntity
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import com.mohamedaminelouati.tvora.util.CategoryUtils
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class WidgetRemoteViewsService : RemoteViewsService() {
 
@@ -129,8 +131,9 @@ private class WidgetItemFactory(
 
         val category = program.categories.firstOrNull() ?: ""
         if (category.isNotBlank()) {
+            val formatted = CategoryUtils.formatCategory(category, Locale.getDefault())
             views.setViewVisibility(R.id.widget_item_category, View.VISIBLE)
-            views.setTextViewText(R.id.widget_item_category, category)
+            views.setTextViewText(R.id.widget_item_category, formatted)
         } else {
             views.setViewVisibility(R.id.widget_item_category, View.GONE)
         }

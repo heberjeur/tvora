@@ -150,7 +150,8 @@ fun isSignaletique(category: String): Boolean {
         "direct", "en direct", "live",
         "hd", "haute définition", "haute definition",
         "tout public", "tous publics", "tp", "u", "g", "csa", "-10", "-12", "-16", "-18",
-        "general", "autre", "divers", "programme indéterminé", "other", "various"
+        "general", "autre", "divers", "programme indéterminé", "programme indetermine", "programme-indetermine",
+        "other", "various", "tba", "unknown", "inconnu", "pas de diffusion", "off air"
     )
     if (clean in exactMatches) return true
     if (clean.startsWith("csa") || clean.startsWith("déconseillé") || clean.startsWith("interdit")) return true

@@ -69,11 +69,18 @@ fun ProgramMetadataSection(
                 "Cinéma", "Cinema", "Film", "Téléfilm", "Telefilm", "Court-métrage", "Court-metrage",
                 "Série", "Serie", "Série TV", "Mini-série", "Feuilleton",
                 "Documentaire", "Magazine", "Journal", "Divertissement", "Jeu",
-                "Sport", "Jeunesse", "Musique", "Culture Infos", "Info", "Information", "Autre"
+                "Sport", "Jeunesse", "Musique", "Culture Infos", "Info", "Information", "Autre",
+                "Movie", "TV Movie", "Short Film", "Medium-length Film",
+                "Series", "TV Series", "Mini-series", "Drama Series",
+                "Documentary", "Docudrama", "Magazine", "News", "TV News", "News & Current Affairs",
+                "Entertainment", "Game Show", "Game Shows", "Reality TV", "Show", "Theater",
+                "Sports", "Kids", "Cartoon", "Animation", "Anime",
+                "Music", "Musical", "Concert", "Opera", "Culture & News", "Culture", "Other"
             )
             val metaKeywords = listOf(
                 "Rediffusion", "Direct", "En direct", "Inédit", "Inedite", "Inédite",
-                "Audiodescription", "Sous-titres", "General"
+                "Audiodescription", "Sous-titres", "General",
+                "Rerun", "Repeat", "Live", "Premiere", "Unreleased", "Audio Description", "Subtitles"
             )
 
             val formatValue = program.categories.firstOrNull { it.equals("Cinéma", ignoreCase = true) }
