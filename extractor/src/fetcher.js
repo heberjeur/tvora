@@ -424,6 +424,9 @@ async function fetchWithRetry(url, options, maxRetries = 2) {
     try {
       return await axios.get(url, options);
     } catch (err) {
+      if (err.response && (err.response.status === 404 || err.response.status === 503)) {
+        throw err;
+      }
       attempt++;
       if (attempt > maxRetries) throw err;
       await new Promise(r => setTimeout(r, 1000 * attempt));
@@ -723,7 +726,7 @@ async function fetchChannelSchedule(channel, date, refData) {
     }
     return programs;
   } catch (err) {
-    process.stderr.write(`Failed to fetch ${channel.id} for ${formattedDate}: ${err.message}. Using fallback.\n`);
+    process.stdout.write(`Notice: Web schedule for ${channel.id} (${formattedDate}) not published yet (${err.message}). Using XMLTV fallback.\n`);
     return fallbackPrograms;
   }
 }

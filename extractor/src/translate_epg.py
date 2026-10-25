@@ -5,6 +5,9 @@ import json
 import shutil
 import xml.etree.ElementTree as ET
 
+os.environ.setdefault("ARGOS_BEAM_SIZE", "1")
+os.environ.setdefault("ARGOS_INTER_THREADS", "2")
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 EXTRACTOR_DIR = os.path.dirname(SCRIPT_DIR)
 OUTPUT_DIR = os.path.join(EXTRACTOR_DIR, "output")
