@@ -26,6 +26,7 @@ class UserPreferences @Inject constructor(
     private val keyReminderRecurrence = stringPreferencesKey("reminder_recurrence")
     private val keyChannelGridMode = booleanPreferencesKey("channel_grid_mode")
     private val keyAppLanguage = stringPreferencesKey("app_language")
+    private val keyLastSyncedLanguage = stringPreferencesKey("last_synced_language")
     private val keySyncFrequencyHours = intPreferencesKey("sync_frequency_hours")
     private val keySyncWifiOnly = booleanPreferencesKey("sync_wifi_only")
     private val keySyncChargingOnly = booleanPreferencesKey("sync_charging_only")
@@ -71,6 +72,10 @@ class UserPreferences @Inject constructor(
 
     val appLanguage: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[keyAppLanguage] ?: "fr"
+    }
+
+    val lastSyncedLanguage: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[keyLastSyncedLanguage]
     }
 
     val syncFrequencyHours: Flow<Int> = context.dataStore.data.map { preferences ->
@@ -218,6 +223,12 @@ class UserPreferences @Inject constructor(
     suspend fun setAppLanguage(language: String) {
         context.dataStore.edit { preferences ->
             preferences[keyAppLanguage] = language
+        }
+    }
+
+    suspend fun setLastSyncedLanguage(language: String) {
+        context.dataStore.edit { preferences ->
+            preferences[keyLastSyncedLanguage] = language
         }
     }
 

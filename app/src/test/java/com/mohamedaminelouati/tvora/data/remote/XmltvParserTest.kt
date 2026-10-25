@@ -102,4 +102,43 @@ class XmltvParserTest {
         assertTrue(program.isUnreleased)
         assertTrue(program.hasSubtitles)
     }
+
+    @Test
+    fun parse_handlesEnglishFeedAttributes() = runBlocking {
+        val xmlContent = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <tv source-info-name="TVora TNT+">
+              <channel id="tf1.fr">
+                <display-name>TF1</display-name>
+              </channel>
+              <programme start="20261025211000 +0100" stop="20261025220000 +0100" channel="tf1.fr">
+                <title lang="en">The Twelve O'Clock News</title>
+                <sub-title lang="en">Season 2 Episode 4</sub-title>
+                <desc lang="en">Daily investigation report from Washington.</desc>
+                <desc lang="en-more">Exclusive interviews and detailed breakdowns.</desc>
+                <category lang="en">News</category>
+                <country lang="en">United States</country>
+                <date>2025</date>
+              </programme>
+            </tv>
+        """.trimIndent()
+
+        val parser = XmltvParser()
+        val parsedPrograms = mutableListOf<ProgramEntity>()
+
+        val inputStream = ByteArrayInputStream(xmlContent.toByteArray(Charsets.UTF_8))
+        parser.parse(inputStream, packageId = "tnt") { _, programs ->
+            parsedPrograms.addAll(programs)
+        }
+
+        assertEquals(1, parsedPrograms.size)
+        val program = parsedPrograms[0]
+        assertEquals("The Twelve O'Clock News", program.title)
+        assertEquals("Season 2 Episode 4", program.subTitle)
+        assertEquals("Daily investigation report from Washington.", program.description)
+        assertEquals("Exclusive interviews and detailed breakdowns.", program.secondaryDescription)
+        assertEquals("United States", program.country)
+        assertEquals(2025, program.productionYear)
+        assertTrue(program.categories.contains("News"))
+    }
 }

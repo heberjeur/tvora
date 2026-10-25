@@ -4,7 +4,8 @@
   "description": "Automated rich XMLTV EPG generator for French TV channels",
   "main": "src/generate.js",
   "scripts": {
-    "start": "node src/generate.js"
+    "start": "node src/generate.js",
+    "translate": "python src/translate_epg.py"
   },
   "license": "GPL-3.0-or-later",
   "dependencies": {

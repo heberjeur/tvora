@@ -162,11 +162,16 @@ class EpgRepositoryImpl @Inject constructor(
     override suspend fun syncEpg(channelPackage: ChannelPackage, forceRefresh: Boolean): Result<Unit> =
         withContext(Dispatchers.IO) {
             val now = System.currentTimeMillis()
+            val currentLanguage = userPreferences.appLanguage.first()
+            val lastLanguage = userPreferences.lastSyncedLanguage.first()
+            val languageChanged = lastLanguage != null && lastLanguage != currentLanguage
+            val effectiveForceRefresh = forceRefresh || languageChanged
+
             var cachedCount = programDao.getProgramCount()
 
-            if (cachedCount == 0) {
+            if (cachedCount == 0 || languageChanged) {
                 _syncProgress.value = SyncProgress(state = SyncState.PARSING)
-                preloadFromAssetsIfEmpty(channelPackage)
+                preloadFromAssetsIfEmpty(channelPackage, currentLanguage)
                 cachedCount = programDao.getProgramCount()
             }
 
@@ -174,7 +179,7 @@ class EpgRepositoryImpl @Inject constructor(
             val fourHoursMillis = 4 * 60 * 60 * 1000L
             val isStale = metadata == null || (now - metadata.lastSyncTimestamp) > fourHoursMillis
 
-            if (!forceRefresh && !isStale && cachedCount > 0) {
+            if (!effectiveForceRefresh && !isStale && cachedCount > 0) {
                 _syncProgress.value = SyncProgress(
                     state = SyncState.IDLE,
                     programCount = cachedCount,
@@ -197,8 +202,8 @@ class EpgRepositoryImpl @Inject constructor(
             )
 
             val candidateUrls = listOf(
-                channelPackage.feedUrl,
-                "https://raw.githubusercontent.com/heberjeur/tvora/gh-pages/epg_tnt.xml.gz"
+                channelPackage.getFeedUrl(currentLanguage),
+                channelPackage.getFallbackUrl(currentLanguage)
             )
 
             var lastException: Exception? = null
@@ -207,7 +212,7 @@ class EpgRepositoryImpl @Inject constructor(
 
             for (url in candidateUrls) {
                 try {
-                    val currentEtag = if (forceRefresh) null else metadata?.etag
+                    val currentEtag = if (effectiveForceRefresh) null else metadata?.etag
                     val downloadResult = downloader.downloadFeed(url, currentEtag)
 
                     if (downloadResult.isNotModified) {
@@ -216,6 +221,7 @@ class EpgRepositoryImpl @Inject constructor(
                                 it.copy(lastSyncTimestamp = now, isSuccess = true)
                             )
                         }
+                        userPreferences.setLastSyncedLanguage(currentLanguage)
                         _syncProgress.value = SyncProgress(
                             state = SyncState.SUCCESS,
                             programCount = metadata?.programCount ?: cachedCount,
@@ -298,6 +304,8 @@ class EpgRepositoryImpl @Inject constructor(
                         )
                     )
 
+                    userPreferences.setLastSyncedLanguage(currentLanguage)
+
                     val retentionDays = userPreferences.retentionDays.first()
                     if (retentionDays > 0) {
                         val zone = ZoneId.of("Europe/Paris")
@@ -344,15 +352,20 @@ class EpgRepositoryImpl @Inject constructor(
             }
         }
 
-    private suspend fun preloadFromAssetsIfEmpty(channelPackage: ChannelPackage) {
+    private suspend fun preloadFromAssetsIfEmpty(channelPackage: ChannelPackage, lang: String) {
         try {
+            val preferredAsset = channelPackage.getFeedFileName(lang)
             val rawStream = try {
-                context.assets.open("epg_tnt.xml")
+                context.assets.open(preferredAsset)
             } catch (e: java.io.IOException) {
                 try {
-                    context.assets.open("epg_tnt.xml.gz")
+                    context.assets.open(channelPackage.feedFileName)
                 } catch (gzException: java.io.IOException) {
-                    null
+                    try {
+                        context.assets.open("epg_tnt.xml")
+                    } catch (xmlException: java.io.IOException) {
+                        null
+                    }
                 }
             } ?: return
             val buffered = if (rawStream is java.io.BufferedInputStream) rawStream else java.io.BufferedInputStream(rawStream)
@@ -365,9 +378,14 @@ class EpgRepositoryImpl @Inject constructor(
 
             var totalPrograms = 0
             val imageList = mutableListOf<String>()
+            var isFirstBatch = true
 
             assetStream.use { input ->
                 parser.parse(input, channelPackage.id) { channels, programs ->
+                    if (isFirstBatch) {
+                        isFirstBatch = false
+                        programDao.clearAll()
+                    }
                     if (channels.isNotEmpty()) {
                         channelDao.insertChannels(channels)
                         channels.forEach { c ->
@@ -400,6 +418,8 @@ class EpgRepositoryImpl @Inject constructor(
                     isSuccess = true
                 )
             )
+
+            userPreferences.setLastSyncedLanguage(lang)
 
             imageList.addAll(ChannelCatalog.getAllLogoUrls())
             prefetchImages(imageList)

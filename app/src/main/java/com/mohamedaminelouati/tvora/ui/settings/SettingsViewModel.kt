@@ -154,6 +154,7 @@ class SettingsViewModel @Inject constructor(
                 config.setLocale(locale)
                 context.resources.updateConfiguration(config, context.resources.displayMetrics)
             }
+            epgRepository.syncEpg(ChannelPackage.COMMUNITY_ENRICHED, forceRefresh = true)
             activity?.recreate()
         }
     }

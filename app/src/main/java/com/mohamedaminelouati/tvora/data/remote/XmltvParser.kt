@@ -183,7 +183,7 @@ class XmltvParser @Inject constructor() {
                 "desc" -> {
                     val lang = parser.getAttributeValue(null, "lang")
                     val text = readText(parser)
-                    if (lang == "fr-more" || lang == "more") {
+                    if (lang == "fr-more" || lang == "more" || lang == "en-more") {
                         secondaryDescription = text
                     } else if (description.isEmpty()) {
                         description = text
@@ -261,7 +261,7 @@ class XmltvParser @Inject constructor() {
             }
         }
 
-        val sRegex = Regex("""Saisons?\s*(\d+)""", RegexOption.IGNORE_CASE)
+        val sRegex = Regex("""(?:Saisons?|Seasons?)\s*(\d+)""", RegexOption.IGNORE_CASE)
         val sFromSub = sRegex.find(subTitle ?: "")?.groupValues?.get(1)?.toIntOrNull()
             ?: sRegex.find(title)?.groupValues?.get(1)?.toIntOrNull()
         if (sFromSub != null) {
@@ -270,7 +270,7 @@ class XmltvParser @Inject constructor() {
             seasonNumber = sRegex.find(description)?.groupValues?.get(1)?.toIntOrNull()
         }
 
-        val eRegex = Regex("""(?:[ÉéE]pisode|[ÉéE]p\.?)\s*(\d+)""", RegexOption.IGNORE_CASE)
+        val eRegex = Regex("""(?:[ÉéE]pisode|[ÉéE]p\.?|Episodes?|Ep\.?)\s*(\d+)""", RegexOption.IGNORE_CASE)
         val eFromSub = eRegex.find(subTitle ?: "")?.groupValues?.get(1)?.toIntOrNull()
             ?: eRegex.find(title)?.groupValues?.get(1)?.toIntOrNull()
         if (eFromSub != null) {
@@ -279,37 +279,37 @@ class XmltvParser @Inject constructor() {
             episodeNumber = eRegex.find(description)?.groupValues?.get(1)?.toIntOrNull()
         }
 
-        val isNewsOrWeather = categories.any { it.equals("Journal", ignoreCase = true) || it.equals("Météo", ignoreCase = true) } ||
-            Regex("""\b(?:journal|m[ée]t[ée]o|l'info|le 1945|le 1245|jt)\b""", RegexOption.IGNORE_CASE).containsMatchIn(title)
+        val isNewsOrWeather = categories.any { it.equals("Journal", ignoreCase = true) || it.equals("Météo", ignoreCase = true) || it.equals("News", ignoreCase = true) || it.equals("Weather", ignoreCase = true) } ||
+            Regex("""\b(?:journal|m[ée]t[ée]o|l'info|le 1945|le 1245|jt|news|weather)\b""", RegexOption.IGNORE_CASE).containsMatchIn(title)
         if (isNewsOrWeather) {
             seasonNumber = null
             episodeNumber = null
         }
         if (productionYear == null) {
-            val yRegex = Regex("""(?:Sortie|Année)\s*:\s*(\d{4})""", RegexOption.IGNORE_CASE)
+            val yRegex = Regex("""(?:Sortie|Année|Release|Year)\s*:\s*(\d{4})""", RegexOption.IGNORE_CASE)
             val pRegex = Regex("""\((\d{4})\)""")
             productionYear = yRegex.find(description)?.groupValues?.get(1)?.toIntOrNull()
                 ?: pRegex.find(title)?.groupValues?.get(1)?.toIntOrNull()
                 ?: pRegex.find(subTitle ?: "")?.groupValues?.get(1)?.toIntOrNull()
         }
         if (seriesYear == null) {
-            val syRegex = Regex("""(?:Série|Origine)\s*:\s*(\d{4})""", RegexOption.IGNORE_CASE)
+            val syRegex = Regex("""(?:Série|Origine|Series|Origin)\s*:\s*(\d{4})""", RegexOption.IGNORE_CASE)
             seriesYear = syRegex.find(description)?.groupValues?.get(1)?.toIntOrNull()
         }
         if (country == null) {
-            val cRegex = Regex("""Pays\s*:\s*([^•\n\r|]{3,30})""", RegexOption.IGNORE_CASE)
+            val cRegex = Regex("""(?:Pays|Country)\s*:\s*([^•\n\r|]{3,30})""", RegexOption.IGNORE_CASE)
             country = cRegex.find(description)?.groupValues?.get(1)?.trim()
         }
         if (productionYear == null && !secondaryDescription.isNullOrBlank()) {
-            val yRegex = Regex("""(?:Sortie|Année)\s*:\s*(\d{4})""", RegexOption.IGNORE_CASE)
+            val yRegex = Regex("""(?:Sortie|Année|Release|Year)\s*:\s*(\d{4})""", RegexOption.IGNORE_CASE)
             productionYear = yRegex.find(secondaryDescription)?.groupValues?.get(1)?.toIntOrNull()
         }
         if (seriesYear == null && !secondaryDescription.isNullOrBlank()) {
-            val syRegex = Regex("""(?:Série|Origine)\s*:\s*(\d{4})""", RegexOption.IGNORE_CASE)
+            val syRegex = Regex("""(?:Série|Origine|Series|Origin)\s*:\s*(\d{4})""", RegexOption.IGNORE_CASE)
             seriesYear = syRegex.find(secondaryDescription)?.groupValues?.get(1)?.toIntOrNull()
         }
         if (country == null && !secondaryDescription.isNullOrBlank()) {
-            val cRegex = Regex("""Pays\s*:\s*([^•\n\r|]{3,30})""", RegexOption.IGNORE_CASE)
+            val cRegex = Regex("""(?:Pays|Country)\s*:\s*([^•\n\r|]{3,30})""", RegexOption.IGNORE_CASE)
             country = cRegex.find(secondaryDescription)?.groupValues?.get(1)?.trim()
         }
 
@@ -320,7 +320,10 @@ class XmltvParser @Inject constructor() {
                 scanText.contains("VOST", ignoreCase = true) ||
                 scanText.contains("SME", ignoreCase = false) ||
                 scanText.contains("[ST]", ignoreCase = true) ||
-                scanText.contains("(ST)", ignoreCase = true)
+                scanText.contains("(ST)", ignoreCase = true) ||
+                scanText.contains("subtitle", ignoreCase = true) ||
+                scanText.contains("subtitled", ignoreCase = true) ||
+                scanText.contains("closed caption", ignoreCase = true)
             ) {
                 hasSubtitles = true
             }

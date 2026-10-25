@@ -26,13 +26,36 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Cache Argos Models and Translation Data
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.local/share/argos-translate
+            extractor/cache
+          key: argos-translate-cache-${{ runner.os }}
+          restore-keys: |
+            argos-translate-cache-
+
+      - name: Install Node dependencies
         working-directory: extractor
         run: npm install
 
-      - name: Generate EPG feeds
+      - name: Install Python dependencies
+        run: pip install argostranslate
+
+      - name: Generate French EPG feed
         working-directory: extractor
         run: node src/generate.js
+
+      - name: Translate and Generate English EPG feed
+        working-directory: extractor
+        run: python src/translate_epg.py
 
       - name: Deploy to GitHub Pages branch
         uses: peaceiris/actions-gh-pages@v4
