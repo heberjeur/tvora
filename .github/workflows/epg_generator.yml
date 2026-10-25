@@ -2,7 +2,7 @@ name: Generate EPG
 
 on:
   schedule:
-    - cron: '0 3 * * *'
+    - cron: '0 2,6,10,14,18,22 * * *'
   workflow_dispatch:
   push:
     paths:
@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -33,15 +35,13 @@ jobs:
           cache: 'pip'
           cache-dependency-path: extractor/requirements.txt
 
-      - name: Cache Argos Models and Translation Data
+      - name: Cache Argos Models
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.local/share/argos-translate
-            extractor/cache
-          key: argos-translate-cache-${{ runner.os }}
+          path: ~/.local/share/argos-translate
+          key: argos-translate-models-${{ runner.os }}
           restore-keys: |
-            argos-translate-cache-
+            argos-translate-models-
 
       - name: Install Node dependencies
         working-directory: extractor
@@ -65,3 +65,10 @@ jobs:
           publish_dir: extractor/output
           publish_branch: gh-pages
           force_orphan: true
+
+      - name: Commit and push updated assets to master
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/assets/epg_tnt.xml.gz app/src/main/assets/epg_tnt_en.xml.gz extractor/cache/translation_cache.json
+          git diff --staged --quiet || (git commit -m "Automate remote EPG assets synchronization [skip ci]" && git push origin master)
