@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TVora — Programme TV France</string>
+    <string name="app_name">TVora</string>
     <string name="tab_now">Now Playing</string>
     <string name="tab_programs">Programs</string>
     <string name="tab_guide">Guide</string>
