@@ -163,8 +163,8 @@ class EpgRepositoryImpl @Inject constructor(
         withContext(Dispatchers.IO) {
             val now = System.currentTimeMillis()
             val currentLanguage = userPreferences.appLanguage.first()
-            val lastLanguage = userPreferences.lastSyncedLanguage.first()
-            val languageChanged = lastLanguage != null && lastLanguage != currentLanguage
+            val lastLanguage = userPreferences.lastSyncedLanguage.first() ?: "fr"
+            val languageChanged = lastLanguage != currentLanguage
             val effectiveForceRefresh = forceRefresh || languageChanged
 
             var cachedCount = programDao.getProgramCount()
@@ -242,9 +242,11 @@ class EpgRepositoryImpl @Inject constructor(
 
                     stream.use { input ->
                         parser.parse(input, channelPackage.id) { channels, programs ->
-                            if (isFirstBatch && forceRefresh) {
+                            if (isFirstBatch) {
                                 isFirstBatch = false
-                                programDao.clearAll()
+                                if (effectiveForceRefresh) {
+                                    programDao.clearAll()
+                                }
                             }
                             if (channels.isNotEmpty()) {
                                 channelDao.insertChannels(channels)
@@ -256,30 +258,34 @@ class EpgRepositoryImpl @Inject constructor(
                                 }
                             }
                             if (programs.isNotEmpty()) {
-                                val enrichedPrograms = programs.map { incoming ->
-                                    val existing = programDao.getProgramByChannelAndStart(incoming.channelId, incoming.startTimestamp)
-                                    if (existing != null) {
-                                        val incomingTruncated = incoming.description.endsWith("...") || incoming.description.endsWith("…")
-                                        val existingFull = !existing.description.endsWith("...") && !existing.description.endsWith("…") && existing.description.length > incoming.description.length
-                                        val bestDesc = if (incomingTruncated && existingFull) existing.description else incoming.description
-                                        val bestSecondary = incoming.secondaryDescription ?: existing.secondaryDescription
-                                        val bestSeason = incoming.seasonNumber ?: existing.seasonNumber
-                                        val bestEpisode = incoming.episodeNumber ?: existing.episodeNumber
-                                        val bestYear = incoming.productionYear ?: existing.productionYear
-                                        val bestSeriesYear = incoming.seriesYear ?: existing.seriesYear
-                                        val bestCountry = incoming.country ?: existing.country
-                                        incoming.copy(
-                                            id = existing.id,
-                                            description = bestDesc,
-                                            secondaryDescription = bestSecondary,
-                                            seasonNumber = bestSeason,
-                                            episodeNumber = bestEpisode,
-                                            productionYear = bestYear,
-                                            seriesYear = bestSeriesYear,
-                                            country = bestCountry
-                                        )
-                                    } else {
-                                        incoming
+                                val enrichedPrograms = if (effectiveForceRefresh) {
+                                    programs
+                                } else {
+                                    programs.map { incoming ->
+                                        val existing = programDao.getProgramByChannelAndStart(incoming.channelId, incoming.startTimestamp)
+                                        if (existing != null) {
+                                            val incomingTruncated = incoming.description.endsWith("...") || incoming.description.endsWith("…")
+                                            val existingFull = !existing.description.endsWith("...") && !existing.description.endsWith("…") && existing.description.length > incoming.description.length
+                                            val bestDesc = if (incomingTruncated && existingFull) existing.description else incoming.description
+                                            val bestSecondary = incoming.secondaryDescription ?: existing.secondaryDescription
+                                            val bestSeason = incoming.seasonNumber ?: existing.seasonNumber
+                                            val bestEpisode = incoming.episodeNumber ?: existing.episodeNumber
+                                            val bestYear = incoming.productionYear ?: existing.productionYear
+                                            val bestSeriesYear = incoming.seriesYear ?: existing.seriesYear
+                                            val bestCountry = incoming.country ?: existing.country
+                                            incoming.copy(
+                                                id = existing.id,
+                                                description = bestDesc,
+                                                secondaryDescription = bestSecondary,
+                                                seasonNumber = bestSeason,
+                                                episodeNumber = bestEpisode,
+                                                productionYear = bestYear,
+                                                seriesYear = bestSeriesYear,
+                                                country = bestCountry
+                                            )
+                                        } else {
+                                            incoming
+                                        }
                                     }
                                 }
                                 programDao.insertPrograms(enrichedPrograms)

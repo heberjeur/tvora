@@ -56,17 +56,25 @@ data class Program(
                 categories.any { it.contains("sous-titre", ignoreCase = true) || it.contains("malentendant", ignoreCase = true) }
 
     val isRerun: Boolean
-        get() = categories.any { it.equals("rediffusion", ignoreCase = true) || it.equals("rediff", ignoreCase = true) } ||
+        get() = categories.any {
+            it.equals("rediffusion", ignoreCase = true) ||
+            it.equals("rediff", ignoreCase = true) ||
+            it.equals("rerun", ignoreCase = true) ||
+            it.equals("repeat", ignoreCase = true)
+        } ||
             title.contains("rediffusion", ignoreCase = true) ||
+            title.contains("rerun", ignoreCase = true) ||
             title.contains("(rediff", ignoreCase = true) ||
             title.contains("[rediff", ignoreCase = true) ||
             title.contains("(r)", ignoreCase = true) ||
             title.contains("[r]", ignoreCase = true) ||
             (subTitle?.contains("rediffusion", ignoreCase = true) == true) ||
+            (subTitle?.contains("rerun", ignoreCase = true) == true) ||
             (subTitle?.contains("(rediff", ignoreCase = true) == true) ||
             (subTitle?.contains("[rediff", ignoreCase = true) == true) ||
             (subTitle?.contains("(r)", ignoreCase = true) == true) ||
             description.contains("rediffusion", ignoreCase = true) ||
+            description.contains("rerun", ignoreCase = true) ||
             description.contains("(rediff", ignoreCase = true) ||
             description.contains("[rediff", ignoreCase = true)
 
@@ -74,10 +82,13 @@ data class Program(
         get() = !isRerun && (
             isUnreleased ||
             title.contains("inédit", ignoreCase = true) ||
+            title.contains("premiere", ignoreCase = true) ||
             (subTitle?.contains("inédit", ignoreCase = true) == true) ||
+            (subTitle?.contains("premiere", ignoreCase = true) == true) ||
             description.contains("inédit", ignoreCase = true) ||
             description.contains("inédite", ignoreCase = true) ||
-            categories.any { it.contains("inédit", ignoreCase = true) }
+            description.contains("premiere", ignoreCase = true) ||
+            categories.any { it.contains("inédit", ignoreCase = true) || it.contains("premiere", ignoreCase = true) }
         )
 
     val isLiveBroadcast: Boolean
@@ -85,8 +96,15 @@ data class Program(
             title.contains("en direct", ignoreCase = true) ||
             title.contains("[direct]", ignoreCase = true) ||
             title.contains("(direct)", ignoreCase = true) ||
+            title.contains("[live]", ignoreCase = true) ||
+            title.contains("(live)", ignoreCase = true) ||
             (subTitle?.contains("en direct", ignoreCase = true) == true) ||
-            categories.any { it.equals("direct", ignoreCase = true) || it.equals("en direct", ignoreCase = true) }
+            (subTitle?.contains("live", ignoreCase = true) == true) ||
+            categories.any {
+                it.equals("direct", ignoreCase = true) ||
+                it.equals("en direct", ignoreCase = true) ||
+                it.equals("live", ignoreCase = true)
+            }
         )
 
     val isNowPlaying: Boolean
@@ -124,20 +142,20 @@ fun isSignaletique(category: String): Boolean {
     val clean = category.trim().lowercase()
     if (clean.isBlank()) return true
     val exactMatches = setOf(
-        "rediffusion", "rediff", "r", "(r)", "[r]",
+        "rediffusion", "rediff", "r", "(r)", "[r]", "rerun", "repeat",
         "audiodescription", "audio-description", "audio description", "ad",
         "sous-titres", "sous-titres sourds et malentendants", "sous-titrage", "sous-titré", "sous-titrée",
-        "st", "sme", "vost", "vostfr",
-        "inédit", "inedit", "inédite", "inedite",
+        "st", "sme", "vost", "vostfr", "subtitles",
+        "inédit", "inedit", "inédite", "inedite", "premiere",
         "direct", "en direct", "live",
         "hd", "haute définition", "haute definition",
         "tout public", "tous publics", "tp", "u", "g", "csa", "-10", "-12", "-16", "-18",
-        "general", "autre", "divers", "programme indéterminé"
+        "general", "autre", "divers", "programme indéterminé", "other", "various"
     )
     if (clean in exactMatches) return true
     if (clean.startsWith("csa") || clean.startsWith("déconseillé") || clean.startsWith("interdit")) return true
     if (clean.contains("audiodescription") || clean.contains("audio-description")) return true
-    if (clean.contains("rediffusion")) return true
-    if (clean.contains("sous-titr") || clean.contains("malentendant")) return true
+    if (clean.contains("rediffusion") || clean.contains("rerun")) return true
+    if (clean.contains("sous-titr") || clean.contains("malentendant") || clean.contains("subtitles")) return true
     return false
 }

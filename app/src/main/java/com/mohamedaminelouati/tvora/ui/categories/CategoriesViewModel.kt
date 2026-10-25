@@ -58,7 +58,8 @@ class CategoriesViewModel @Inject constructor(
 
     private val metaKeywords = setOf(
         "rediffusion", "rediff", "direct", "en direct", "inédit", "inedit", "inédite", "inedite",
-        "audiodescription", "sous-titres", "general", "autre", "divers", "programme indéterminé"
+        "audiodescription", "sous-titres", "general", "autre", "divers", "programme indéterminé",
+        "rerun", "repeat", "live", "premiere", "subtitles", "audio description", "other", "various"
     )
 
     private val allActivePrograms: StateFlow<List<Program>> = epgRepository.getAllActivePrograms()
@@ -216,27 +217,27 @@ class CategoriesViewModel @Inject constructor(
         val first = program.categories.firstOrNull()?.trim()?.lowercase()
         if (first != null) {
             when {
-                first.contains("film") || first.contains("cinéma") || first.contains("cinema") -> return TvCategory.MOVIES
-                first.contains("série") || first.contains("serie") || first.contains("feuilleton") -> return TvCategory.SERIES
-                first.contains("divertissement") || first.contains("jeu") -> return TvCategory.ENTERTAINMENT
+                first.contains("film") || first.contains("movie") || first.contains("cinéma") || first.contains("cinema") -> return TvCategory.MOVIES
+                first.contains("série") || first.contains("serie") || first.contains("series") || first.contains("feuilleton") -> return TvCategory.SERIES
+                first.contains("divertissement") || first.contains("entertainment") || first.contains("jeu") || first.contains("game") -> return TvCategory.ENTERTAINMENT
                 first.contains("sport") -> return TvCategory.SPORT
-                first.contains("info") || first.contains("journal") || first.contains("actualité") -> return TvCategory.NEWS
-                first.contains("documentaire") || first.contains("docu") || first.contains("découverte") -> return TvCategory.DOCUMENTARY
-                first.contains("jeunesse") || first.contains("animation") -> return TvCategory.KIDS
-                first.contains("musique") || first.contains("concert") -> return TvCategory.MUSIC
+                first.contains("info") || first.contains("news") || first.contains("journal") || first.contains("actualité") -> return TvCategory.NEWS
+                first.contains("documentaire") || first.contains("documentary") || first.contains("docu") || first.contains("découverte") -> return TvCategory.DOCUMENTARY
+                first.contains("jeunesse") || first.contains("kids") || first.contains("children") || first.contains("animation") || first.contains("cartoon") -> return TvCategory.KIDS
+                first.contains("musique") || first.contains("music") || first.contains("concert") -> return TvCategory.MUSIC
             }
         }
 
         val allCatText = program.categories.joinToString(" ").lowercase()
         return when {
-            allCatText.contains("film") || allCatText.contains("cinéma") || allCatText.contains("téléfilm") -> TvCategory.MOVIES
-            allCatText.contains("série") || allCatText.contains("feuilleton") || program.seasonNumber != null || program.episodeNumber != null -> TvCategory.SERIES
-            allCatText.contains("divertissement") || allCatText.contains("jeu") || allCatText.contains("téléréalité") || allCatText.contains("humour") -> TvCategory.ENTERTAINMENT
-            allCatText.contains("sport") || allCatText.contains("football") || allCatText.contains("rugby") || allCatText.contains("tennis") || allCatText.contains("cyclisme") -> TvCategory.SPORT
-            allCatText.contains("documentaire") || allCatText.contains("découverte") || allCatText.contains("animalier") || allCatText.contains("nature") || allCatText.contains("histoire") -> TvCategory.DOCUMENTARY
-            allCatText.contains("info") || allCatText.contains("journal") || allCatText.contains("actualité") || allCatText.contains("météo") || allCatText.contains("débat") || allCatText.contains("société") -> TvCategory.NEWS
-            allCatText.contains("jeunesse") || allCatText.contains("dessin animé") || allCatText.contains("animation") -> TvCategory.KIDS
-            allCatText.contains("musique") || allCatText.contains("concert") || allCatText.contains("clip") || allCatText.contains("opéra") -> TvCategory.MUSIC
+            allCatText.contains("film") || allCatText.contains("movie") || allCatText.contains("cinéma") || allCatText.contains("cinema") || allCatText.contains("téléfilm") -> TvCategory.MOVIES
+            allCatText.contains("série") || allCatText.contains("serie") || allCatText.contains("series") || allCatText.contains("feuilleton") || program.seasonNumber != null || program.episodeNumber != null -> TvCategory.SERIES
+            allCatText.contains("divertissement") || allCatText.contains("entertainment") || allCatText.contains("jeu") || allCatText.contains("game") || allCatText.contains("téléréalité") || allCatText.contains("reality") || allCatText.contains("humour") || allCatText.contains("comedy") || allCatText.contains("show") -> TvCategory.ENTERTAINMENT
+            allCatText.contains("sport") || allCatText.contains("football") || allCatText.contains("soccer") || allCatText.contains("rugby") || allCatText.contains("tennis") || allCatText.contains("cyclisme") -> TvCategory.SPORT
+            allCatText.contains("documentaire") || allCatText.contains("documentary") || allCatText.contains("découverte") || allCatText.contains("discovery") || allCatText.contains("animalier") || allCatText.contains("nature") || allCatText.contains("histoire") || allCatText.contains("history") -> TvCategory.DOCUMENTARY
+            allCatText.contains("info") || allCatText.contains("news") || allCatText.contains("journal") || allCatText.contains("actualité") || allCatText.contains("current affairs") || allCatText.contains("météo") || allCatText.contains("weather") || allCatText.contains("débat") || allCatText.contains("debate") || allCatText.contains("société") || allCatText.contains("society") -> TvCategory.NEWS
+            allCatText.contains("jeunesse") || allCatText.contains("kids") || allCatText.contains("children") || allCatText.contains("dessin animé") || allCatText.contains("cartoon") || allCatText.contains("animation") -> TvCategory.KIDS
+            allCatText.contains("musique") || allCatText.contains("music") || allCatText.contains("concert") || allCatText.contains("clip") || allCatText.contains("opéra") || allCatText.contains("opera") -> TvCategory.MUSIC
             else -> TvCategory.OTHER
         }
     }
@@ -247,7 +248,8 @@ class CategoriesViewModel @Inject constructor(
             val c = cat.trim().lowercase()
             c.isNotEmpty() &&
                 c != parentSearch &&
-                c != "autre"
+                c != "autre" &&
+                c != "other"
         }
     }
 }
