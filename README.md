@@ -1,6 +1,8 @@
 # TVora — Programme TV France
 
-A native, offline-first Android TVora application for French television channels. Designed with zero tracking, zero cookies, zero WebViews, and strict adherence to open-source privacy standards (F-Droid and Google Play compliant).
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+A native, offline-first Android TVora application for French television channels. Designed with zero tracking, zero cookies, zero WebViews, and strict adherence to open-source privacy standards (100% FOSS, F-Droid and Google Play compliant).
 
 ## Features
 - **100% Offline-First**: All EPG schedules, channels, programs, and episode descriptions are stored locally in SQLite via Room.
@@ -38,3 +40,6 @@ or for release:
 ```bash
 ./gradlew assembleRelease
 ```
+
+## License
+This project is 100% Free and Open Source Software (FOSS) licensed under the [GNU General Public License v3.0](LICENSE).
