@@ -31,6 +31,7 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+          cache-dependency-path: extractor/requirements.txt
 
       - name: Cache Argos Models and Translation Data
         uses: actions/cache@v4
@@ -47,7 +48,7 @@ jobs:
         run: npm install
 
       - name: Install Python dependencies
-        run: pip install argostranslate
+        run: pip install -r extractor/requirements.txt
 
       - name: Generate French EPG feed
         working-directory: extractor

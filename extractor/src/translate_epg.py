@@ -225,14 +225,17 @@ def main():
         for i, text in enumerate(missing):
             try:
                 translated = translator.translate(text)
-                cache[text] = translated
+                cache[text] = translated if translated else text
             except Exception as e:
                 cache[text] = text
             if (i + 1) % batch_size == 0 or (i + 1) == len(missing):
                 sys.stdout.write(f"Translated {i + 1}/{len(missing)} items...\n")
+                sys.stdout.flush()
+                save_cache(cache)
         save_cache(cache)
     elif missing and not translator:
         sys.stdout.write("Argos Translate not available, preserving original text for uncached entries.\n")
+        sys.stdout.flush()
 
     for prog in root.findall("programme"):
         title_elem = prog.find("title")
