@@ -21,6 +21,7 @@ import com.mohamedaminelouati.tvora.domain.model.SyncState
 import com.mohamedaminelouati.tvora.domain.repository.EpgRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -358,9 +359,10 @@ class EpgRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun preloadFromAssets(channelPackage: ChannelPackage, lang: String) {
-        preloadFromAssetsIfEmpty(channelPackage, lang)
-    }
+    override suspend fun preloadFromAssets(channelPackage: ChannelPackage, lang: String): Unit =
+        withContext(Dispatchers.IO + NonCancellable) {
+            preloadFromAssetsIfEmpty(channelPackage, lang)
+        }
 
     private suspend fun preloadFromAssetsIfEmpty(channelPackage: ChannelPackage, lang: String) {
         try {
@@ -430,6 +432,11 @@ class EpgRepositoryImpl @Inject constructor(
             )
 
             userPreferences.setLastSyncedLanguage(lang)
+            _syncProgress.value = SyncProgress(
+                state = SyncState.IDLE,
+                programCount = totalPrograms,
+                lastSyncTimestamp = now
+            )
         } catch (e: Exception) {
             android.util.Log.e("EpgRepository", "Failed to preload from assets", e)
         }

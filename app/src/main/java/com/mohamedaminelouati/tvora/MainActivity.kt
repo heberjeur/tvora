@@ -47,6 +47,20 @@ class MainActivity : ComponentActivity() {
         applySavedLocale()
         enableEdgeToEdge()
         setContent {
+            val appLanguage by userPreferences.appLanguage.collectAsStateWithLifecycle(initialValue = "fr")
+            val currentLocale = androidx.compose.runtime.remember(appLanguage) {
+                Locale.forLanguageTag(appLanguage)
+            }
+            val baseContext = androidx.compose.ui.platform.LocalContext.current
+            val localizedConfiguration = androidx.compose.runtime.remember(appLanguage, baseContext) {
+                val config = android.content.res.Configuration(baseContext.resources.configuration)
+                config.setLocale(currentLocale)
+                config
+            }
+            val localizedContext = androidx.compose.runtime.remember(appLanguage, baseContext, localizedConfiguration) {
+                baseContext.createConfigurationContext(localizedConfiguration)
+            }
+
             val themeMode by userPreferences.themeMode.collectAsStateWithLifecycle(initialValue = "dark")
             val fontSizeScale by userPreferences.fontSizeScale.collectAsStateWithLifecycle(initialValue = "normal")
             val displayDensity by userPreferences.displayDensity.collectAsStateWithLifecycle(initialValue = "comfort")
@@ -71,6 +85,8 @@ class MainActivity : ComponentActivity() {
                 }
 
                 CompositionLocalProvider(
+                    androidx.compose.ui.platform.LocalConfiguration provides localizedConfiguration,
+                    androidx.compose.ui.platform.LocalContext provides localizedContext,
                     androidx.compose.ui.platform.LocalDensity provides effectiveDensity,
                     LocalDisplayDensity provides displayDensity,
                     LocalHighlightAccessibility provides highlightAccessibility,

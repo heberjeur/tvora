@@ -147,8 +147,6 @@ class SettingsViewModel @Inject constructor(
             if (currentLang == langCode) return@launch
 
             userPreferences.setAppLanguage(langCode)
-            epgRepository.preloadFromAssets(ChannelPackage.COMMUNITY_ENRICHED, langCode)
-
             val locale = Locale.forLanguageTag(langCode)
             Locale.setDefault(locale)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -164,7 +162,7 @@ class SettingsViewModel @Inject constructor(
                 actConfig.setLocale(locale)
                 act.resources.updateConfiguration(actConfig, act.resources.displayMetrics)
             }
-            activity?.recreate()
+            epgRepository.preloadFromAssets(ChannelPackage.COMMUNITY_ENRICHED, langCode)
         }
     }
 
