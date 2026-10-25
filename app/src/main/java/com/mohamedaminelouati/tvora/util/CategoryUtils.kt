@@ -272,8 +272,130 @@ object CategoryUtils {
         "danse" to "Dance",
         "ballet" to "Ballet",
         "cirque" to "Circus",
-        "cabaret" to "Cabaret"
+        "cabaret" to "Cabaret",
+        "piece de theatre" to "Theater Play",
+        "pièce de théâtre" to "Theater Play",
+        "vaudeville" to "Vaudeville",
+        "film d'animation" to "Animated Film",
+        "magazine des medias" to "Media Magazine",
+        "magazine des médias" to "Media Magazine",
+        "magazine d'actualite" to "Current Affairs Magazine",
+        "magazine d'actualité" to "Current Affairs Magazine",
+        "magazine animalier" to "Wildlife Magazine",
+        "magazine de l'art de vivre" to "Lifestyle Magazine",
+        "magazine de l'automobile" to "Automotive Magazine",
+        "magazine de l'environnement" to "Environmental Magazine",
+        "magazine de l'economie" to "Business Magazine",
+        "magazine de l'économie" to "Business Magazine",
+        "magazine de la gastronomie" to "Gastronomy Magazine",
+        "magazine de la mer" to "Marine Magazine",
+        "magazine de la mode" to "Fashion Magazine",
+        "magazine de la nature" to "Nature Magazine",
+        "magazine de reportages" to "Investigative Magazine",
+        "magazine de services" to "Consumer Services Magazine",
+        "magazine de tele-achat" to "Home Shopping Magazine",
+        "magazine de télé-achat" to "Home Shopping Magazine",
+        "magazine des beaux-arts" to "Fine Arts Magazine",
+        "magazine du cinema" to "Cinema Magazine",
+        "magazine du cinéma" to "Cinema Magazine",
+        "magazine du consommateur" to "Consumer Affairs Magazine",
+        "magazine du jardinage" to "Gardening Magazine",
+        "magazine du multimedia" to "Tech & Multimedia Magazine",
+        "magazine du multimédia" to "Tech & Multimedia Magazine",
+        "magazine du show-biz" to "Showbiz Magazine",
+        "magazine du tourisme" to "Tourism Magazine",
+        "magazine historique" to "History Magazine",
+        "magazine jeunesse" to "Youth Magazine",
+        "magazine judiciaire" to "Legal Magazine",
+        "magazine litteraire" to "Literary Magazine",
+        "magazine littéraire" to "Literary Magazine",
+        "magazine musical" to "Music Magazine",
+        "magazine politique" to "Political Magazine",
+        "magazine religieux" to "Religious Magazine",
+        "magazine regional" to "Regional Magazine",
+        "magazine régional" to "Regional Magazine",
+        "magazine educatif" to "Educational Magazine",
+        "magazine éducatif" to "Educational Magazine",
+        "mag culture" to "Culture Magazine",
+        "mag sciences" to "Science Magazine",
+        "mag societe" to "Society Magazine",
+        "mag société" to "Society Magazine",
+        "court metrage d'animation" to "Animated Short Film",
+        "court métrage d'animation" to "Animated Short Film",
+        "court metrage dramatique" to "Dramatic Short Film",
+        "court métrage dramatique" to "Dramatic Short Film",
+        "dessin anime manga" to "Manga Animation",
+        "dessin animé manga" to "Manga Animation",
+        "divertissement-humour" to "Comedy Entertainment",
+        "drame lyrique" to "Lyric Drama",
+        "debat parlementaire" to "Parliamentary Debate",
+        "débat parlementaire" to "Parliamentary Debate",
+        "emission jeunesse" to "Kids Show",
+        "émission jeunesse" to "Kids Show",
+        "emission musicale" to "Music Show",
+        "émission musicale" to "Music Show",
+        "emission politique" to "Political Show",
+        "émission politique" to "Political Show",
+        "emission speciale" to "Special Broadcast",
+        "émission spéciale" to "Special Broadcast",
+        "endurance" to "Endurance Racing",
+        "feuilleton policier" to "Crime Drama Series",
+        "feuilleton realiste" to "Realistic Soap Opera",
+        "feuilleton réaliste" to "Realistic Soap Opera",
+        "feuilleton sentimental" to "Romantic Soap Opera",
+        "jt sport" to "Sports News",
+        "one man show" to "Stand-up Comedy",
+        "patinage artistique" to "Figure Skating",
+        "pop & rock" to "Pop & Rock",
+        "programme indetermine" to "TBA",
+        "programme indéterminé" to "TBA",
+        "sports mecaniques" to "Motorsports",
+        "sports mécaniques" to "Motorsports",
+        "tennis de table" to "Table Tennis",
+        "thriller politique" to "Political Thriller",
+        "telefilm d'animation" to "Animated TV Movie",
+        "téléfilm d'animation" to "Animated TV Movie",
+        "telefilm d'aventures" to "Adventure TV Movie",
+        "téléfilm d'aventures" to "Adventure TV Movie",
+        "telefilm dramatique" to "Dramatic TV Movie",
+        "téléfilm dramatique" to "Dramatic TV Movie",
+        "telefilm fantastique" to "Fantasy TV Movie",
+        "téléfilm fantastique" to "Fantasy TV Movie",
+        "telefilm feerique" to "Fairytale TV Movie",
+        "téléfilm féerique" to "Fairytale TV Movie",
+        "telefilm humoristique" to "Comedy TV Movie",
+        "téléfilm humoristique" to "Comedy TV Movie",
+        "telefilm policier" to "Crime TV Movie",
+        "téléfilm policier" to "Crime TV Movie",
+        "telefilm romanesque" to "Romantic TV Movie",
+        "téléfilm romanesque" to "Romantic TV Movie",
+        "telefilm sentimental" to "Romantic TV Movie",
+        "téléfilm sentimental" to "Romantic TV Movie",
+        "telefilm erotique" to "Erotic TV Movie",
+        "téléfilm érotique" to "Erotic TV Movie",
+        "art de vivre" to "Lifestyle",
+        "audiodescription" to "Audio Description",
+        "civilisations" to "Civilizations",
+        "ceremonie" to "Ceremony",
+        "cérémonie" to "Ceremony",
+        "direct" to "Live",
+        "football americain" to "American Football",
+        "football américain" to "American Football",
+        "lettres" to "Literature",
+        "melodrame" to "Melodrama",
+        "mélodrame" to "Melodrama",
+        "peche" to "Fishing",
+        "pêche" to "Fishing",
+        "religions" to "Religion",
+        "fiction" to "Fiction",
+        "varietes" to "Variety",
+        "variétés" to "Variety"
     )
+
+    private fun stripAccents(str: String): String {
+        return java.text.Normalizer.normalize(str, java.text.Normalizer.Form.NFD)
+            .replace("\\p{InCombiningDiacriticalMarks}+".toRegex(), "")
+    }
 
     fun formatCategory(rawCategory: String?, targetLocale: Locale): String {
         if (rawCategory.isNullOrBlank()) return ""
@@ -282,24 +404,46 @@ object CategoryUtils {
             return trimmed
         }
 
-        val lower = trimmed.lowercase()
+        val clean = trimmed.replace("’", "'").replace("&apos;", "'").replace("&amp;", "&")
+        val lower = clean.lowercase()
         val direct = frenchToEnglish[lower]
         if (direct != null) return direct
 
-        if (lower.startsWith("film : ") || lower.startsWith("film - ") || lower.startsWith("film • ")) {
-            val suffix = trimmed.substring(7).trim()
-            val translatedSuffix = formatCategory(suffix, targetLocale)
-            return if (translatedSuffix != suffix) "Movie: $translatedSuffix" else trimmed
+        val unaccented = stripAccents(lower)
+        val unaccentedDirect = frenchToEnglish[unaccented]
+        if (unaccentedDirect != null) return unaccentedDirect
+
+        for (prefix in listOf("film : ", "film - ", "film • ", "film ")) {
+            if (lower.startsWith(prefix) || unaccented.startsWith(stripAccents(prefix))) {
+                val prefixLen = if (lower.startsWith(prefix)) prefix.length else stripAccents(prefix).length
+                val suffix = clean.substring(prefixLen).trim()
+                val translatedSuffix = formatCategory(suffix, targetLocale)
+                return if (translatedSuffix != suffix) "Movie: $translatedSuffix" else trimmed
+            }
         }
-        if (lower.startsWith("série : ") || lower.startsWith("série - ") || lower.startsWith("serie : ")) {
-            val suffix = trimmed.substring(8).trim()
-            val translatedSuffix = formatCategory(suffix, targetLocale)
-            return if (translatedSuffix != suffix) "Series: $translatedSuffix" else trimmed
+        for (prefix in listOf("série : ", "série - ", "serie : ", "serie - ")) {
+            if (lower.startsWith(prefix) || unaccented.startsWith(stripAccents(prefix))) {
+                val prefixLen = if (lower.startsWith(prefix)) prefix.length else stripAccents(prefix).length
+                val suffix = clean.substring(prefixLen).trim()
+                val translatedSuffix = formatCategory(suffix, targetLocale)
+                return if (translatedSuffix != suffix) "Series: $translatedSuffix" else trimmed
+            }
         }
-        if (lower.startsWith("documentaire : ") || lower.startsWith("documentaire - ")) {
-            val suffix = trimmed.substring(15).trim()
-            val translatedSuffix = formatCategory(suffix, targetLocale)
-            return if (translatedSuffix != suffix) "Documentary: $translatedSuffix" else trimmed
+        for (prefix in listOf("documentaire : ", "documentaire - ")) {
+            if (lower.startsWith(prefix) || unaccented.startsWith(stripAccents(prefix))) {
+                val prefixLen = if (lower.startsWith(prefix)) prefix.length else stripAccents(prefix).length
+                val suffix = clean.substring(prefixLen).trim()
+                val translatedSuffix = formatCategory(suffix, targetLocale)
+                return if (translatedSuffix != suffix) "Documentary: $translatedSuffix" else trimmed
+            }
+        }
+        for (prefix in listOf("magazine : ", "magazine - ", "mag : ", "mag - ")) {
+            if (lower.startsWith(prefix) || unaccented.startsWith(stripAccents(prefix))) {
+                val prefixLen = if (lower.startsWith(prefix)) prefix.length else stripAccents(prefix).length
+                val suffix = clean.substring(prefixLen).trim()
+                val translatedSuffix = formatCategory(suffix, targetLocale)
+                return if (translatedSuffix != suffix) "Magazine: $translatedSuffix" else trimmed
+            }
         }
 
         return trimmed

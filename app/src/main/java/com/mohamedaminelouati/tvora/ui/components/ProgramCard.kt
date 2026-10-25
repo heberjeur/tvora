@@ -48,6 +48,8 @@ import com.mohamedaminelouati.tvora.ui.theme.DarkSurfaceVariant
 import com.mohamedaminelouati.tvora.ui.theme.IndicatorGreen
 import com.mohamedaminelouati.tvora.ui.theme.TextPrimary
 import com.mohamedaminelouati.tvora.ui.theme.TextSecondary
+import androidx.compose.ui.platform.LocalConfiguration
+import com.mohamedaminelouati.tvora.util.CategoryUtils
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
@@ -65,6 +67,10 @@ fun ProgramCard(
     onCategoryClick: ((String) -> Unit)? = null,
     onChannelClick: ((String) -> Unit)? = null
 ) {
+    val configuration = LocalConfiguration.current
+    val currentLocale = remember(configuration) {
+        configuration.locales[0] ?: java.util.Locale.getDefault()
+    }
     val zone = com.mohamedaminelouati.tvora.ui.theme.LocalDisplayZone.current
     val startTime = Instant.ofEpochMilli(program.startTimestamp).atZone(zone).format(timeFormatter)
     val stopTime = Instant.ofEpochMilli(program.stopTimestamp).atZone(zone).format(timeFormatter)
@@ -343,7 +349,7 @@ fun ProgramCard(
                                                 }
                                         ) {
                                             Text(
-                                                text = category,
+                                                text = CategoryUtils.formatCategory(category, currentLocale),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = TextSecondary,
                                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
