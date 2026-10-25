@@ -1,10 +1,7 @@
 package com.mohamedaminelouati.tvora.ui.settings
 
 import android.app.Activity
-import android.app.LocaleManager
 import android.content.Context
-import android.os.Build
-import android.os.LocaleList
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Constraints
@@ -146,23 +143,25 @@ class SettingsViewModel @Inject constructor(
             val currentLang = userPreferences.appLanguage.first()
             if (currentLang == langCode) return@launch
 
-            userPreferences.setAppLanguage(langCode)
-            val locale = Locale.forLanguageTag(langCode)
-            Locale.setDefault(locale)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                val localeManager = context.getSystemService(LocaleManager::class.java)
-                localeManager?.applicationLocales = LocaleList.forLanguageTags(langCode)
-            } else {
+            _isSyncing.value = true
+            try {
+                userPreferences.setAppLanguage(langCode)
+                val locale = Locale.forLanguageTag(langCode)
+                Locale.setDefault(locale)
                 val config = context.resources.configuration
                 config.setLocale(locale)
+                @Suppress("DEPRECATION")
                 context.resources.updateConfiguration(config, context.resources.displayMetrics)
+                activity?.let { act ->
+                    val actConfig = act.resources.configuration
+                    actConfig.setLocale(locale)
+                    @Suppress("DEPRECATION")
+                    act.resources.updateConfiguration(actConfig, act.resources.displayMetrics)
+                }
+                epgRepository.preloadFromAssets(ChannelPackage.COMMUNITY_ENRICHED, langCode)
+            } finally {
+                _isSyncing.value = false
             }
-            activity?.let { act ->
-                val actConfig = act.resources.configuration
-                actConfig.setLocale(locale)
-                act.resources.updateConfiguration(actConfig, act.resources.displayMetrics)
-            }
-            epgRepository.preloadFromAssets(ChannelPackage.COMMUNITY_ENRICHED, langCode)
         }
     }
 

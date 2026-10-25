@@ -1,9 +1,6 @@
 package com.mohamedaminelouati.tvora
 
-import android.app.LocaleManager
-import android.os.Build
 import android.os.Bundle
-import android.os.LocaleList
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,7 +10,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.mohamedaminelouati.tvora.data.local.prefs.UserPreferences
 import com.mohamedaminelouati.tvora.ui.navigation.TvoraAppNavigation
-import com.mohamedaminelouati.tvora.ui.theme.DarkBackground
 import com.mohamedaminelouati.tvora.ui.theme.TvoraTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
@@ -51,14 +47,13 @@ class MainActivity : ComponentActivity() {
             val currentLocale = androidx.compose.runtime.remember(appLanguage) {
                 Locale.forLanguageTag(appLanguage)
             }
-            val baseContext = androidx.compose.ui.platform.LocalContext.current
-            val localizedConfiguration = androidx.compose.runtime.remember(appLanguage, baseContext) {
-                val config = android.content.res.Configuration(baseContext.resources.configuration)
+            val localizedConfiguration = androidx.compose.runtime.remember(appLanguage) {
+                Locale.setDefault(currentLocale)
+                val config = android.content.res.Configuration(resources.configuration)
                 config.setLocale(currentLocale)
+                @Suppress("DEPRECATION")
+                resources.updateConfiguration(config, resources.displayMetrics)
                 config
-            }
-            val localizedContext = androidx.compose.runtime.remember(appLanguage, baseContext, localizedConfiguration) {
-                baseContext.createConfigurationContext(localizedConfiguration)
             }
 
             val themeMode by userPreferences.themeMode.collectAsStateWithLifecycle(initialValue = "dark")
@@ -86,7 +81,6 @@ class MainActivity : ComponentActivity() {
 
                 CompositionLocalProvider(
                     androidx.compose.ui.platform.LocalConfiguration provides localizedConfiguration,
-                    androidx.compose.ui.platform.LocalContext provides localizedContext,
                     androidx.compose.ui.platform.LocalDensity provides effectiveDensity,
                     LocalDisplayDensity provides displayDensity,
                     LocalHighlightAccessibility provides highlightAccessibility,
@@ -127,15 +121,9 @@ class MainActivity : ComponentActivity() {
             val lang = runBlocking { userPreferences.appLanguage.first() }
             val locale = Locale.forLanguageTag(lang)
             Locale.setDefault(locale)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                val localeManager = getSystemService(LocaleManager::class.java)
-                val currentTags = localeManager?.applicationLocales?.toLanguageTags() ?: ""
-                if (!currentTags.contains(lang)) {
-                    localeManager?.applicationLocales = LocaleList.forLanguageTags(lang)
-                }
-            }
             val config = resources.configuration
             config.setLocale(locale)
+            @Suppress("DEPRECATION")
             resources.updateConfiguration(config, resources.displayMetrics)
         } catch (e: Exception) {
             Log.w("MainActivity", "Failed to apply saved locale", e)
