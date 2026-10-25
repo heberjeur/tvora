@@ -358,6 +358,10 @@ class EpgRepositoryImpl @Inject constructor(
             }
         }
 
+    override suspend fun preloadFromAssets(channelPackage: ChannelPackage, lang: String) {
+        preloadFromAssetsIfEmpty(channelPackage, lang)
+    }
+
     private suspend fun preloadFromAssetsIfEmpty(channelPackage: ChannelPackage, lang: String) {
         try {
             val preferredAsset = channelPackage.getFeedFileName(lang)
@@ -426,9 +430,6 @@ class EpgRepositoryImpl @Inject constructor(
             )
 
             userPreferences.setLastSyncedLanguage(lang)
-
-            imageList.addAll(ChannelCatalog.getAllLogoUrls())
-            prefetchImages(imageList)
         } catch (e: Exception) {
             android.util.Log.e("EpgRepository", "Failed to preload from assets", e)
         }

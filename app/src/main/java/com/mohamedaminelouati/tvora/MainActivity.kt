@@ -117,11 +117,10 @@ class MainActivity : ComponentActivity() {
                 if (!currentTags.contains(lang)) {
                     localeManager?.applicationLocales = LocaleList.forLanguageTags(lang)
                 }
-            } else {
-                val config = resources.configuration
-                config.setLocale(locale)
-                resources.updateConfiguration(config, resources.displayMetrics)
             }
+            val config = resources.configuration
+            config.setLocale(locale)
+            resources.updateConfiguration(config, resources.displayMetrics)
         } catch (e: Exception) {
             Log.w("MainActivity", "Failed to apply saved locale", e)
         }

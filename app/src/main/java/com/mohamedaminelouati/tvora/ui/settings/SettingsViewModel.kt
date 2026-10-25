@@ -143,7 +143,12 @@ class SettingsViewModel @Inject constructor(
 
     fun setLanguage(langCode: String, activity: Activity?) {
         viewModelScope.launch {
+            val currentLang = userPreferences.appLanguage.first()
+            if (currentLang == langCode) return@launch
+
             userPreferences.setAppLanguage(langCode)
+            epgRepository.preloadFromAssets(ChannelPackage.COMMUNITY_ENRICHED, langCode)
+
             val locale = Locale.forLanguageTag(langCode)
             Locale.setDefault(locale)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -154,7 +159,11 @@ class SettingsViewModel @Inject constructor(
                 config.setLocale(locale)
                 context.resources.updateConfiguration(config, context.resources.displayMetrics)
             }
-            epgRepository.syncEpg(ChannelPackage.COMMUNITY_ENRICHED, forceRefresh = true)
+            activity?.let { act ->
+                val actConfig = act.resources.configuration
+                actConfig.setLocale(locale)
+                act.resources.updateConfiguration(actConfig, act.resources.displayMetrics)
+            }
             activity?.recreate()
         }
     }

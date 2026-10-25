@@ -22,6 +22,7 @@ interface EpgRepository {
     fun getSyncProgress(): kotlinx.coroutines.flow.StateFlow<com.mohamedaminelouati.tvora.domain.model.SyncProgress>
     suspend fun toggleFavoriteChannel(channelId: String, isFavorite: Boolean)
     suspend fun syncEpg(channelPackage: ChannelPackage, forceRefresh: Boolean = false): Result<Unit>
+    suspend fun preloadFromAssets(channelPackage: ChannelPackage, lang: String)
     fun getLastSyncTimestamp(channelPackage: ChannelPackage): Flow<Long?>
     fun resetSyncProgress()
 }
