@@ -35,11 +35,12 @@ class KeywordAlertRepositoryImpl @Inject constructor(
         return keywordAlertDao.getActiveKeywordAlertsDirect().map { it.toDomain() }
     }
 
-    override suspend fun addKeywordAlert(keyword: String, leadTimeMinutes: Int): Long {
+    override suspend fun addKeywordAlert(keyword: String, leadTimeMinutes: Int, soundUri: String?): Long {
         val trimmed = keyword.trim()
         val entity = KeywordAlertEntity(
             keyword = trimmed,
-            leadTimeMinutes = leadTimeMinutes
+            leadTimeMinutes = leadTimeMinutes,
+            soundUri = soundUri
         )
         val id = keywordAlertDao.insertKeyword(entity)
         val saved = keywordAlertDao.getKeywordAlertById(id)
@@ -57,6 +58,12 @@ class KeywordAlertRepositoryImpl @Inject constructor(
         } else {
             keywordAlertManager.cancelRemindersForKeyword(current.keyword)
         }
+    }
+
+    override suspend fun setKeywordSound(id: Long, soundUri: String?) {
+        val current = keywordAlertDao.getKeywordAlertById(id) ?: return
+        keywordAlertDao.setKeywordSound(id, soundUri)
+        keywordAlertManager.updateSoundForKeyword(current.keyword, soundUri)
     }
 
     override suspend fun deleteKeywordAlert(id: Long, keyword: String, deleteReminders: Boolean) {

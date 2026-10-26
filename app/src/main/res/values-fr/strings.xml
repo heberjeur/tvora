@@ -328,4 +328,11 @@
     <string name="action_delete_keyword_only">Garder les rappels</string>
     <string name="keyword_error_duplicate">Ce mot-clé a déjà été ajouté</string>
     <string name="keyword_error_empty">Le mot-clé ne peut pas être vide</string>
+    <string name="keyword_notification_title">Alerte mot-clé : #%1$s</string>
+    <string name="keyword_notification_single_match">%1$s sur %2$s (Rappel programmé)</string>
+    <string name="keyword_notification_multiple_matches">%1$d nouveaux programmes trouvés pour #%2$s (Rappels programmés)</string>
+    <string name="keyword_sound_label">Sonnerie</string>
+    <string name="keyword_sound_default">Sonnerie par défaut</string>
+    <string name="action_change_sound">Modifier la sonnerie</string>
+    <string name="action_reset_sound">Rétablir le son par défaut</string>
 </resources>

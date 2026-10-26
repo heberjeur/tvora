@@ -5,5 +5,6 @@ data class KeywordAlert(
     val keyword: String,
     val isEnabled: Boolean = true,
     val leadTimeMinutes: Int = 10,
+    val soundUri: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )

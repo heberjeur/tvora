@@ -7,8 +7,9 @@ interface KeywordAlertRepository {
     fun getAllKeywordAlerts(): Flow<List<KeywordAlert>>
     fun getActiveKeywordAlerts(): Flow<List<KeywordAlert>>
     suspend fun getActiveKeywordAlertsDirect(): List<KeywordAlert>
-    suspend fun addKeywordAlert(keyword: String, leadTimeMinutes: Int = 10): Long
+    suspend fun addKeywordAlert(keyword: String, leadTimeMinutes: Int = 10, soundUri: String? = null): Long
     suspend fun setKeywordEnabled(id: Long, isEnabled: Boolean)
+    suspend fun setKeywordSound(id: Long, soundUri: String?)
     suspend fun deleteKeywordAlert(id: Long, keyword: String, deleteReminders: Boolean = true)
     suspend fun countUpcomingReminders(keyword: String): Int
 }

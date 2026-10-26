@@ -2,6 +2,7 @@ package com.mohamedaminelouati.tvora.ui.settings.keyword
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mohamedaminelouati.tvora.data.local.prefs.UserPreferences
 import com.mohamedaminelouati.tvora.domain.model.KeywordAlert
 import com.mohamedaminelouati.tvora.domain.repository.KeywordAlertRepository
 import com.mohamedaminelouati.tvora.domain.repository.ReminderRepository
@@ -23,8 +24,12 @@ data class KeywordAlertItemUiState(
 @HiltViewModel
 class KeywordAlertsViewModel @Inject constructor(
     private val keywordAlertRepository: KeywordAlertRepository,
-    private val reminderRepository: ReminderRepository
+    private val reminderRepository: ReminderRepository,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
+
+    val defaultNotificationSound: StateFlow<String?> = userPreferences.notificationSound
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val _inputError = MutableStateFlow<String?>(null)
     val inputError: StateFlow<String?> = _inputError.asStateFlow()
@@ -49,7 +54,7 @@ class KeywordAlertsViewModel @Inject constructor(
         _inputError.value = null
     }
 
-    fun addKeyword(rawKeyword: String, leadTimeMinutes: Int = 10) {
+    fun addKeyword(rawKeyword: String, leadTimeMinutes: Int = 10, soundUri: String? = null) {
         val trimmed = rawKeyword.trim()
         if (trimmed.isBlank()) {
             _inputError.value = "empty"
@@ -62,13 +67,19 @@ class KeywordAlertsViewModel @Inject constructor(
         }
         _inputError.value = null
         viewModelScope.launch {
-            keywordAlertRepository.addKeywordAlert(trimmed, leadTimeMinutes)
+            keywordAlertRepository.addKeywordAlert(trimmed, leadTimeMinutes, soundUri)
         }
     }
 
     fun setKeywordEnabled(id: Long, isEnabled: Boolean) {
         viewModelScope.launch {
             keywordAlertRepository.setKeywordEnabled(id, isEnabled)
+        }
+    }
+
+    fun setKeywordSound(id: Long, soundUri: String?) {
+        viewModelScope.launch {
+            keywordAlertRepository.setKeywordSound(id, soundUri)
         }
     }
 

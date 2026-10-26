@@ -1,6 +1,13 @@
 package com.mohamedaminelouati.tvora.ui.settings.keyword
 
-import androidx.compose.foundation.background
+import android.app.Activity
+import android.content.Intent
+import android.media.RingtoneManager
+import android.net.Uri
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,9 +27,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -51,6 +60,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -73,14 +83,34 @@ fun KeywordAlertsScreen(
     onBackClick: () -> Unit,
     viewModel: KeywordAlertsViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val keywordAlerts by viewModel.keywordAlerts.collectAsStateWithLifecycle()
+    val defaultSound by viewModel.defaultNotificationSound.collectAsStateWithLifecycle()
     val inputError by viewModel.inputError.collectAsStateWithLifecycle()
     var inputText by remember { mutableStateOf("") }
     var itemToDelete by remember { mutableStateOf<KeywordAlertItemUiState?>(null) }
+    var selectedKeywordIdForSound by remember { mutableStateOf<Long?>(null) }
+
+    val ringtonePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val uri: Uri? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                result.data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI, Uri::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                result.data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+            }
+            selectedKeywordIdForSound?.let { id ->
+                viewModel.setKeywordSound(id, uri?.toString())
+            }
+        }
+        selectedKeywordIdForSound = null
+    }
 
     val handleAdd = {
         if (inputText.isNotBlank()) {
-            viewModel.addKeyword(inputText)
+            viewModel.addKeyword(inputText, soundUri = defaultSound)
             if (inputError == null) {
                 inputText = ""
             }
@@ -223,11 +253,44 @@ fun KeywordAlertsScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(keywordAlerts, key = { it.alert.id }) { item ->
+                        val soundDisplayName = remember(item.alert.soundUri, defaultSound) {
+                            val uriStringToResolve = item.alert.soundUri ?: defaultSound
+                            if (uriStringToResolve != null) {
+                                try {
+                                    val ringtone = RingtoneManager.getRingtone(context, Uri.parse(uriStringToResolve))
+                                    ringtone?.getTitle(context) ?: context.getString(R.string.keyword_sound_default)
+                                } catch (_: SecurityException) {
+                                    context.getString(R.string.keyword_sound_default)
+                                } catch (_: IllegalArgumentException) {
+                                    context.getString(R.string.keyword_sound_default)
+                                }
+                            } else {
+                                context.getString(R.string.keyword_sound_default)
+                            }
+                        }
+
                         KeywordAlertCard(
                             item = item,
+                            soundTitle = soundDisplayName,
                             onToggleEnabled = { enabled ->
                                 viewModel.setKeywordEnabled(item.alert.id, enabled)
                             },
+                            onPickSoundClick = {
+                                selectedKeywordIdForSound = item.alert.id
+                                val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+                                    putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION)
+                                    putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+                                    putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, true)
+                                    val existing = item.alert.soundUri ?: defaultSound
+                                    existing?.let {
+                                        putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, Uri.parse(it))
+                                    }
+                                }
+                                ringtonePickerLauncher.launch(intent)
+                            },
+                            onResetSoundClick = if (item.alert.soundUri != null) {
+                                { viewModel.setKeywordSound(item.alert.id, null) }
+                            } else null,
                             onDeleteClick = {
                                 itemToDelete = item
                             }
@@ -288,7 +351,10 @@ fun KeywordAlertsScreen(
 @Composable
 private fun KeywordAlertCard(
     item: KeywordAlertItemUiState,
+    soundTitle: String,
     onToggleEnabled: (Boolean) -> Unit,
+    onPickSoundClick: () -> Unit,
+    onResetSoundClick: (() -> Unit)? = null,
     onDeleteClick: () -> Unit
 ) {
     Card(
@@ -325,22 +391,52 @@ private fun KeywordAlertCard(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Alarm,
-                        contentDescription = null,
-                        modifier = Modifier.size(13.dp),
-                        tint = TextSecondary
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = stringResource(R.string.keyword_upcoming_count, item.upcomingCount),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (item.upcomingCount > 0) AccentRed else TextSecondary,
-                        fontWeight = if (item.upcomingCount > 0) FontWeight.SemiBold else FontWeight.Normal
-                    )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Alarm,
+                            contentDescription = null,
+                            modifier = Modifier.size(13.dp),
+                            tint = TextSecondary
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.keyword_upcoming_count, item.upcomingCount),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (item.upcomingCount > 0) AccentRed else TextSecondary,
+                            fontWeight = if (item.upcomingCount > 0) FontWeight.SemiBold else FontWeight.Normal
+                        )
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = if (item.alert.soundUri != null) AccentRed.copy(alpha = 0.15f) else DarkSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.clickable(onClick = onPickSoundClick)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (item.alert.soundUri != null) Icons.Default.MusicNote else Icons.AutoMirrored.Filled.VolumeUp,
+                                contentDescription = null,
+                                modifier = Modifier.size(12.dp),
+                                tint = if (item.alert.soundUri != null) AccentRed else TextSecondary
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = soundTitle,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (item.alert.soundUri != null) AccentRed else TextSecondary,
+                                fontWeight = if (item.alert.soundUri != null) FontWeight.SemiBold else FontWeight.Normal
+                            )
+                        }
+                    }
                 }
             }
 

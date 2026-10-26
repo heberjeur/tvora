@@ -328,4 +328,11 @@
     <string name="action_delete_keyword_only">Keep reminders only</string>
     <string name="keyword_error_duplicate">This keyword is already added</string>
     <string name="keyword_error_empty">Keyword cannot be empty</string>
+    <string name="keyword_notification_title">Keyword Alert: #%1$s</string>
+    <string name="keyword_notification_single_match">%1$s on %2$s (Reminder scheduled)</string>
+    <string name="keyword_notification_multiple_matches">%1$d new programs found for #%2$s (Reminders scheduled)</string>
+    <string name="keyword_sound_label">Sound</string>
+    <string name="keyword_sound_default">Default sound</string>
+    <string name="action_change_sound">Change sound</string>
+    <string name="action_reset_sound">Reset to default sound</string>
 </resources>

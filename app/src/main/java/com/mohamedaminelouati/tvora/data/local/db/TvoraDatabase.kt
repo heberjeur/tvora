@@ -17,7 +17,7 @@ import com.mohamedaminelouati.tvora.data.local.entity.SyncMetadataEntity
         SyncMetadataEntity::class,
         KeywordAlertEntity::class
     ],
-    version = 15,
+    version = 16,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

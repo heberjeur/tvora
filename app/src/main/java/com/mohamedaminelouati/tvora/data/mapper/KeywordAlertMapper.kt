@@ -9,6 +9,7 @@ fun KeywordAlertEntity.toDomain(): KeywordAlert {
         keyword = keyword,
         isEnabled = isEnabled,
         leadTimeMinutes = leadTimeMinutes,
+        soundUri = soundUri,
         createdAt = createdAt
     )
 }
@@ -19,6 +20,7 @@ fun KeywordAlert.toEntity(): KeywordAlertEntity {
         keyword = keyword,
         isEnabled = isEnabled,
         leadTimeMinutes = leadTimeMinutes,
+        soundUri = soundUri,
         createdAt = createdAt
     )
 }

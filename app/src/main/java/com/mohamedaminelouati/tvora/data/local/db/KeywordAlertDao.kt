@@ -37,4 +37,7 @@ interface KeywordAlertDao {
 
     @Query("UPDATE keyword_alerts SET isEnabled = :isEnabled WHERE id = :id")
     suspend fun setKeywordEnabled(id: Long, isEnabled: Boolean)
+
+    @Query("UPDATE keyword_alerts SET soundUri = :soundUri WHERE id = :id")
+    suspend fun setKeywordSound(id: Long, soundUri: String?)
 }
