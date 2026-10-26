@@ -12,5 +12,6 @@ data class Reminder(
     val calendarEventId: Long? = null,
     val isNotificationEnabled: Boolean = true,
     val soundUri: String? = null,
-    val recurrence: String = "once"
+    val recurrence: String = "once",
+    val originKeyword: String? = null
 )

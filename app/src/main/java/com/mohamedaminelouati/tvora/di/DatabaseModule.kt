@@ -3,6 +3,7 @@ package com.mohamedaminelouati.tvora.di
 import android.content.Context
 import androidx.room.Room
 import com.mohamedaminelouati.tvora.data.local.db.ChannelDao
+import com.mohamedaminelouati.tvora.data.local.db.KeywordAlertDao
 import com.mohamedaminelouati.tvora.data.local.db.ProgramDao
 import com.mohamedaminelouati.tvora.data.local.db.ReminderDao
 import com.mohamedaminelouati.tvora.data.local.db.SyncMetadataDao
@@ -39,4 +40,7 @@ object DatabaseModule {
 
     @Provides
     fun provideSyncMetadataDao(database: TvoraDatabase): SyncMetadataDao = database.syncMetadataDao()
+
+    @Provides
+    fun provideKeywordAlertDao(database: TvoraDatabase): KeywordAlertDao = database.keywordAlertDao()
 }

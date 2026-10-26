@@ -30,6 +30,12 @@ interface ProgramDao {
     @Query("SELECT * FROM programs WHERE title LIKE '%' || :query || '%' OR description LIKE '%' || :query || '%' OR directors LIKE '%' || :query || '%' OR actors LIKE '%' || :query || '%' OR presenters LIKE '%' || :query || '%' OR guests LIKE '%' || :query || '%' ORDER BY startTimestamp ASC LIMIT 100")
     fun searchPrograms(query: String): Flow<List<ProgramEntity>>
 
+    @Query("SELECT * FROM programs WHERE (title LIKE '%' || :query || '%' OR description LIKE '%' || :query || '%' OR subTitle LIKE '%' || :query || '%') AND stopTimestamp > :fromTime ORDER BY startTimestamp ASC")
+    suspend fun searchUpcomingProgramsByText(query: String, fromTime: Long): List<ProgramEntity>
+
+    @Query("SELECT * FROM programs WHERE (title LIKE '%' || :query || '%' OR description LIKE '%' || :query || '%' OR subTitle LIKE '%' || :query || '%') AND stopTimestamp > :fromTime ORDER BY startTimestamp ASC")
+    fun searchUpcomingProgramsByTextFlow(query: String, fromTime: Long): Flow<List<ProgramEntity>>
+
     @Query("SELECT * FROM programs WHERE directors LIKE '%' || :personName || '%' OR actors LIKE '%' || :personName || '%' OR presenters LIKE '%' || :personName || '%' OR guests LIKE '%' || :personName || '%' ORDER BY startTimestamp ASC")
     fun getProgramsByPerson(personName: String): Flow<List<ProgramEntity>>
 

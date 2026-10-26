@@ -57,6 +57,7 @@ import com.mohamedaminelouati.tvora.ui.settings.sections.WidgetSettingsSection
 @Composable
 fun SettingsScreen(
     onBackClick: (() -> Unit)? = null,
+    onNavigateToKeywordAlerts: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -281,7 +282,8 @@ fun SettingsScreen(
                 },
                 onSetVibrationEnabled = viewModel::setVibrationEnabled,
                 onSetLeadTime = viewModel::setLeadTime,
-                onSetReminderRecurrence = viewModel::setReminderRecurrence
+                onSetReminderRecurrence = viewModel::setReminderRecurrence,
+                onNavigateToKeywordAlerts = onNavigateToKeywordAlerts
             )
 
             SyncSettingsSection(

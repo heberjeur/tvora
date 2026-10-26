@@ -311,4 +311,21 @@
     <string name="widget_favorites_desc">Displays current programs for your favorite channels in custom order</string>
     <string name="widget_today_label">Tonight on TV</string>
     <string name="widget_today_desc">Displays tonight\'s prime time schedule</string>
+
+    <string name="filter_all">All</string>
+    <string name="filter_manual">Manual</string>
+    <string name="settings_keyword_alerts_title">Keyword Alerts</string>
+    <string name="settings_keyword_alerts_subtitle">Automatically schedule reminders for programs matching keywords</string>
+    <string name="keyword_alerts_title">Keyword Alerts</string>
+    <string name="keyword_input_placeholder">e.g. Artificial Intelligence, Tennis...</string>
+    <string name="action_add">Add</string>
+    <string name="empty_keywords_title">No keyword alerts</string>
+    <string name="empty_keywords_desc">Add keywords to automatically track and schedule reminders whenever matching programs are broadcast.</string>
+    <string name="keyword_upcoming_count">%1$d upcoming reminder(s)</string>
+    <string name="delete_keyword_dialog_title">Delete keyword?</string>
+    <string name="delete_keyword_dialog_desc">Do you also want to remove all reminders automatically created for this keyword?</string>
+    <string name="action_delete_keyword_with_reminders">Delete with reminders</string>
+    <string name="action_delete_keyword_only">Keep reminders only</string>
+    <string name="keyword_error_duplicate">This keyword is already added</string>
+    <string name="keyword_error_empty">Keyword cannot be empty</string>
 </resources>

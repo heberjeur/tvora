@@ -40,4 +40,13 @@ interface ReminderDao {
 
     @Query("DELETE FROM reminders WHERE triggerTimestamp < :cutoffTimestamp")
     suspend fun deleteExpiredReminders(cutoffTimestamp: Long)
+
+    @Query("SELECT * FROM reminders WHERE originKeyword = :keyword")
+    suspend fun getRemindersByOriginKeyword(keyword: String): List<ReminderEntity>
+
+    @Query("DELETE FROM reminders WHERE originKeyword = :keyword")
+    suspend fun deleteRemindersByOriginKeyword(keyword: String)
+
+    @Query("SELECT COUNT(*) FROM reminders WHERE originKeyword = :keyword AND startTimestamp > :now")
+    suspend fun countUpcomingRemindersByKeyword(keyword: String, now: Long): Int
 }

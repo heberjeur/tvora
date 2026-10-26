@@ -24,6 +24,9 @@ class ReminderReceiver : BroadcastReceiver() {
     @Inject
     lateinit var reminderRepository: ReminderRepository
 
+    @Inject
+    lateinit var alarmScheduler: com.mohamedaminelouati.tvora.notification.AlarmScheduler
+
     override fun onReceive(context: Context, intent: Intent) {
         val programId = intent.getLongExtra("extra_program_id", -1L)
         if (programId == -1L) return
@@ -64,37 +67,7 @@ class ReminderReceiver : BroadcastReceiver() {
                     triggerTimestamp = reminder.triggerTimestamp + delta
                 )
                 reminderRepository.saveReminder(updatedReminder)
-
-                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                val nextIntent = Intent(context, ReminderReceiver::class.java).apply {
-                    putExtra("extra_program_id", updatedReminder.programId)
-                    putExtra("extra_title", updatedReminder.title)
-                    putExtra("extra_channel_id", updatedReminder.channelId)
-                    putExtra("extra_lead_time", updatedReminder.leadTimeMinutes)
-                    putExtra("extra_sound_uri", updatedReminder.soundUri)
-                    putExtra("extra_vibration_enabled", vibrationEnabled)
-                }
-
-                val nextPendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    updatedReminder.programId.toInt(),
-                    nextIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-
-                try {
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        updatedReminder.triggerTimestamp,
-                        nextPendingIntent
-                    )
-                } catch (_: SecurityException) {
-                    alarmManager.setAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        updatedReminder.triggerTimestamp,
-                        nextPendingIntent
-                    )
-                }
+                alarmScheduler.schedule(updatedReminder, vibrationEnabled)
             } finally {
                 pendingResult.finish()
             }

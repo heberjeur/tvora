@@ -2,8 +2,11 @@ package com.mohamedaminelouati.tvora.ui.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mohamedaminelouati.tvora.domain.model.KeywordAlert
 import com.mohamedaminelouati.tvora.domain.model.Reminder
+import com.mohamedaminelouati.tvora.domain.repository.KeywordAlertRepository
 import com.mohamedaminelouati.tvora.domain.repository.ReminderRepository
+import com.mohamedaminelouati.tvora.notification.AlarmScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,6 +24,8 @@ import javax.inject.Inject
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
     private val reminderRepository: ReminderRepository,
+    private val keywordAlertRepository: KeywordAlertRepository,
+    private val alarmScheduler: AlarmScheduler,
     private val userPreferences: com.mohamedaminelouati.tvora.data.local.prefs.UserPreferences
 ) : ViewModel() {
 
@@ -34,10 +39,22 @@ class CalendarViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
+    private val _selectedKeywordFilter = MutableStateFlow<String?>(null)
+    val selectedKeywordFilter: StateFlow<String?> = _selectedKeywordFilter.asStateFlow()
+
+    val activeKeywords: StateFlow<List<KeywordAlert>> = keywordAlertRepository.getActiveKeywordAlerts()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val allReminders: StateFlow<List<Reminder>> = reminderRepository.getAllReminders()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val filteredReminders: StateFlow<List<Reminder>> = combine(allReminders, _selectedDate, _searchQuery, displayZoneFlow) { reminders, date, query, zone ->
+    val filteredReminders: StateFlow<List<Reminder>> = combine(
+        allReminders,
+        _selectedDate,
+        _searchQuery,
+        _selectedKeywordFilter,
+        displayZoneFlow
+    ) { reminders, date, query, filter, zone ->
         reminders.filter { reminder ->
             val reminderDate = Instant.ofEpochMilli(reminder.startTimestamp).atZone(zone).toLocalDate()
             val matchesDate = when (reminder.recurrence) {
@@ -49,7 +66,12 @@ class CalendarViewModel @Inject constructor(
             val matchesQuery = query.isBlank() ||
                 reminder.title.contains(query, ignoreCase = true) ||
                 reminder.channelId.contains(query, ignoreCase = true)
-            matchesDate && matchesQuery
+            val matchesKeyword = when (filter) {
+                null -> true
+                "__manual__" -> reminder.originKeyword == null
+                else -> reminder.originKeyword.equals(filter, ignoreCase = true)
+            }
+            matchesDate && matchesQuery && matchesKeyword
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -61,8 +83,13 @@ class CalendarViewModel @Inject constructor(
         _searchQuery.value = query
     }
 
+    fun selectKeywordFilter(filter: String?) {
+        _selectedKeywordFilter.value = filter
+    }
+
     fun removeReminder(programId: Long) {
         viewModelScope.launch {
+            alarmScheduler.cancel(programId)
             reminderRepository.deleteReminder(programId)
         }
     }

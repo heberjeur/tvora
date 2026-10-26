@@ -16,7 +16,8 @@ fun ReminderEntity.toDomain(): Reminder {
         calendarEventId = calendarEventId,
         isNotificationEnabled = isNotificationEnabled,
         soundUri = soundUri,
-        recurrence = recurrence
+        recurrence = recurrence,
+        originKeyword = originKeyword
     )
 }
 
@@ -33,6 +34,7 @@ fun Reminder.toEntity(): ReminderEntity {
         calendarEventId = calendarEventId,
         isNotificationEnabled = isNotificationEnabled,
         soundUri = soundUri,
-        recurrence = recurrence
+        recurrence = recurrence,
+        originKeyword = originKeyword
     )
 }

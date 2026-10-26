@@ -25,5 +25,7 @@ data class ReminderEntity(
     val isNotificationEnabled: Boolean,
     val soundUri: String?,
     @androidx.room.ColumnInfo(defaultValue = "'once'")
-    val recurrence: String = "once"
+    val recurrence: String = "once",
+    @androidx.room.ColumnInfo(defaultValue = "NULL")
+    val originKeyword: String? = null
 )

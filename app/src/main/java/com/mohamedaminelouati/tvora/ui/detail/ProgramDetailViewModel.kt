@@ -34,6 +34,7 @@ class ProgramDetailViewModel @Inject constructor(
     private val reminderRepository: ReminderRepository,
     private val epgRepository: EpgRepository,
     private val userPreferences: UserPreferences,
+    private val alarmScheduler: com.mohamedaminelouati.tvora.notification.AlarmScheduler,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -145,50 +146,19 @@ class ProgramDetailViewModel @Inject constructor(
         if (triggerTime <= System.currentTimeMillis()) return
 
         val vibrationEnabled = userPreferences.vibrationEnabled.first()
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, ReminderReceiver::class.java).apply {
-            putExtra("extra_program_id", program.id)
-            putExtra("extra_title", program.title)
-            putExtra("extra_channel_id", program.channelId)
-            putExtra("extra_lead_time", leadTime)
-            putExtra("extra_sound_uri", soundUri)
-            putExtra("extra_vibration_enabled", vibrationEnabled)
-        }
-
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            program.id.toInt(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        val tempReminder = Reminder(
+            programId = program.id,
+            channelId = program.channelId,
+            title = program.title,
+            startTimestamp = program.startTimestamp,
+            triggerTimestamp = triggerTime,
+            leadTimeMinutes = leadTime,
+            soundUri = soundUri
         )
-
-        try {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                triggerTime,
-                pendingIntent
-            )
-        } catch (_: SecurityException) {
-            alarmManager.setAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                triggerTime,
-                pendingIntent
-            )
-        }
+        alarmScheduler.schedule(tempReminder, vibrationEnabled)
     }
 
     private fun cancelAlarm(reminder: Reminder) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, ReminderReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            reminder.programId.toInt(),
-            intent,
-            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
-        )
-        if (pendingIntent != null) {
-            alarmManager.cancel(pendingIntent)
-            pendingIntent.cancel()
-        }
+        alarmScheduler.cancel(reminder.programId)
     }
 }

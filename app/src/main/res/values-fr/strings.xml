@@ -311,4 +311,21 @@
     <string name="widget_favorites_desc">Affiche les programmes en cours de vos chaînes favorites selon votre ordre</string>
     <string name="widget_today_label">Ce soir à la TV</string>
     <string name="widget_today_desc">Affiche la grille des programmes en première partie de soirée</string>
+
+    <string name="filter_all">Tous</string>
+    <string name="filter_manual">Manuels</string>
+    <string name="settings_keyword_alerts_title">Alertes par mots-clés</string>
+    <string name="settings_keyword_alerts_subtitle">Programmer automatiquement des rappels pour les émissions contenant des mots-clés</string>
+    <string name="keyword_alerts_title">Alertes par mots-clés</string>
+    <string name="keyword_input_placeholder">ex. Intelligence artificielle, Tennis...</string>
+    <string name="action_add">Ajouter</string>
+    <string name="empty_keywords_title">Aucune alerte mot-clé</string>
+    <string name="empty_keywords_desc">Ajoutez des mots-clés pour programmer automatiquement des rappels dès qu\'une émission correspondante est diffusée.</string>
+    <string name="keyword_upcoming_count">%1$d rappel(s) à venir</string>
+    <string name="delete_keyword_dialog_title">Supprimer le mot-clé ?</string>
+    <string name="delete_keyword_dialog_desc">Voulez-vous aussi supprimer tous les rappels automatiquement créés pour ce mot-clé ?</string>
+    <string name="action_delete_keyword_with_reminders">Supprimer avec les rappels</string>
+    <string name="action_delete_keyword_only">Garder les rappels</string>
+    <string name="keyword_error_duplicate">Ce mot-clé a déjà été ajouté</string>
+    <string name="keyword_error_empty">Le mot-clé ne peut pas être vide</string>
 </resources>

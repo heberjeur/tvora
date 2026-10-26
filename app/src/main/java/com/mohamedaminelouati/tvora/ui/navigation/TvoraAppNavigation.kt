@@ -42,6 +42,7 @@ import com.mohamedaminelouati.tvora.ui.series.SeriesEpisodesScreen
 import com.mohamedaminelouati.tvora.ui.guide.GuideScreen
 import com.mohamedaminelouati.tvora.ui.now.NowPlayingScreen
 import com.mohamedaminelouati.tvora.ui.settings.SettingsScreen
+import com.mohamedaminelouati.tvora.ui.settings.keyword.KeywordAlertsScreen
 import com.mohamedaminelouati.tvora.ui.theme.AccentRed
 
 sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector) {
@@ -287,6 +288,12 @@ private fun AppNavHost(
             }
             composable(Screen.Settings.route) {
                 SettingsScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onNavigateToKeywordAlerts = { navController.navigate("settings/keywords") }
+                )
+            }
+            composable("settings/keywords") {
+                KeywordAlertsScreen(
                     onBackClick = { navController.popBackStack() }
                 )
             }

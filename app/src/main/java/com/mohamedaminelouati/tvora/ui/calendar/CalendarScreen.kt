@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -35,6 +36,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -64,6 +67,7 @@ import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import com.mohamedaminelouati.tvora.R
 import com.mohamedaminelouati.tvora.data.local.ChannelCatalog
+import com.mohamedaminelouati.tvora.domain.model.KeywordAlert
 import com.mohamedaminelouati.tvora.domain.model.Reminder
 import com.mohamedaminelouati.tvora.ui.theme.AccentRed
 import com.mohamedaminelouati.tvora.ui.theme.DarkBackground
@@ -97,6 +101,8 @@ fun CalendarScreen(
     val allReminders by viewModel.allReminders.collectAsStateWithLifecycle()
     val filteredReminders by viewModel.filteredReminders.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val activeKeywords by viewModel.activeKeywords.collectAsStateWithLifecycle()
+    val selectedKeywordFilter by viewModel.selectedKeywordFilter.collectAsStateWithLifecycle()
     var isSearchActive by remember { mutableStateOf(false) }
 
     val zone = com.mohamedaminelouati.tvora.ui.theme.LocalDisplayZone.current
@@ -223,6 +229,9 @@ fun CalendarScreen(
                     currentLocale = currentLocale,
                     filteredReminders = filteredReminders,
                     searchQuery = searchQuery,
+                    activeKeywords = activeKeywords,
+                    selectedKeywordFilter = selectedKeywordFilter,
+                    onSelectKeywordFilter = viewModel::selectKeywordFilter,
                     onProgramClick = onProgramClick,
                     onDeleteReminder = viewModel::removeReminder,
                     onChannelClick = onChannelClick,
@@ -255,6 +264,9 @@ fun CalendarScreen(
                     currentLocale = currentLocale,
                     filteredReminders = filteredReminders,
                     searchQuery = searchQuery,
+                    activeKeywords = activeKeywords,
+                    selectedKeywordFilter = selectedKeywordFilter,
+                    onSelectKeywordFilter = viewModel::selectKeywordFilter,
                     onProgramClick = onProgramClick,
                     onDeleteReminder = viewModel::removeReminder,
                     onChannelClick = onChannelClick,
@@ -428,6 +440,9 @@ private fun CalendarRemindersSection(
     currentLocale: Locale,
     filteredReminders: List<Reminder>,
     searchQuery: String,
+    activeKeywords: List<KeywordAlert>,
+    selectedKeywordFilter: String?,
+    onSelectKeywordFilter: (String?) -> Unit,
     onProgramClick: (Long) -> Unit,
     onDeleteReminder: (Long) -> Unit,
     onChannelClick: (String) -> Unit,
@@ -453,6 +468,58 @@ private fun CalendarRemindersSection(
                 style = MaterialTheme.typography.bodySmall,
                 color = TextSecondary
             )
+        }
+
+        if (activeKeywords.isNotEmpty()) {
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    FilterChip(
+                        selected = selectedKeywordFilter == null,
+                        onClick = { onSelectKeywordFilter(null) },
+                        label = { Text(stringResource(R.string.filter_all)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = AccentRed,
+                            selectedLabelColor = Color.White,
+                            containerColor = DarkSurfaceVariant,
+                            labelColor = TextSecondary
+                        ),
+                        border = null
+                    )
+                }
+                item {
+                    FilterChip(
+                        selected = selectedKeywordFilter == "__manual__",
+                        onClick = { onSelectKeywordFilter("__manual__") },
+                        label = { Text(stringResource(R.string.filter_manual)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = AccentRed,
+                            selectedLabelColor = Color.White,
+                            containerColor = DarkSurfaceVariant,
+                            labelColor = TextSecondary
+                        ),
+                        border = null
+                    )
+                }
+                items(activeKeywords, key = { it.id }) { kw ->
+                    FilterChip(
+                        selected = selectedKeywordFilter == kw.keyword,
+                        onClick = { onSelectKeywordFilter(kw.keyword) },
+                        label = { Text("#${kw.keyword}") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = AccentRed,
+                            selectedLabelColor = Color.White,
+                            containerColor = DarkSurfaceVariant,
+                            labelColor = TextSecondary
+                        ),
+                        border = null
+                    )
+                }
+            }
         }
 
         if (filteredReminders.isEmpty()) {
@@ -608,6 +675,21 @@ private fun CalendarReminderItem(
                         style = MaterialTheme.typography.labelSmall,
                         color = TextSecondary
                     )
+                    reminder.originKeyword?.let { kw ->
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = AccentRed.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = "#$kw",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = AccentRed,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
                 }
             }
 

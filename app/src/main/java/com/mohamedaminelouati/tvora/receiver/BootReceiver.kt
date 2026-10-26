@@ -18,6 +18,9 @@ class BootReceiver : BroadcastReceiver() {
     @Inject
     lateinit var reminderRepository: ReminderRepository
 
+    @Inject
+    lateinit var alarmScheduler: com.mohamedaminelouati.tvora.notification.AlarmScheduler
+
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
 
@@ -26,37 +29,8 @@ class BootReceiver : BroadcastReceiver() {
             try {
                 val now = System.currentTimeMillis()
                 val upcoming = reminderRepository.getUpcomingReminders(now)
-                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
                 for (reminder in upcoming) {
-                    val reminderIntent = Intent(context, ReminderReceiver::class.java).apply {
-                        putExtra("extra_program_id", reminder.programId)
-                        putExtra("extra_title", reminder.title)
-                        putExtra("extra_channel_id", reminder.channelId)
-                        putExtra("extra_lead_time", reminder.leadTimeMinutes)
-                        putExtra("extra_sound_uri", reminder.soundUri)
-                    }
-
-                    val pendingIntent = PendingIntent.getBroadcast(
-                        context,
-                        reminder.programId.toInt(),
-                        reminderIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                    )
-
-                    try {
-                        alarmManager.setExactAndAllowWhileIdle(
-                            AlarmManager.RTC_WAKEUP,
-                            reminder.triggerTimestamp,
-                            pendingIntent
-                        )
-                    } catch (_: SecurityException) {
-                        alarmManager.setAndAllowWhileIdle(
-                            AlarmManager.RTC_WAKEUP,
-                            reminder.triggerTimestamp,
-                            pendingIntent
-                        )
-                    }
+                    alarmScheduler.schedule(reminder)
                 }
             } finally {
                 pendingResult.finish()
