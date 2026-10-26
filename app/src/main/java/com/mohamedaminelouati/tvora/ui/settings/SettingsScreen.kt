@@ -46,6 +46,7 @@ import com.mohamedaminelouati.tvora.ui.settings.dialogs.TimezoneDialog
 import com.mohamedaminelouati.tvora.ui.settings.sections.AppearanceSettingsSection
 import com.mohamedaminelouati.tvora.ui.settings.sections.ChannelSettingsSection
 import com.mohamedaminelouati.tvora.ui.settings.sections.DisplayBadgesSettingsSection
+import com.mohamedaminelouati.tvora.ui.settings.sections.KeywordAlertsSettingsSection
 import com.mohamedaminelouati.tvora.ui.settings.sections.LanguageSettingsSection
 import com.mohamedaminelouati.tvora.ui.settings.sections.NotificationSettingsSection
 import com.mohamedaminelouati.tvora.ui.settings.sections.StorageSettingsSection
@@ -97,6 +98,7 @@ fun SettingsScreen(
     val vibrationEnabled by viewModel.vibrationEnabled.collectAsStateWithLifecycle()
     val widgetTheme by viewModel.widgetTheme.collectAsStateWithLifecycle()
     val widgetShowProgress by viewModel.widgetShowProgress.collectAsStateWithLifecycle()
+    val keywordAlertsCount by viewModel.keywordAlertsCount.collectAsStateWithLifecycle()
 
     var showFavoritesDialog by remember { mutableStateOf(false) }
     var showHiddenDialog by remember { mutableStateOf(false) }
@@ -282,9 +284,15 @@ fun SettingsScreen(
                 },
                 onSetVibrationEnabled = viewModel::setVibrationEnabled,
                 onSetLeadTime = viewModel::setLeadTime,
-                onSetReminderRecurrence = viewModel::setReminderRecurrence,
-                onNavigateToKeywordAlerts = onNavigateToKeywordAlerts
+                onSetReminderRecurrence = viewModel::setReminderRecurrence
             )
+
+            if (onNavigateToKeywordAlerts != null) {
+                KeywordAlertsSettingsSection(
+                    keywordAlertsCount = keywordAlertsCount,
+                    onNavigateToKeywordAlerts = onNavigateToKeywordAlerts
+                )
+            }
 
             SyncSettingsSection(
                 syncFrequencyHours = syncFrequencyHours,

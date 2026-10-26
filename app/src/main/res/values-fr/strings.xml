@@ -335,4 +335,7 @@
     <string name="keyword_sound_default">Sonnerie par défaut</string>
     <string name="action_change_sound">Modifier la sonnerie</string>
     <string name="action_reset_sound">Rétablir le son par défaut</string>
+    <string name="settings_manage_keyword_alerts">Configurer</string>
+    <string name="settings_keyword_alerts_count">%1$d alerte(s) mot-clé active(s)</string>
+    <string name="settings_keyword_alerts_none">Aucune alerte mot-clé configurée</string>
 </resources>

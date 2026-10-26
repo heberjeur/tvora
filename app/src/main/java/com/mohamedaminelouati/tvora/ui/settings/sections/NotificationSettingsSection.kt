@@ -52,7 +52,6 @@ fun NotificationSettingsSection(
     onSetVibrationEnabled: (Boolean) -> Unit,
     onSetLeadTime: (Int) -> Unit,
     onSetReminderRecurrence: (String) -> Unit,
-    onNavigateToKeywordAlerts: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -217,41 +216,6 @@ fun NotificationSettingsSection(
                             ),
                             border = null,
                             shape = RoundedCornerShape(8.dp)
-                        )
-                    }
-                }
-
-                if (onNavigateToKeywordAlerts != null) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable(onClick = onNavigateToKeywordAlerts)
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.settings_keyword_alerts_title),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = stringResource(R.string.settings_keyword_alerts_subtitle),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

@@ -335,4 +335,7 @@
     <string name="keyword_sound_default">Default sound</string>
     <string name="action_change_sound">Change sound</string>
     <string name="action_reset_sound">Reset to default sound</string>
+    <string name="settings_manage_keyword_alerts">Configure</string>
+    <string name="settings_keyword_alerts_count">%1$d keyword alert(s) active</string>
+    <string name="settings_keyword_alerts_none">No keyword alerts configured</string>
 </resources>

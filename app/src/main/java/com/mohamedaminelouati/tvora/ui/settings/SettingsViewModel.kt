@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -31,14 +32,20 @@ import javax.inject.Inject
 
 import com.mohamedaminelouati.tvora.domain.model.Channel
 import com.mohamedaminelouati.tvora.domain.repository.EpgRepository
+import com.mohamedaminelouati.tvora.domain.repository.KeywordAlertRepository
 
 @OptIn(coil.annotation.ExperimentalCoilApi::class)
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val userPreferences: UserPreferences,
     private val epgRepository: EpgRepository,
+    private val keywordAlertRepository: KeywordAlertRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
+
+    val keywordAlertsCount: StateFlow<Int> = keywordAlertRepository.getAllKeywordAlerts()
+        .map { it.size }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
 
     val appLanguage: StateFlow<String> = userPreferences.appLanguage
