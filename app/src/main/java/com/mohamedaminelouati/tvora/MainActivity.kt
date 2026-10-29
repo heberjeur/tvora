@@ -29,11 +29,20 @@ import com.mohamedaminelouati.tvora.ui.theme.LocalDisplayDensity
 import com.mohamedaminelouati.tvora.ui.theme.LocalHighlightAccessibility
 import com.mohamedaminelouati.tvora.ui.theme.LocalFontSizeScale
 
+import androidx.lifecycle.lifecycleScope
+import com.mohamedaminelouati.tvora.domain.model.ChannelPackage
+import com.mohamedaminelouati.tvora.domain.repository.EpgRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var userPreferences: UserPreferences
+
+    @Inject
+    lateinit var epgRepository: EpgRepository
 
     private var pendingProgramId by mutableStateOf<Long?>(null)
 
@@ -41,6 +50,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         handleIntent(intent)
         applySavedLocale()
+        lifecycleScope.launch(Dispatchers.IO) {
+            epgRepository.syncEpg(ChannelPackage.COMMUNITY_ENRICHED, forceRefresh = false)
+        }
         enableEdgeToEdge()
         setContent {
             val appLanguage by userPreferences.appLanguage.collectAsStateWithLifecycle(initialValue = "fr")

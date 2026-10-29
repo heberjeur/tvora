@@ -63,6 +63,9 @@ interface ProgramDao {
     @Query("SELECT COUNT(*) FROM programs")
     suspend fun getProgramCount(): Int
 
+    @Query("SELECT MAX(stopTimestamp) FROM programs")
+    suspend fun getLatestProgramTimestamp(): Long?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPrograms(programs: List<ProgramEntity>)
 

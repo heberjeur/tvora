@@ -38,6 +38,10 @@ class GuideViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
+    init {
+        refresh(force = false)
+    }
+
     fun refresh(force: Boolean = true) {
         viewModelScope.launch {
             _isRefreshing.value = true

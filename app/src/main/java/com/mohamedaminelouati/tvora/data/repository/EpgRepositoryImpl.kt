@@ -76,7 +76,9 @@ class EpgRepositoryImpl @Inject constructor(
             userPreferences.appLanguage.distinctUntilChanged().collect { lang ->
                 val lastLang = userPreferences.lastSyncedLanguage.first()
                 val cachedCount = programDao.getProgramCount()
-                if (cachedCount == 0 || (lastLang != null && lastLang != lang)) {
+                val latestTimestamp = programDao.getLatestProgramTimestamp() ?: 0L
+                val now = System.currentTimeMillis()
+                if (cachedCount == 0 || (lastLang != null && lastLang != lang) || latestTimestamp < now) {
                     preloadFeed(ChannelPackage.COMMUNITY_ENRICHED, lang)
                 }
             }
@@ -207,7 +209,9 @@ class EpgRepositoryImpl @Inject constructor(
             val metadata = syncMetadataDao.getSyncMetadataDirect(channelPackage.id)
             val syncFrequencyHours = userPreferences.syncFrequencyHours.first().coerceIn(1, 48)
             val staleThresholdMillis = syncFrequencyHours * 3600 * 1000L
-            val isStale = metadata == null || (now - metadata.lastSyncTimestamp) > staleThresholdMillis
+            val latestTimestamp = programDao.getLatestProgramTimestamp() ?: 0L
+            val hasActivePrograms = latestTimestamp >= now
+            val isStale = metadata == null || (now - metadata.lastSyncTimestamp) > staleThresholdMillis || !hasActivePrograms
 
             if (!effectiveForceRefresh && !isStale && cachedCount > 0) {
                 _syncProgress.value = SyncProgress(
@@ -218,7 +222,7 @@ class EpgRepositoryImpl @Inject constructor(
                 return@withContext Result.success(Unit)
             }
 
-            if (!connectivityObserver.isConnected()) {
+            if (!effectiveForceRefresh && !connectivityObserver.isConnected()) {
                 _syncProgress.value = SyncProgress(
                     state = SyncState.IDLE,
                     programCount = cachedCount,
@@ -363,11 +367,11 @@ class EpgRepositoryImpl @Inject constructor(
                 Result.success(Unit)
             } else if (cachedCount > 0) {
                 _syncProgress.value = SyncProgress(
-                    state = SyncState.IDLE,
+                    state = SyncState.ERROR,
                     programCount = cachedCount,
                     lastSyncTimestamp = metadata?.lastSyncTimestamp ?: now
                 )
-                Result.success(Unit)
+                Result.failure(lastException ?: IOException("Failed to sync EPG from all sources"))
             } else {
                 _syncProgress.value = SyncProgress(
                     state = SyncState.ERROR

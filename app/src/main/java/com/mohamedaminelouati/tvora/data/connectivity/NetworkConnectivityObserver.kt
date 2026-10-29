@@ -51,6 +51,7 @@ class NetworkConnectivityObserver @Inject constructor(
     override fun isConnected(): Boolean {
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) ||
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
     }
 }
