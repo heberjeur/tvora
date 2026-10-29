@@ -71,14 +71,20 @@ class EpgRepositoryImpl @Inject constructor(
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _syncProgress = MutableStateFlow(SyncProgress())
 
+    companion object {
+        const val CURRENT_EPG_ASSET_VERSION = 2
+    }
+
     init {
         repositoryScope.launch {
             userPreferences.appLanguage.distinctUntilChanged().collect { lang ->
                 val lastLang = userPreferences.lastSyncedLanguage.first()
+                val lastAssetVersion = userPreferences.lastSyncedAssetVersion.first()
+                val assetVersionOutdated = lastAssetVersion < CURRENT_EPG_ASSET_VERSION
                 val cachedCount = programDao.getProgramCount()
                 val latestTimestamp = programDao.getLatestProgramTimestamp() ?: 0L
                 val now = System.currentTimeMillis()
-                if (cachedCount == 0 || (lastLang != null && lastLang != lang) || latestTimestamp < now) {
+                if (cachedCount == 0 || (lastLang != null && lastLang != lang) || latestTimestamp < now || assetVersionOutdated) {
                     preloadFeed(ChannelPackage.COMMUNITY_ENRICHED, lang)
                 }
             }
@@ -195,12 +201,14 @@ class EpgRepositoryImpl @Inject constructor(
             val now = System.currentTimeMillis()
             val currentLanguage = userPreferences.appLanguage.first()
             val lastLanguage = userPreferences.lastSyncedLanguage.first() ?: "fr"
+            val lastAssetVersion = userPreferences.lastSyncedAssetVersion.first()
+            val assetVersionOutdated = lastAssetVersion < CURRENT_EPG_ASSET_VERSION
             val languageChanged = lastLanguage != currentLanguage
             val effectiveForceRefresh = forceRefresh
 
             var cachedCount = programDao.getProgramCount()
 
-            if (cachedCount == 0 || languageChanged) {
+            if (cachedCount == 0 || languageChanged || assetVersionOutdated) {
                 _syncProgress.value = SyncProgress(state = SyncState.PARSING)
                 preloadFeed(channelPackage, currentLanguage)
                 cachedCount = programDao.getProgramCount()
@@ -468,6 +476,7 @@ class EpgRepositoryImpl @Inject constructor(
         )
 
         userPreferences.setLastSyncedLanguage(lang)
+        userPreferences.setLastSyncedAssetVersion(CURRENT_EPG_ASSET_VERSION)
         _syncProgress.value = SyncProgress(
             state = SyncState.IDLE,
             programCount = allPrograms.size,

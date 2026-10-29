@@ -27,6 +27,7 @@ class UserPreferences @Inject constructor(
     private val keyChannelGridMode = booleanPreferencesKey("channel_grid_mode")
     private val keyAppLanguage = stringPreferencesKey("app_language")
     private val keyLastSyncedLanguage = stringPreferencesKey("last_synced_language")
+    private val keyLastSyncedAssetVersion = intPreferencesKey("last_synced_asset_version")
     private val keySyncFrequencyHours = intPreferencesKey("sync_frequency_hours")
     private val keySyncWifiOnly = booleanPreferencesKey("sync_wifi_only")
     private val keySyncChargingOnly = booleanPreferencesKey("sync_charging_only")
@@ -76,6 +77,10 @@ class UserPreferences @Inject constructor(
 
     val lastSyncedLanguage: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[keyLastSyncedLanguage]
+    }
+
+    val lastSyncedAssetVersion: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[keyLastSyncedAssetVersion] ?: 0
     }
 
     val syncFrequencyHours: Flow<Int> = context.dataStore.data.map { preferences ->
@@ -229,6 +234,12 @@ class UserPreferences @Inject constructor(
     suspend fun setLastSyncedLanguage(language: String) {
         context.dataStore.edit { preferences ->
             preferences[keyLastSyncedLanguage] = language
+        }
+    }
+
+    suspend fun setLastSyncedAssetVersion(version: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[keyLastSyncedAssetVersion] = version
         }
     }
 

@@ -17,6 +17,14 @@ const HTTP_HEADERS = {
   'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7'
 };
 
+const RAW_CHANNEL_ALIASES = {
+  'NT1.fr': 'TFX.fr',
+  'LaChaineParlementaire.fr': 'LCP.fr',
+  'LEquipe21.fr': 'LEquipe.fr',
+  'Numero23.fr': 'RMCStory.fr',
+  'Cherie25.fr': 'RMCLife.fr'
+};
+
 const detailCache = new Map();
 const pageHtmlCache = new Map();
 
@@ -30,11 +38,15 @@ async function loadXmltvReference(channels) {
     const map = new Map();
     $root('channel').each((_, el) => {
       const rawId = $root(el).attr('id');
+      if (!rawId) return;
       const dispName = cleanTitle($root(el).find('display-name').text());
+      const aliasTargetId = RAW_CHANNEL_ALIASES[rawId];
       const matched = channels.find(c => {
+        if (aliasTargetId && c.id === aliasTargetId) return true;
         const cName = cleanTitle(c.name);
         const cId = cleanTitle(c.id);
-        return cName === dispName || cId === cleanTitle(rawId) || (cName.length > 3 && dispName.includes(cName)) || (dispName.length > 3 && cName.includes(dispName));
+        const rawClean = cleanTitle(rawId);
+        return cName === dispName || cId === rawClean;
       });
       if (matched) {
         map.set(rawId, matched.id);
@@ -43,7 +55,7 @@ async function loadXmltvReference(channels) {
     return map;
   };
 
-  const registerEntry = (channel, start, stop, desc, subTitle, title, rating, category, credits, season, episode, year, seriesYear, country, icon, channelMap, isUnreleased = false, isRerun = false, hasSubtitles = false, isHd = false) => {
+  const registerEntry = (channel, start, stop, desc, subTitle, title, rating, category, credits, season, episode, year, seriesYear, country, icon, channelMap, isUnreleased = false, isRerun = false, hasSubtitles = false, isHd = false, allowProgramsList = true) => {
     if (!channel || !start || !title) return;
     const entry = {
       channelId: channel,
@@ -80,11 +92,15 @@ async function loadXmltvReference(channels) {
     for (const ch of targetChannels) {
       if (entry.desc && entry.desc.length > 5) {
         const timeKey = `${ch}_${start.substring(0, 12)}`;
-        timeMap.set(timeKey, entry);
+        if (!timeMap.has(timeKey)) {
+          timeMap.set(timeKey, entry);
+        }
 
         if (entry.subTitle) {
           const daySubKey = `${ch}_${start.substring(0, 8)}_${cleanTitle(title)}_${cleanTitle(entry.subTitle)}`;
-          titleMap.set(daySubKey, entry);
+          if (!titleMap.has(daySubKey)) {
+            titleMap.set(daySubKey, entry);
+          }
         }
 
         const dayKey = `${ch}_${start.substring(0, 8)}_${cleanTitle(title)}`;
@@ -98,7 +114,7 @@ async function loadXmltvReference(channels) {
         }
       }
 
-      if (entry.start) {
+      if (allowProgramsList && entry.start) {
         const progDayKey = `${ch}_${start.substring(0, 8)}`;
         if (!channelProgramsMap.has(progDayKey)) {
           channelProgramsMap.set(progDayKey, []);
@@ -205,7 +221,7 @@ async function loadXmltvReference(channels) {
         const hasSubtitles = $xml(el).find('subtitles').length > 0;
         const isHd = $xml(el).find('video quality').text().toUpperCase().includes('HD');
 
-        registerEntry(channel, start, stop, desc, subTitle, title, rating, category, { presenters, actors, directors }, season, episode, year, seriesYear, country, icon, channelMap, isUnreleased, isRerun, hasSubtitles, isHd);
+        registerEntry(channel, start, stop, desc, subTitle, title, rating, category, { presenters, actors, directors }, season, episode, year, seriesYear, country, icon, channelMap, isUnreleased, isRerun, hasSubtitles, isHd, false);
       }
     });
   } catch (err) {
