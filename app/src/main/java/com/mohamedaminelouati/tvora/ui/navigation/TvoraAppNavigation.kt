@@ -100,7 +100,8 @@ fun TvoraAppNavigation(
                     bottomNavItems.forEach { screen ->
                         val isSelected = currentRoute == screen.route ||
                             (screen == Screen.Guide && currentRoute?.startsWith("guide") == true) ||
-                            (screen == Screen.Categories && currentRoute?.startsWith("categories") == true)
+                            (screen == Screen.Categories && currentRoute?.startsWith("categories") == true) ||
+                            (screen == Screen.Calendar && currentRoute?.startsWith("calendar") == true)
                         androidx.compose.material3.NavigationRailItem(
                             selected = isSelected,
                             onClick = {
@@ -158,7 +159,8 @@ fun TvoraAppNavigation(
                         bottomNavItems.forEach { screen ->
                             val isSelected = currentRoute == screen.route ||
                                 (screen == Screen.Guide && currentRoute?.startsWith("guide") == true) ||
-                                (screen == Screen.Categories && currentRoute?.startsWith("categories") == true)
+                                (screen == Screen.Categories && currentRoute?.startsWith("categories") == true) ||
+                                (screen == Screen.Calendar && currentRoute?.startsWith("calendar") == true)
                             NavigationBarItem(
                                 selected = isSelected,
                                 onClick = {
@@ -267,7 +269,20 @@ private fun AppNavHost(
                     }
                 )
             }
-            composable(Screen.Calendar.route) {
+            composable(
+                route = "calendar?keyword={keyword}&allUpcoming={allUpcoming}",
+                arguments = listOf(
+                    navArgument("keyword") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                    navArgument("allUpcoming") {
+                        type = NavType.BoolType
+                        defaultValue = false
+                    }
+                )
+            ) {
                 CalendarScreen(
                     onProgramClick = { programId ->
                         navController.navigate("program/$programId")
@@ -294,7 +309,11 @@ private fun AppNavHost(
             }
             composable("settings/keywords") {
                 KeywordAlertsScreen(
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { navController.popBackStack() },
+                    onNavigateToCalendar = { keyword ->
+                        val encoded = if (keyword != null) java.net.URLEncoder.encode(keyword, "UTF-8") else ""
+                        navController.navigate("calendar?keyword=$encoded&allUpcoming=true")
+                    }
                 )
             }
             composable(

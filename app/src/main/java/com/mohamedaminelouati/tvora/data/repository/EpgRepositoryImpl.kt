@@ -126,6 +126,10 @@ class EpgRepositoryImpl @Inject constructor(
         return programDao.getProgramById(programId).map { it?.toDomain() }
     }
 
+    override suspend fun getProgramByChannelAndStart(channelId: String, startTimestamp: Long): Program? {
+        return programDao.getProgramByChannelAndStart(channelId, startTimestamp)?.toDomain()
+    }
+
     override fun searchPrograms(query: String): Flow<List<Program>> {
         return programDao.searchPrograms(query).map { list ->
             list.map { it.toDomain() }
@@ -326,6 +330,7 @@ class EpgRepositoryImpl @Inject constructor(
                         if (allPrograms.isNotEmpty()) {
                             programDao.insertPrograms(allPrograms)
                         }
+                        database.reminderDao().reconcileProgramIds()
                     }
 
                     val totalPrograms = allPrograms.size
@@ -462,6 +467,7 @@ class EpgRepositoryImpl @Inject constructor(
             if (allPrograms.isNotEmpty()) {
                 programDao.insertPrograms(allPrograms)
             }
+            database.reminderDao().reconcileProgramIds()
         }
 
         val now = System.currentTimeMillis()

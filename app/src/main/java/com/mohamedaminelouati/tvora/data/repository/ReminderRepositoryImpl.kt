@@ -27,7 +27,8 @@ class ReminderRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getReminder(programId: Long): Reminder? {
-        return reminderDao.getReminderForProgramDirect(programId)?.toDomain()
+        return (reminderDao.getReminderForProgramDirect(programId)
+            ?: reminderDao.getReminderById(programId))?.toDomain()
     }
 
     override suspend fun getUpcomingReminders(currentTimestamp: Long): List<Reminder> {
@@ -66,5 +67,9 @@ class ReminderRepositoryImpl @Inject constructor(
 
     override suspend fun deleteExpiredReminders(cutoffTimestamp: Long) {
         reminderDao.deleteExpiredReminders(cutoffTimestamp)
+    }
+
+    override suspend fun reconcileProgramIds() {
+        reminderDao.reconcileProgramIds()
     }
 }

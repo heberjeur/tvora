@@ -46,7 +46,11 @@
     <string name="calendar_empty_title">No reminders scheduled</string>
     <string name="calendar_empty_desc">Add reminders from the guide or program details to track your shows.</string>
     <string name="calendar_no_reminders_day">No reminders scheduled for this day</string>
+    <string name="calendar_no_reminders_all">No upcoming reminders scheduled</string>
     <string name="calendar_reminders_count">%1$d reminder(s)</string>
+    <string name="calendar_scope_day">This day</string>
+    <string name="calendar_scope_upcoming">All upcoming (%1$d)</string>
+    <string name="calendar_group_manual">Individual reminders</string>
     <string name="reminder_at_airtime">At start time</string>
     <string name="reminder_lead_time_format">%1$d min before</string>
     <string name="reminder_active">Reminder set</string>

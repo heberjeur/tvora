@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -41,10 +42,30 @@ class ProgramDetailViewModel @Inject constructor(
     private val programId: Long = checkNotNull(savedStateHandle["programId"])
 
     val program: StateFlow<Program?> = epgRepository.getProgramById(programId)
+        .flatMapLatest { prog ->
+            if (prog != null) {
+                flowOf<Program?>(prog)
+            } else {
+                flow<Program?> {
+                    val rem = reminderRepository.getReminder(programId)
+                    if (rem != null) {
+                        val recovered = epgRepository.getProgramByChannelAndStart(rem.channelId, rem.startTimestamp)
+                        emit(recovered)
+                    } else {
+                        emit(null)
+                    }
+                }
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    val reminder: StateFlow<Reminder?> = reminderRepository.getReminderForProgram(programId)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    val reminder: StateFlow<Reminder?> = program.flatMapLatest { prog ->
+        if (prog != null) {
+            reminderRepository.getReminderForProgram(prog.id)
+        } else {
+            reminderRepository.getReminderForProgram(programId)
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val defaultLeadTimeMinutes: StateFlow<Int> = userPreferences.reminderLeadTimeMinutes
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
@@ -69,6 +90,7 @@ class ProgramDetailViewModel @Inject constructor(
         viewModelScope.launch {
             if (currentReminder != null) {
                 cancelAlarm(currentReminder)
+                reminderRepository.deleteReminder(currentProgram.id)
                 reminderRepository.deleteReminder(programId)
             } else {
                 val leadTime = customLeadTime ?: userPreferences.reminderLeadTimeMinutes.first()

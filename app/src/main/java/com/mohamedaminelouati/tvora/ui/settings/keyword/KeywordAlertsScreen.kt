@@ -27,6 +27,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Alarm
@@ -65,6 +66,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -81,6 +83,7 @@ import com.mohamedaminelouati.tvora.ui.theme.TextSecondary
 @Composable
 fun KeywordAlertsScreen(
     onBackClick: () -> Unit,
+    onNavigateToCalendar: (String?) -> Unit = {},
     viewModel: KeywordAlertsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -288,6 +291,9 @@ fun KeywordAlertsScreen(
                                 }
                                 ringtonePickerLauncher.launch(intent)
                             },
+                            onRemindersClick = {
+                                onNavigateToCalendar(item.alert.keyword)
+                            },
                             onResetSoundClick = if (item.alert.soundUri != null) {
                                 { viewModel.setKeywordSound(item.alert.id, null) }
                             } else null,
@@ -354,112 +360,136 @@ private fun KeywordAlertCard(
     soundTitle: String,
     onToggleEnabled: (Boolean) -> Unit,
     onPickSoundClick: () -> Unit,
-    onResetSoundClick: (() -> Unit)? = null,
-    onDeleteClick: () -> Unit
+    onRemindersClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onResetSoundClick: (() -> Unit)? = null
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = DarkSurface)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 14.dp, vertical = 12.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        shape = RoundedCornerShape(4.dp),
-                        color = AccentRed.copy(alpha = 0.15f)
-                    ) {
-                        Text(
-                            text = "#",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = AccentRed,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = AccentRed.copy(alpha = 0.15f)
+                ) {
                     Text(
-                        text = item.alert.keyword,
+                        text = "#",
                         style = MaterialTheme.typography.titleMedium,
+                        color = AccentRed,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
                 }
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = item.alert.keyword,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Switch(
+                    checked = item.alert.isEnabled,
+                    onCheckedChange = onToggleEnabled,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = AccentRed,
+                        uncheckedThumbColor = Color(0xFFD6D6D6),
+                        uncheckedTrackColor = DarkSurfaceVariant,
+                        uncheckedBorderColor = SurfaceBorder
+                    )
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.action_delete_keyword_only),
+                        tint = TextSecondary
+                    )
+                }
+            }
 
-                Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Surface(
+                    onClick = onRemindersClick,
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (item.upcomingCount > 0) AccentRed.copy(alpha = 0.12f) else DarkSurfaceVariant.copy(alpha = 0.5f)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Alarm,
                             contentDescription = null,
-                            modifier = Modifier.size(13.dp),
-                            tint = TextSecondary
+                            modifier = Modifier.size(14.dp),
+                            tint = if (item.upcomingCount > 0) AccentRed else TextSecondary
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = stringResource(R.string.keyword_upcoming_count, item.upcomingCount),
                             style = MaterialTheme.typography.labelSmall,
                             color = if (item.upcomingCount > 0) AccentRed else TextSecondary,
                             fontWeight = if (item.upcomingCount > 0) FontWeight.SemiBold else FontWeight.Normal
                         )
-                    }
-
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = if (item.alert.soundUri != null) AccentRed.copy(alpha = 0.15f) else DarkSurfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.clickable(onClick = onPickSoundClick)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (item.alert.soundUri != null) Icons.Default.MusicNote else Icons.AutoMirrored.Filled.VolumeUp,
-                                contentDescription = null,
-                                modifier = Modifier.size(12.dp),
-                                tint = if (item.alert.soundUri != null) AccentRed else TextSecondary
-                            )
+                        if (item.upcomingCount > 0) {
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = soundTitle,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (item.alert.soundUri != null) AccentRed else TextSecondary,
-                                fontWeight = if (item.alert.soundUri != null) FontWeight.SemiBold else FontWeight.Normal
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = AccentRed
                             )
                         }
                     }
                 }
-            }
 
-            Switch(
-                checked = item.alert.isEnabled,
-                onCheckedChange = onToggleEnabled,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = AccentRed,
-                    uncheckedThumbColor = Color(0xFFD6D6D6),
-                    uncheckedTrackColor = DarkSurfaceVariant,
-                    uncheckedBorderColor = SurfaceBorder
-                )
-            )
-
-            Spacer(modifier = Modifier.width(6.dp))
-
-            IconButton(onClick = onDeleteClick) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = stringResource(R.string.action_delete_keyword_only),
-                    tint = TextSecondary
-                )
+                Surface(
+                    onClick = onPickSoundClick,
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (item.alert.soundUri != null) AccentRed.copy(alpha = 0.12f) else DarkSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.weight(1f, fill = false)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (item.alert.soundUri != null) Icons.Default.MusicNote else Icons.AutoMirrored.Filled.VolumeUp,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = if (item.alert.soundUri != null) AccentRed else TextSecondary
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = soundTitle,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (item.alert.soundUri != null) AccentRed else TextSecondary,
+                            fontWeight = if (item.alert.soundUri != null) FontWeight.SemiBold else FontWeight.Normal,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
         }
     }

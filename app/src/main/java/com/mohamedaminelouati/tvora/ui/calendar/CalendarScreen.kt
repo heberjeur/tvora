@@ -1,8 +1,17 @@
 package com.mohamedaminelouati.tvora.ui.calendar
 
+import android.content.res.Configuration
+import android.os.Build
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,7 +31,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import android.content.res.Configuration
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
@@ -49,21 +57,25 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import com.mohamedaminelouati.tvora.R
 import com.mohamedaminelouati.tvora.data.local.ChannelCatalog
@@ -76,13 +88,10 @@ import com.mohamedaminelouati.tvora.ui.theme.DarkSurfaceVariant
 import com.mohamedaminelouati.tvora.ui.theme.SurfaceBorder
 import com.mohamedaminelouati.tvora.ui.theme.TextPrimary
 import com.mohamedaminelouati.tvora.ui.theme.TextSecondary
-import android.os.Build
-import androidx.compose.ui.platform.LocalConfiguration
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
@@ -98,6 +107,8 @@ fun CalendarScreen(
     viewModel: CalendarViewModel = hiltViewModel()
 ) {
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
+    val calendarScope by viewModel.calendarScope.collectAsStateWithLifecycle()
+    val totalUpcomingCount by viewModel.totalUpcomingCount.collectAsStateWithLifecycle()
     val allReminders by viewModel.allReminders.collectAsStateWithLifecycle()
     val filteredReminders by viewModel.filteredReminders.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -108,6 +119,13 @@ fun CalendarScreen(
     val zone = com.mohamedaminelouati.tvora.ui.theme.LocalDisplayZone.current
     val today = remember(zone) { LocalDate.now(zone) }
     var currentYearMonth by remember { mutableStateOf(YearMonth.from(selectedDate)) }
+
+    LaunchedEffect(selectedDate) {
+        val dateMonth = YearMonth.from(selectedDate)
+        if (dateMonth != currentYearMonth) {
+            currentYearMonth = dateMonth
+        }
+    }
 
     val configuration = LocalConfiguration.current
     val currentLocale = remember(configuration) {
@@ -121,8 +139,17 @@ fun CalendarScreen(
     val monthYearFormatter = remember(currentLocale) { DateTimeFormatter.ofPattern("MMMM yyyy", currentLocale) }
     val selectedDateHeaderFormatter = remember(currentLocale) { DateTimeFormatter.ofPattern("EEEE d MMMM", currentLocale) }
 
-    val reminderDates = remember(allReminders, zone) {
-        allReminders.map { Instant.ofEpochMilli(it.startTimestamp).atZone(zone).toLocalDate() }.toSet()
+    val reminderDates = remember(allReminders, selectedKeywordFilter, zone) {
+        allReminders
+            .filter { rem ->
+                when (selectedKeywordFilter) {
+                    null -> true
+                    "__manual__" -> rem.originKeyword == null
+                    else -> rem.originKeyword.equals(selectedKeywordFilter, ignoreCase = true)
+                }
+            }
+            .map { Instant.ofEpochMilli(it.startTimestamp).atZone(zone).toLocalDate() }
+            .toSet()
     }
 
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -227,11 +254,15 @@ fun CalendarScreen(
                     selectedDate = selectedDate,
                     selectedDateHeaderFormatter = selectedDateHeaderFormatter,
                     currentLocale = currentLocale,
+                    calendarScope = calendarScope,
+                    totalUpcomingCount = totalUpcomingCount,
                     filteredReminders = filteredReminders,
                     searchQuery = searchQuery,
                     activeKeywords = activeKeywords,
                     selectedKeywordFilter = selectedKeywordFilter,
+                    onSelectScope = viewModel::setCalendarScope,
                     onSelectKeywordFilter = viewModel::selectKeywordFilter,
+                    onSelectDate = viewModel::selectDate,
                     onProgramClick = onProgramClick,
                     onDeleteReminder = viewModel::removeReminder,
                     onChannelClick = onChannelClick,
@@ -262,11 +293,15 @@ fun CalendarScreen(
                     selectedDate = selectedDate,
                     selectedDateHeaderFormatter = selectedDateHeaderFormatter,
                     currentLocale = currentLocale,
+                    calendarScope = calendarScope,
+                    totalUpcomingCount = totalUpcomingCount,
                     filteredReminders = filteredReminders,
                     searchQuery = searchQuery,
                     activeKeywords = activeKeywords,
                     selectedKeywordFilter = selectedKeywordFilter,
+                    onSelectScope = viewModel::setCalendarScope,
                     onSelectKeywordFilter = viewModel::selectKeywordFilter,
+                    onSelectDate = viewModel::selectDate,
                     onProgramClick = onProgramClick,
                     onDeleteReminder = viewModel::removeReminder,
                     onChannelClick = onChannelClick,
@@ -290,10 +325,29 @@ private fun CalendarMonthCard(
     onSelectDate: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var totalDragOffset by remember { mutableFloatStateOf(0f) }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .pointerInput(currentYearMonth) {
+                detectHorizontalDragGestures(
+                    onDragStart = { totalDragOffset = 0f },
+                    onDragEnd = {
+                        if (totalDragOffset < -50f) {
+                            onNextMonth()
+                        } else if (totalDragOffset > 50f) {
+                            onPrevMonth()
+                        }
+                        totalDragOffset = 0f
+                    },
+                    onDragCancel = { totalDragOffset = 0f },
+                    onHorizontalDrag = { _, dragAmount ->
+                        totalDragOffset += dragAmount
+                    }
+                )
+            },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = DarkSurface)
     ) {
@@ -361,70 +415,88 @@ private fun CalendarMonthCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            val firstDay = currentYearMonth.atDay(1)
-            val daysInMonth = currentYearMonth.lengthOfMonth()
-            val leadingEmptySlots = (firstDay.dayOfWeek.value - 1)
-            val totalSlots = leadingEmptySlots + daysInMonth
-            val rowsCount = (totalSlots + 6) / 7
+            AnimatedContent(
+                targetState = currentYearMonth,
+                transitionSpec = {
+                    if (targetState.isAfter(initialState)) {
+                        (slideInHorizontally { width -> width } + fadeIn()).togetherWith(
+                            slideOutHorizontally { width -> -width } + fadeOut()
+                        )
+                    } else {
+                        (slideInHorizontally { width -> -width } + fadeIn()).togetherWith(
+                            slideOutHorizontally { width -> width } + fadeOut()
+                        )
+                    }
+                },
+                label = "MonthDaysGrid"
+            ) { displayedMonth ->
+                Column {
+                    val firstDay = displayedMonth.atDay(1)
+                    val daysInMonth = displayedMonth.lengthOfMonth()
+                    val leadingEmptySlots = (firstDay.dayOfWeek.value - 1)
+                    val totalSlots = leadingEmptySlots + daysInMonth
+                    val rowsCount = (totalSlots + 6) / 7
 
-            for (rowIndex in 0 until rowsCount) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 2.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    for (colIndex in 0 until 7) {
-                        val slotIndex = rowIndex * 7 + colIndex
-                        val dayNumber = slotIndex - leadingEmptySlots + 1
+                    for (rowIndex in 0 until rowsCount) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.dp),
+                            horizontalArrangement = Arrangement.SpaceAround
+                        ) {
+                            for (colIndex in 0 until 7) {
+                                val slotIndex = rowIndex * 7 + colIndex
+                                val dayNumber = slotIndex - leadingEmptySlots + 1
 
-                        if (dayNumber in 1..daysInMonth) {
-                            val date = currentYearMonth.atDay(dayNumber)
-                            val isSelected = date == selectedDate
-                            val isToday = date == today
-                            val hasReminders = reminderDates.contains(date)
+                                if (dayNumber in 1..daysInMonth) {
+                                    val date = displayedMonth.atDay(dayNumber)
+                                    val isSelected = date == selectedDate
+                                    val isToday = date == today
+                                    val hasReminders = reminderDates.contains(date)
 
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(38.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(
-                                        when {
-                                            isSelected -> AccentRed
-                                            else -> DarkSurfaceVariant.copy(alpha = 0.3f)
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(38.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                when {
+                                                    isSelected -> AccentRed
+                                                    else -> DarkSurfaceVariant.copy(alpha = 0.3f)
+                                                }
+                                            )
+                                            .then(
+                                                if (isToday && !isSelected) {
+                                                    Modifier.border(1.dp, AccentRed.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
+                                                } else Modifier
+                                            )
+                                            .clickable { onSelectDate(date) },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.Center
+                                        ) {
+                                            Text(
+                                                text = dayNumber.toString(),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal,
+                                                color = if (isSelected) TextPrimary else if (isToday) AccentRed else TextPrimary
+                                            )
+                                            if (hasReminders) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(4.dp)
+                                                        .clip(CircleShape)
+                                                        .background(if (isSelected) TextPrimary else AccentRed)
+                                                )
+                                            }
                                         }
-                                    )
-                                    .then(
-                                        if (isToday && !isSelected) {
-                                            Modifier.border(1.dp, AccentRed.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
-                                        } else Modifier
-                                    )
-                                    .clickable { onSelectDate(date) },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    Text(
-                                        text = dayNumber.toString(),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isSelected) TextPrimary else if (isToday) AccentRed else TextPrimary
-                                    )
-                                    if (hasReminders) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(4.dp)
-                                                .clip(CircleShape)
-                                                .background(if (isSelected) TextPrimary else AccentRed)
-                                        )
                                     }
+                                } else {
+                                    Spacer(modifier = Modifier.weight(1f))
                                 }
                             }
-                        } else {
-                            Spacer(modifier = Modifier.weight(1f))
                         }
                     }
                 }
@@ -438,27 +510,60 @@ private fun CalendarRemindersSection(
     selectedDate: LocalDate,
     selectedDateHeaderFormatter: DateTimeFormatter,
     currentLocale: Locale,
+    calendarScope: CalendarScope,
+    totalUpcomingCount: Int,
     filteredReminders: List<Reminder>,
     searchQuery: String,
     activeKeywords: List<KeywordAlert>,
     selectedKeywordFilter: String?,
+    onSelectScope: (CalendarScope) -> Unit,
     onSelectKeywordFilter: (String?) -> Unit,
+    onSelectDate: (LocalDate) -> Unit,
     onProgramClick: (Long) -> Unit,
     onDeleteReminder: (Long) -> Unit,
     onChannelClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var dateDragOffset by remember { mutableFloatStateOf(0f) }
+
     Column(modifier = modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 6.dp),
+                .padding(horizontal = 20.dp, vertical = 6.dp)
+                .pointerInput(selectedDate, calendarScope) {
+                    if (calendarScope == CalendarScope.SELECTED_DAY) {
+                        detectHorizontalDragGestures(
+                            onDragStart = { dateDragOffset = 0f },
+                            onDragEnd = {
+                                if (dateDragOffset < -50f) {
+                                    onSelectDate(selectedDate.plusDays(1))
+                                } else if (dateDragOffset > 50f) {
+                                    onSelectDate(selectedDate.minusDays(1))
+                                }
+                                dateDragOffset = 0f
+                            },
+                            onDragCancel = { dateDragOffset = 0f },
+                            onHorizontalDrag = { _, dragAmount ->
+                                dateDragOffset += dragAmount
+                            }
+                        )
+                    }
+                },
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = selectedDate.format(selectedDateHeaderFormatter)
-                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase(currentLocale) else it.toString() },
+                text = if (calendarScope == CalendarScope.SELECTED_DAY) {
+                    selectedDate.format(selectedDateHeaderFormatter)
+                        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(currentLocale) else it.toString() }
+                } else {
+                    if (selectedKeywordFilter != null) {
+                        "#$selectedKeywordFilter"
+                    } else {
+                        stringResource(R.string.calendar_scope_upcoming, totalUpcomingCount)
+                    }
+                },
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -470,55 +575,82 @@ private fun CalendarRemindersSection(
             )
         }
 
-        if (activeKeywords.isNotEmpty()) {
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                item {
-                    FilterChip(
-                        selected = selectedKeywordFilter == null,
-                        onClick = { onSelectKeywordFilter(null) },
-                        label = { Text(stringResource(R.string.filter_all)) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = AccentRed,
-                            selectedLabelColor = Color.White,
-                            containerColor = DarkSurfaceVariant,
-                            labelColor = TextSecondary
-                        ),
-                        border = null
-                    )
-                }
-                item {
-                    FilterChip(
-                        selected = selectedKeywordFilter == "__manual__",
-                        onClick = { onSelectKeywordFilter("__manual__") },
-                        label = { Text(stringResource(R.string.filter_manual)) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = AccentRed,
-                            selectedLabelColor = Color.White,
-                            containerColor = DarkSurfaceVariant,
-                            labelColor = TextSecondary
-                        ),
-                        border = null
-                    )
-                }
-                items(activeKeywords, key = { it.id }) { kw ->
-                    FilterChip(
-                        selected = selectedKeywordFilter == kw.keyword,
-                        onClick = { onSelectKeywordFilter(kw.keyword) },
-                        label = { Text("#${kw.keyword}") },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = AccentRed,
-                            selectedLabelColor = Color.White,
-                            containerColor = DarkSurfaceVariant,
-                            labelColor = TextSecondary
-                        ),
-                        border = null
-                    )
-                }
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item {
+                FilterChip(
+                    selected = calendarScope == CalendarScope.SELECTED_DAY,
+                    onClick = { onSelectScope(CalendarScope.SELECTED_DAY) },
+                    label = { Text(stringResource(R.string.calendar_scope_day)) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = AccentRed,
+                        selectedLabelColor = Color.White,
+                        containerColor = DarkSurfaceVariant,
+                        labelColor = TextSecondary
+                    ),
+                    border = null
+                )
+            }
+            item {
+                FilterChip(
+                    selected = calendarScope == CalendarScope.ALL_UPCOMING && selectedKeywordFilter == null,
+                    onClick = {
+                        onSelectScope(CalendarScope.ALL_UPCOMING)
+                        onSelectKeywordFilter(null)
+                    },
+                    label = { Text(stringResource(R.string.calendar_scope_upcoming, totalUpcomingCount)) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = AccentRed,
+                        selectedLabelColor = Color.White,
+                        containerColor = DarkSurfaceVariant,
+                        labelColor = TextSecondary
+                    ),
+                    border = null
+                )
+            }
+            item {
+                FilterChip(
+                    selected = selectedKeywordFilter == "__manual__",
+                    onClick = {
+                        if (selectedKeywordFilter == "__manual__") {
+                            onSelectKeywordFilter(null)
+                        } else {
+                            onSelectKeywordFilter("__manual__")
+                        }
+                    },
+                    label = { Text(stringResource(R.string.filter_manual)) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = AccentRed,
+                        selectedLabelColor = Color.White,
+                        containerColor = DarkSurfaceVariant,
+                        labelColor = TextSecondary
+                    ),
+                    border = null
+                )
+            }
+            items(activeKeywords, key = { it.id }) { kw ->
+                FilterChip(
+                    selected = selectedKeywordFilter.equals(kw.keyword, ignoreCase = true),
+                    onClick = {
+                        if (selectedKeywordFilter.equals(kw.keyword, ignoreCase = true)) {
+                            onSelectKeywordFilter(null)
+                        } else {
+                            onSelectKeywordFilter(kw.keyword)
+                        }
+                    },
+                    label = { Text("#${kw.keyword}") },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = AccentRed,
+                        selectedLabelColor = Color.White,
+                        containerColor = DarkSurfaceVariant,
+                        labelColor = TextSecondary
+                    ),
+                    border = null
+                )
             }
         }
 
@@ -543,8 +675,10 @@ private fun CalendarRemindersSection(
                     Text(
                         text = if (searchQuery.isNotEmpty()) {
                             stringResource(R.string.search_empty)
-                        } else {
+                        } else if (calendarScope == CalendarScope.SELECTED_DAY) {
                             stringResource(R.string.calendar_no_reminders_day)
+                        } else {
+                            stringResource(R.string.calendar_no_reminders_all)
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextSecondary,
@@ -553,22 +687,111 @@ private fun CalendarRemindersSection(
                 }
             }
         } else {
+            val groupedReminders = remember(filteredReminders) {
+                filteredReminders.groupBy { it.originKeyword?.trim()?.lowercase() }
+            }
+
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(
-                    items = filteredReminders,
-                    key = { it.programId }
-                ) { reminder ->
-                    CalendarReminderItem(
-                        reminder = reminder,
-                        onClick = { onProgramClick(reminder.programId) },
-                        onDelete = { onDeleteReminder(reminder.programId) },
-                        onChannelClick = onChannelClick
+                groupedReminders.forEach { (keywordKey, remindersInGroup) ->
+                    val groupDisplayName = remindersInGroup.firstOrNull()?.originKeyword
+
+                    item(key = "header_${keywordKey ?: "__manual__"}") {
+                        HashtagGroupHeader(
+                            keyword = groupDisplayName,
+                            count = remindersInGroup.size,
+                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                        )
+                    }
+
+                    items(
+                        items = remindersInGroup,
+                        key = { "${it.channelId}_${it.startTimestamp}" }
+                    ) { reminder ->
+                        CalendarReminderItem(
+                            reminder = reminder,
+                            showDate = calendarScope == CalendarScope.ALL_UPCOMING,
+                            onClick = { onProgramClick(reminder.programId) },
+                            onDelete = { onDeleteReminder(reminder.programId) },
+                            onChannelClick = onChannelClick
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HashtagGroupHeader(
+    keyword: String?,
+    count: Int,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = DarkSurfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (keyword != null) {
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = AccentRed.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = "#",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = AccentRed,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = keyword,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Alarm,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = AccentRed
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.calendar_group_manual),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
                     )
                 }
+            }
+
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = AccentRed.copy(alpha = 0.15f)
+            ) {
+                Text(
+                    text = stringResource(R.string.calendar_reminders_count, count),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = AccentRed,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                )
             }
         }
     }
@@ -577,12 +800,28 @@ private fun CalendarRemindersSection(
 @Composable
 private fun CalendarReminderItem(
     reminder: Reminder,
+    showDate: Boolean,
     onClick: () -> Unit,
     onDelete: () -> Unit,
     onChannelClick: (String) -> Unit = {}
 ) {
     val zone = com.mohamedaminelouati.tvora.ui.theme.LocalDisplayZone.current
-    val startTime = Instant.ofEpochMilli(reminder.startTimestamp).atZone(zone).format(timeFormatter)
+    val zonedDateTime = Instant.ofEpochMilli(reminder.startTimestamp).atZone(zone)
+    val timeStr = zonedDateTime.format(timeFormatter)
+    val configuration = LocalConfiguration.current
+    val currentLocale = remember(configuration) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !configuration.locales.isEmpty) {
+            configuration.locales[0]
+        } else {
+            @Suppress("DEPRECATION")
+            configuration.locale ?: Locale.getDefault()
+        }
+    }
+    val dateStr = if (showDate) {
+        val dayFormatter = remember(currentLocale) { DateTimeFormatter.ofPattern("EEE d MMM", currentLocale) }
+        zonedDateTime.format(dayFormatter).replaceFirstChar { if (it.isLowerCase()) it.titlecase(currentLocale) else it.toString() }
+    } else null
+
     val channelLogoUrl = ChannelCatalog.getLogoUrl(reminder.channelId)
     val channelDisplayName = ChannelCatalog.getDisplayName(reminder.channelId)
 
@@ -641,7 +880,7 @@ private fun CalendarReminderItem(
                         modifier = Modifier.clickable { onChannelClick(reminder.channelId) }
                     )
                     Text(
-                        text = "  •  $startTime",
+                        text = if (dateStr != null) "  •  $dateStr, $timeStr" else "  •  $timeStr",
                         style = MaterialTheme.typography.labelSmall,
                         color = TextSecondary
                     )

@@ -1,5 +1,6 @@
 package com.mohamedaminelouati.tvora.ui.calendar
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mohamedaminelouati.tvora.domain.model.KeywordAlert
@@ -21,8 +22,14 @@ import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
 
+enum class CalendarScope {
+    SELECTED_DAY,
+    ALL_UPCOMING
+}
+
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val reminderRepository: ReminderRepository,
     private val keywordAlertRepository: KeywordAlertRepository,
     private val alarmScheduler: AlarmScheduler,
@@ -33,13 +40,29 @@ class CalendarViewModel @Inject constructor(
         com.mohamedaminelouati.tvora.util.TimezoneUtils.resolveZoneId(it)
     }
 
+    private val initialKeyword: String? = savedStateHandle.get<String>("keyword")?.takeIf { it.isNotBlank() && it != "null" }?.let { raw ->
+        try {
+            java.net.URLDecoder.decode(raw, "UTF-8")
+        } catch (_: Exception) {
+            raw
+        }
+    }
+    private val initialAllUpcoming: Boolean = savedStateHandle.get<Boolean>("allUpcoming") ?: false
+
     private val _selectedDate = MutableStateFlow(LocalDate.now(com.mohamedaminelouati.tvora.util.TimezoneUtils.ORIGIN_ZONE))
     val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
+
+    private val _calendarScope = MutableStateFlow(
+        if (initialAllUpcoming || !initialKeyword.isNullOrBlank()) CalendarScope.ALL_UPCOMING else CalendarScope.SELECTED_DAY
+    )
+    val calendarScope: StateFlow<CalendarScope> = _calendarScope.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    private val _selectedKeywordFilter = MutableStateFlow<String?>(null)
+    private val _selectedKeywordFilter = MutableStateFlow<String?>(
+        if (!initialKeyword.isNullOrBlank()) initialKeyword else null
+    )
     val selectedKeywordFilter: StateFlow<String?> = _selectedKeywordFilter.asStateFlow()
 
     val activeKeywords: StateFlow<List<KeywordAlert>> = keywordAlertRepository.getActiveKeywordAlerts()
@@ -48,35 +71,73 @@ class CalendarViewModel @Inject constructor(
     val allReminders: StateFlow<List<Reminder>> = reminderRepository.getAllReminders()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val filteredReminders: StateFlow<List<Reminder>> = combine(
-        allReminders,
+    val totalUpcomingCount: StateFlow<Int> = allReminders.map { reminders ->
+        val now = System.currentTimeMillis()
+        reminders.count { it.startTimestamp >= now - 60_000L }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    private data class FilterParams(
+        val date: LocalDate,
+        val query: String,
+        val keywordFilter: String?,
+        val scope: CalendarScope
+    )
+
+    private val filterParams = combine(
         _selectedDate,
         _searchQuery,
         _selectedKeywordFilter,
+        _calendarScope
+    ) { date, query, filter, scope ->
+        FilterParams(date, query, filter, scope)
+    }
+
+    val filteredReminders: StateFlow<List<Reminder>> = combine(
+        allReminders,
+        filterParams,
         displayZoneFlow
-    ) { reminders, date, query, filter, zone ->
+    ) { reminders, params, zone ->
+        val now = System.currentTimeMillis()
         reminders.filter { reminder ->
             val reminderDate = Instant.ofEpochMilli(reminder.startTimestamp).atZone(zone).toLocalDate()
-            val matchesDate = when (reminder.recurrence) {
-                "daily" -> date >= reminderDate
-                "weekly" -> date >= reminderDate && java.time.temporal.ChronoUnit.DAYS.between(reminderDate, date) % 7 == 0L
-                "monthly" -> date >= reminderDate && date.dayOfMonth == reminderDate.dayOfMonth
-                else -> reminderDate == date
+            val matchesScope = when (params.scope) {
+                CalendarScope.SELECTED_DAY -> {
+                    when (reminder.recurrence) {
+                        "daily" -> params.date >= reminderDate
+                        "weekly" -> params.date >= reminderDate && java.time.temporal.ChronoUnit.DAYS.between(reminderDate, params.date) % 7 == 0L
+                        "monthly" -> params.date >= reminderDate && params.date.dayOfMonth == reminderDate.dayOfMonth
+                        else -> reminderDate == params.date
+                    }
+                }
+                CalendarScope.ALL_UPCOMING -> {
+                    reminder.startTimestamp >= now - 60_000L
+                }
             }
-            val matchesQuery = query.isBlank() ||
-                reminder.title.contains(query, ignoreCase = true) ||
-                reminder.channelId.contains(query, ignoreCase = true)
-            val matchesKeyword = when (filter) {
+            val matchesQuery = params.query.isBlank() ||
+                reminder.title.contains(params.query, ignoreCase = true) ||
+                reminder.channelId.contains(params.query, ignoreCase = true)
+            val matchesKeyword = when (val filter = params.keywordFilter) {
                 null -> true
                 "__manual__" -> reminder.originKeyword == null
                 else -> reminder.originKeyword.equals(filter, ignoreCase = true)
             }
-            matchesDate && matchesQuery && matchesKeyword
-        }
+            matchesScope && matchesQuery && matchesKeyword
+        }.sortedBy { it.startTimestamp }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    init {
+        viewModelScope.launch {
+            reminderRepository.reconcileProgramIds()
+        }
+    }
 
     fun selectDate(date: LocalDate) {
         _selectedDate.value = date
+        _calendarScope.value = CalendarScope.SELECTED_DAY
+    }
+
+    fun setCalendarScope(scope: CalendarScope) {
+        _calendarScope.value = scope
     }
 
     fun setSearchQuery(query: String) {
@@ -85,6 +146,9 @@ class CalendarViewModel @Inject constructor(
 
     fun selectKeywordFilter(filter: String?) {
         _selectedKeywordFilter.value = filter
+        if (filter != null) {
+            _calendarScope.value = CalendarScope.ALL_UPCOMING
+        }
     }
 
     fun removeReminder(programId: Long) {

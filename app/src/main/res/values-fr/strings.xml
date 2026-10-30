@@ -46,7 +46,11 @@
     <string name="calendar_empty_title">Aucun rappel prévu</string>
     <string name="calendar_empty_desc">Ajoutez des rappels depuis les grilles TV ou les fiches des émissions pour ne manquer aucun rendez-vous.</string>
     <string name="calendar_no_reminders_day">Aucun rappel prévu pour ce jour</string>
+    <string name="calendar_no_reminders_all">Aucun rappel à venir de prévu</string>
     <string name="calendar_reminders_count">%1$d rappel(s)</string>
+    <string name="calendar_scope_day">Ce jour</string>
+    <string name="calendar_scope_upcoming">Tous les rappels à venir (%1$d)</string>
+    <string name="calendar_group_manual">Rappels individuels</string>
     <string name="reminder_at_airtime">À l\'heure exacte</string>
     <string name="reminder_lead_time_format">%1$d min avant</string>
     <string name="reminder_active">Rappel actif</string>

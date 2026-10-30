@@ -11,6 +11,7 @@ interface EpgRepository {
     fun getNowPlaying(): Flow<List<Program>>
     fun getProgramsForChannel(channelId: String, dayStart: Long, dayEnd: Long): Flow<List<Program>>
     fun getProgramById(programId: Long): Flow<Program?>
+    suspend fun getProgramByChannelAndStart(channelId: String, startTimestamp: Long): Program?
     fun searchPrograms(query: String): Flow<List<Program>>
     fun getUpcomingBroadcasts(title: String): Flow<List<Program>>
     fun getProgramsByTitle(title: String): Flow<List<Program>>
