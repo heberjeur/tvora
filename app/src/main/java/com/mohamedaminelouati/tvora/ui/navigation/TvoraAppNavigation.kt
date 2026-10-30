@@ -270,20 +270,24 @@ private fun AppNavHost(
                 )
             }
             composable(
-                route = "calendar?keyword={keyword}&allUpcoming={allUpcoming}",
+                route = "calendar?keyword={keyword}",
                 arguments = listOf(
                     navArgument("keyword") {
                         type = NavType.StringType
                         nullable = true
                         defaultValue = null
-                    },
-                    navArgument("allUpcoming") {
-                        type = NavType.BoolType
-                        defaultValue = false
                     }
                 )
-            ) {
+            ) { backStackEntry ->
+                val keyword = backStackEntry.arguments?.getString("keyword")?.let {
+                    try {
+                        java.net.URLDecoder.decode(it, "UTF-8")
+                    } catch (_: Exception) {
+                        it
+                    }
+                }
                 CalendarScreen(
+                    initialKeyword = keyword,
                     onProgramClick = { programId ->
                         navController.navigate("program/$programId")
                     },
@@ -312,7 +316,7 @@ private fun AppNavHost(
                     onBackClick = { navController.popBackStack() },
                     onNavigateToCalendar = { keyword ->
                         val encoded = if (keyword != null) java.net.URLEncoder.encode(keyword, "UTF-8") else ""
-                        navController.navigate("calendar?keyword=$encoded&allUpcoming=true")
+                        navController.navigate("calendar?keyword=$encoded")
                     }
                 )
             }

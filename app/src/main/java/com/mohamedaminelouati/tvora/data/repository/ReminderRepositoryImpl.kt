@@ -68,8 +68,4 @@ class ReminderRepositoryImpl @Inject constructor(
     override suspend fun deleteExpiredReminders(cutoffTimestamp: Long) {
         reminderDao.deleteExpiredReminders(cutoffTimestamp)
     }
-
-    override suspend fun reconcileProgramIds() {
-        reminderDao.reconcileProgramIds()
-    }
 }

@@ -1,6 +1,5 @@
 package com.mohamedaminelouati.tvora.ui.calendar
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mohamedaminelouati.tvora.domain.model.KeywordAlert
@@ -29,7 +28,6 @@ enum class CalendarScope {
 
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
     private val reminderRepository: ReminderRepository,
     private val keywordAlertRepository: KeywordAlertRepository,
     private val alarmScheduler: AlarmScheduler,
@@ -40,29 +38,16 @@ class CalendarViewModel @Inject constructor(
         com.mohamedaminelouati.tvora.util.TimezoneUtils.resolveZoneId(it)
     }
 
-    private val initialKeyword: String? = savedStateHandle.get<String>("keyword")?.takeIf { it.isNotBlank() && it != "null" }?.let { raw ->
-        try {
-            java.net.URLDecoder.decode(raw, "UTF-8")
-        } catch (_: Exception) {
-            raw
-        }
-    }
-    private val initialAllUpcoming: Boolean = savedStateHandle.get<Boolean>("allUpcoming") ?: false
-
     private val _selectedDate = MutableStateFlow(LocalDate.now(com.mohamedaminelouati.tvora.util.TimezoneUtils.ORIGIN_ZONE))
     val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
 
-    private val _calendarScope = MutableStateFlow(
-        if (initialAllUpcoming || !initialKeyword.isNullOrBlank()) CalendarScope.ALL_UPCOMING else CalendarScope.SELECTED_DAY
-    )
+    private val _calendarScope = MutableStateFlow(CalendarScope.SELECTED_DAY)
     val calendarScope: StateFlow<CalendarScope> = _calendarScope.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    private val _selectedKeywordFilter = MutableStateFlow<String?>(
-        if (!initialKeyword.isNullOrBlank()) initialKeyword else null
-    )
+    private val _selectedKeywordFilter = MutableStateFlow<String?>(null)
     val selectedKeywordFilter: StateFlow<String?> = _selectedKeywordFilter.asStateFlow()
 
     val activeKeywords: StateFlow<List<KeywordAlert>> = keywordAlertRepository.getActiveKeywordAlerts()
@@ -125,9 +110,10 @@ class CalendarViewModel @Inject constructor(
         }.sortedBy { it.startTimestamp }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    init {
-        viewModelScope.launch {
-            reminderRepository.reconcileProgramIds()
+    fun setInitialKeyword(keyword: String?) {
+        if (!keyword.isNullOrBlank()) {
+            _selectedKeywordFilter.value = keyword
+            _calendarScope.value = CalendarScope.ALL_UPCOMING
         }
     }
 

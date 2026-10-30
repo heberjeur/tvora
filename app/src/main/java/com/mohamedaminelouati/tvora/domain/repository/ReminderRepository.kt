@@ -19,5 +19,4 @@ interface ReminderRepository {
     ): Long
     suspend fun deleteReminder(programId: Long)
     suspend fun deleteExpiredReminders(cutoffTimestamp: Long)
-    suspend fun reconcileProgramIds()
 }

@@ -49,20 +49,4 @@ interface ReminderDao {
 
     @Query("SELECT COUNT(*) FROM reminders WHERE originKeyword = :keyword AND startTimestamp > :now")
     suspend fun countUpcomingRemindersByKeyword(keyword: String, now: Long): Int
-
-    @Query("""
-        UPDATE reminders 
-        SET programId = (
-            SELECT p.id FROM programs p 
-            WHERE p.channelId = reminders.channelId 
-              AND p.startTimestamp = reminders.startTimestamp
-            LIMIT 1
-        )
-        WHERE EXISTS (
-            SELECT 1 FROM programs p 
-            WHERE p.channelId = reminders.channelId 
-              AND p.startTimestamp = reminders.startTimestamp
-        )
-    """)
-    suspend fun reconcileProgramIds()
 }

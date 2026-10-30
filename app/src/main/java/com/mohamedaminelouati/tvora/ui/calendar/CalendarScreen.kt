@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -62,6 +63,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -101,11 +103,17 @@ private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
+    initialKeyword: String? = null,
     onProgramClick: (Long) -> Unit,
     onSettingsClick: () -> Unit = {},
     onChannelClick: (String) -> Unit = {},
     viewModel: CalendarViewModel = hiltViewModel()
 ) {
+    LaunchedEffect(initialKeyword) {
+        if (!initialKeyword.isNullOrBlank()) {
+            viewModel.setInitialKeyword(initialKeyword)
+        }
+    }
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
     val calendarScope by viewModel.calendarScope.collectAsStateWithLifecycle()
     val totalUpcomingCount by viewModel.totalUpcomingCount.collectAsStateWithLifecycle()
@@ -326,19 +334,21 @@ private fun CalendarMonthCard(
     modifier: Modifier = Modifier
 ) {
     var totalDragOffset by remember { mutableFloatStateOf(0f) }
+    val currentOnNextMonth by rememberUpdatedState(onNextMonth)
+    val currentOnPrevMonth by rememberUpdatedState(onPrevMonth)
 
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
-            .pointerInput(currentYearMonth) {
+            .pointerInput(Unit) {
                 detectHorizontalDragGestures(
                     onDragStart = { totalDragOffset = 0f },
                     onDragEnd = {
                         if (totalDragOffset < -50f) {
-                            onNextMonth()
+                            currentOnNextMonth()
                         } else if (totalDragOffset > 50f) {
-                            onPrevMonth()
+                            currentOnPrevMonth()
                         }
                         totalDragOffset = 0f
                     },
@@ -525,31 +535,35 @@ private fun CalendarRemindersSection(
     modifier: Modifier = Modifier
 ) {
     var dateDragOffset by remember { mutableFloatStateOf(0f) }
+    val currentOnSelectDate by rememberUpdatedState(onSelectDate)
+    val currentDate = selectedDate
 
     Column(modifier = modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 6.dp)
-                .pointerInput(selectedDate, calendarScope) {
+                .then(
                     if (calendarScope == CalendarScope.SELECTED_DAY) {
-                        detectHorizontalDragGestures(
-                            onDragStart = { dateDragOffset = 0f },
-                            onDragEnd = {
-                                if (dateDragOffset < -50f) {
-                                    onSelectDate(selectedDate.plusDays(1))
-                                } else if (dateDragOffset > 50f) {
-                                    onSelectDate(selectedDate.minusDays(1))
+                        Modifier.pointerInput(currentDate) {
+                            detectHorizontalDragGestures(
+                                onDragStart = { dateDragOffset = 0f },
+                                onDragEnd = {
+                                    if (dateDragOffset < -50f) {
+                                        currentOnSelectDate(currentDate.plusDays(1))
+                                    } else if (dateDragOffset > 50f) {
+                                        currentOnSelectDate(currentDate.minusDays(1))
+                                    }
+                                    dateDragOffset = 0f
+                                },
+                                onDragCancel = { dateDragOffset = 0f },
+                                onHorizontalDrag = { _, dragAmount ->
+                                    dateDragOffset += dragAmount
                                 }
-                                dateDragOffset = 0f
-                            },
-                            onDragCancel = { dateDragOffset = 0f },
-                            onHorizontalDrag = { _, dragAmount ->
-                                dateDragOffset += dragAmount
-                            }
-                        )
-                    }
-                },
+                            )
+                        }
+                    } else Modifier
+                ),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -707,10 +721,10 @@ private fun CalendarRemindersSection(
                         )
                     }
 
-                    items(
+                    itemsIndexed(
                         items = remindersInGroup,
-                        key = { "${it.channelId}_${it.startTimestamp}" }
-                    ) { reminder ->
+                        key = { index, reminder -> "${reminder.id}_${reminder.startTimestamp}_$index" }
+                    ) { _, reminder ->
                         CalendarReminderItem(
                             reminder = reminder,
                             showDate = calendarScope == CalendarScope.ALL_UPCOMING,

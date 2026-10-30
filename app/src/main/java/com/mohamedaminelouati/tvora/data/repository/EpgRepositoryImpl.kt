@@ -330,7 +330,6 @@ class EpgRepositoryImpl @Inject constructor(
                         if (allPrograms.isNotEmpty()) {
                             programDao.insertPrograms(allPrograms)
                         }
-                        database.reminderDao().reconcileProgramIds()
                     }
 
                     val totalPrograms = allPrograms.size
@@ -467,7 +466,6 @@ class EpgRepositoryImpl @Inject constructor(
             if (allPrograms.isNotEmpty()) {
                 programDao.insertPrograms(allPrograms)
             }
-            database.reminderDao().reconcileProgramIds()
         }
 
         val now = System.currentTimeMillis()
