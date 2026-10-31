@@ -39,10 +39,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mohamedaminelouati.tvora.R
+import com.mohamedaminelouati.tvora.ui.settings.dialogs.AddChannelDialog
 import com.mohamedaminelouati.tvora.ui.settings.dialogs.CustomColorDialog
 import com.mohamedaminelouati.tvora.ui.settings.dialogs.FavoritesOrderDialog
 import com.mohamedaminelouati.tvora.ui.settings.dialogs.HiddenChannelsDialog
 import com.mohamedaminelouati.tvora.ui.settings.dialogs.TimezoneDialog
+import com.mohamedaminelouati.tvora.ui.settings.sections.AdditionalChannelsSettingsSection
 import com.mohamedaminelouati.tvora.ui.settings.sections.AppearanceSettingsSection
 import com.mohamedaminelouati.tvora.ui.settings.sections.ChannelSettingsSection
 import com.mohamedaminelouati.tvora.ui.settings.sections.DisplayBadgesSettingsSection
@@ -90,6 +92,7 @@ fun SettingsScreen(
     val favoriteChannels by viewModel.favoriteChannels.collectAsStateWithLifecycle()
     val favoriteChannelsOrder by viewModel.favoriteChannelsOrder.collectAsStateWithLifecycle()
     val allChannels by viewModel.allChannels.collectAsStateWithLifecycle()
+    val customChannels by viewModel.customChannels.collectAsStateWithLifecycle()
     val cacheSizeText by viewModel.cacheSizeText.collectAsStateWithLifecycle()
     val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
     val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
@@ -102,6 +105,7 @@ fun SettingsScreen(
 
     var showFavoritesDialog by remember { mutableStateOf(false) }
     var showHiddenDialog by remember { mutableStateOf(false) }
+    var showAddChannelDialog by remember { mutableStateOf(false) }
     var showTimezoneDialog by remember { mutableStateOf(false) }
     var showCustomColorDialog by remember { mutableStateOf(false) }
 
@@ -151,6 +155,21 @@ fun SettingsScreen(
             hiddenChannels = hiddenChannels,
             onToggleHidden = viewModel::toggleHiddenChannel,
             onDismiss = { showHiddenDialog = false }
+        )
+    }
+
+    if (showAddChannelDialog) {
+        AddChannelDialog(
+            existingChannels = allChannels,
+            onAddPreset = { preset ->
+                viewModel.addPresetChannel(preset)
+                Toast.makeText(context, context.getString(R.string.toast_channel_added), Toast.LENGTH_SHORT).show()
+            },
+            onAddCustom = { name, number, iconUrl ->
+                viewModel.addCustomChannel(name, number, iconUrl)
+                Toast.makeText(context, context.getString(R.string.toast_channel_added), Toast.LENGTH_SHORT).show()
+            },
+            onDismiss = { showAddChannelDialog = false }
         )
     }
 
@@ -236,6 +255,15 @@ fun SettingsScreen(
                 onSetChannelSortOrder = viewModel::setChannelSortOrder,
                 onShowFavoritesDialog = { showFavoritesDialog = true },
                 onShowHiddenDialog = { showHiddenDialog = true }
+            )
+
+            AdditionalChannelsSettingsSection(
+                customChannels = customChannels,
+                onShowAddDialog = { showAddChannelDialog = true },
+                onRemoveChannel = { channelId ->
+                    viewModel.removeCustomChannel(channelId)
+                    Toast.makeText(context, context.getString(R.string.toast_channel_removed), Toast.LENGTH_SHORT).show()
+                }
             )
 
             WidgetSettingsSection(

@@ -11,6 +11,10 @@ import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import com.mohamedaminelouati.tvora.domain.model.Channel
+import com.mohamedaminelouati.tvora.data.local.ChannelCatalog
+import org.json.JSONArray
+import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -410,9 +414,108 @@ class UserPreferences @Inject constructor(
         }
     }
 
+    private val keyCustomChannels = stringPreferencesKey("custom_channels_json")
+
+    val customChannels: Flow<List<Channel>> = context.dataStore.data.map { preferences ->
+        val raw = preferences[keyCustomChannels]
+        if (raw.isNullOrBlank()) {
+            emptyList()
+        } else {
+            try {
+                val array = JSONArray(raw)
+                val result = mutableListOf<Channel>()
+                for (i in 0 until array.length()) {
+                    val obj = array.getJSONObject(i)
+                    result.add(
+                        Channel(
+                            id = obj.getString("id"),
+                            displayName = obj.getString("displayName"),
+                            iconUrl = obj.optString("iconUrl", "").ifEmpty { null },
+                            packageId = obj.optString("packageId", "community_enriched"),
+                            channelNumber = obj.optInt("channelNumber", 0),
+                            isFavorite = obj.optBoolean("isFavorite", false)
+                        )
+                    )
+                }
+                result
+            } catch (e: Exception) {
+                emptyList()
+            }
+        }
+    }
+
     suspend fun setWidgetShowProgress(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[keyWidgetShowProgress] = enabled
+        }
+    }
+
+    suspend fun addCustomChannel(channel: Channel) {
+        context.dataStore.edit { preferences ->
+            val raw = preferences[keyCustomChannels]
+            val current = if (!raw.isNullOrBlank()) {
+                try {
+                    val array = JSONArray(raw)
+                    val list = mutableListOf<Channel>()
+                    for (i in 0 until array.length()) {
+                        val obj = array.getJSONObject(i)
+                        list.add(
+                            Channel(
+                                id = obj.getString("id"),
+                                displayName = obj.getString("displayName"),
+                                iconUrl = obj.optString("iconUrl", "").ifEmpty { null },
+                                packageId = obj.optString("packageId", "community_enriched"),
+                                channelNumber = obj.optInt("channelNumber", 0),
+                                isFavorite = obj.optBoolean("isFavorite", false)
+                            )
+                        )
+                    }
+                    list
+                } catch (e: Exception) {
+                    mutableListOf()
+                }
+            } else {
+                mutableListOf()
+            }
+
+            val index = current.indexOfFirst { ChannelCatalog.normalizeId(it.id) == ChannelCatalog.normalizeId(channel.id) }
+            if (index >= 0) {
+                current[index] = channel
+            } else {
+                current.add(channel)
+            }
+
+            val array = JSONArray()
+            current.forEach { ch ->
+                val obj = JSONObject().apply {
+                    put("id", ch.id)
+                    put("displayName", ch.displayName)
+                    put("iconUrl", ch.iconUrl ?: "")
+                    put("packageId", ch.packageId)
+                    put("channelNumber", ch.channelNumber)
+                    put("isFavorite", ch.isFavorite)
+                }
+                array.put(obj)
+            }
+            preferences[keyCustomChannels] = array.toString()
+        }
+    }
+
+    suspend fun removeCustomChannel(channelId: String) {
+        context.dataStore.edit { preferences ->
+            val raw = preferences[keyCustomChannels] ?: return@edit
+            try {
+                val array = JSONArray(raw)
+                val newArray = JSONArray()
+                for (i in 0 until array.length()) {
+                    val obj = array.getJSONObject(i)
+                    if (ChannelCatalog.normalizeId(obj.getString("id")) != ChannelCatalog.normalizeId(channelId)) {
+                        newArray.put(obj)
+                    }
+                }
+                preferences[keyCustomChannels] = newArray.toString()
+            } catch (_: Exception) {
+            }
         }
     }
 }

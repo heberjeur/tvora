@@ -167,12 +167,15 @@ class NowPlayingViewModel @Inject constructor(
         FilterParams(part, query, tag, prefs)
     }
 
+    private val allChannelsFlow = epgRepository.getChannels(ChannelPackage.COMMUNITY_ENRICHED)
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val periodPrograms: StateFlow<Map<BroadcastPeriod, List<Program>>> = combine(
         rawProgramsFlow,
         currentTimeFlow,
-        filterParamsFlow
-    ) { rawList, currentTime, filterParams ->
+        filterParamsFlow,
+        allChannelsFlow
+    ) { rawList, currentTime, filterParams, allChannels ->
         val (part, query, tag, prefs) = filterParams
         val originZone = com.mohamedaminelouati.tvora.util.TimezoneUtils.ORIGIN_ZONE
         val today = LocalDate.now(originZone)
@@ -206,7 +209,8 @@ class NowPlayingViewModel @Inject constructor(
                 }
             }
 
-            val selectedPrograms = ChannelCatalog.tntChannelIds.mapNotNull { channelId ->
+            val targetChannelIds = (allChannels.map { it.id } + ChannelCatalog.tntChannelIds).distinct()
+            val selectedPrograms = targetChannelIds.mapNotNull { channelId ->
                 val channelProgs = progsByChannel[channelId] ?: progsByChannel.entries.firstOrNull {
                     ChannelCatalog.normalizeId(it.key) == ChannelCatalog.normalizeId(channelId)
                 }?.value
@@ -245,10 +249,15 @@ class NowPlayingViewModel @Inject constructor(
                 notHidden && notRerun && matchesQuery && matchesTag
             }
 
+            val resolveNumber: (String) -> Int = { chId ->
+                val num = ChannelCatalog.getChannelNumber(chId)
+                if (num > 0) num else allChannels.firstOrNull { ch -> ChannelCatalog.normalizeId(ch.id) == ChannelCatalog.normalizeId(chId) }?.channelNumber?.takeIf { it > 0 } ?: 999
+            }
+
             when (prefs.sortOrder) {
                 "popular" -> filtered.sortedWith(
                     compareBy<Program> { ChannelCatalog.getPopularityRank(it.channelId) }
-                        .thenBy { ChannelCatalog.getChannelNumber(it.channelId).let { num -> if (num > 0) num else 999 } }
+                        .thenBy { resolveNumber(it.channelId) }
                         .thenBy { it.startTimestamp }
                 )
                 "favorites", "favorites_first" -> filtered.sortedWith(
@@ -257,7 +266,7 @@ class NowPlayingViewModel @Inject constructor(
                             ChannelCatalog.normalizeId(favId) == ChannelCatalog.normalizeId(it.channelId)
                         }
                         if (idx >= 0) idx else Int.MAX_VALUE
-                    }.thenBy { ChannelCatalog.getChannelNumber(it.channelId).let { num -> if (num > 0) num else 999 } }
+                    }.thenBy { resolveNumber(it.channelId) }
                     .thenBy { it.startTimestamp }
                 )
                 "name" -> filtered.sortedWith(
@@ -265,7 +274,7 @@ class NowPlayingViewModel @Inject constructor(
                         .thenBy { it.startTimestamp }
                 )
                 else -> filtered.sortedWith(
-                    compareBy<Program> { ChannelCatalog.getChannelNumber(it.channelId).let { num -> if (num > 0) num else 999 } }
+                    compareBy<Program> { resolveNumber(it.channelId) }
                         .thenBy { it.startTimestamp }
                 )
             }

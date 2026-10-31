@@ -202,6 +202,21 @@
     <string name="dialog_select_favorites_title">Select Favorite Channels</string>
     <string name="dialog_select_hidden_title">Select Hidden Channels</string>
 
+    <string name="settings_custom_channels_title">Additional Channels</string>
+    <string name="settings_custom_channels_desc">Add more channels to your guide</string>
+    <string name="settings_custom_channels_count">%1$d channel(s) added</string>
+    <string name="add_channel_button">Add a channel</string>
+    <string name="dialog_add_channel_title">Add a Channel</string>
+    <string name="dialog_add_channel_tab_catalog">Available Channels</string>
+    <string name="dialog_add_channel_tab_custom">Custom</string>
+    <string name="dialog_add_channel_name_label">Channel name</string>
+    <string name="dialog_add_channel_number_label">Channel number</string>
+    <string name="dialog_add_channel_icon_label">Logo URL (optional)</string>
+    <string name="dialog_add_channel_empty_catalog">All catalog channels have been added</string>
+    <string name="dialog_add_channel_no_custom">No additional channels added yet</string>
+    <string name="toast_channel_added">Channel added successfully</string>
+    <string name="toast_channel_removed">Channel removed</string>
+
     <string name="settings_retention_days_title">Offline Guide Retention</string>
     <string name="retention_3_days">3 days</string>
     <string name="retention_7_days">7 days</string>

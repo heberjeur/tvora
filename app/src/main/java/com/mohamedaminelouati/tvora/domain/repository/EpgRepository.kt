@@ -26,4 +26,7 @@ interface EpgRepository {
     suspend fun preloadFromAssets(channelPackage: ChannelPackage, lang: String)
     fun getLastSyncTimestamp(channelPackage: ChannelPackage): Flow<Long?>
     fun resetSyncProgress()
+    fun getCustomChannels(): Flow<List<Channel>>
+    suspend fun addCustomChannel(channel: Channel)
+    suspend fun removeCustomChannel(channelId: String)
 }

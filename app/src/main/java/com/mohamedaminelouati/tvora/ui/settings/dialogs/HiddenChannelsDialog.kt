@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mohamedaminelouati.tvora.R
+import com.mohamedaminelouati.tvora.data.local.ChannelCatalog
 import com.mohamedaminelouati.tvora.domain.model.Channel
 import com.mohamedaminelouati.tvora.ui.theme.AccentRed
 
@@ -49,7 +50,9 @@ fun HiddenChannelsDialog(
                     .height(300.dp)
             ) {
                 items(allChannels, key = { it.id }) { channel ->
-                    val isHidden = hiddenChannels.contains(channel.id)
+                    val isHidden = hiddenChannels.any {
+                        ChannelCatalog.normalizeId(it) == ChannelCatalog.normalizeId(channel.id)
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()

@@ -202,6 +202,21 @@
     <string name="dialog_select_favorites_title">Choisir les chaînes favorites</string>
     <string name="dialog_select_hidden_title">Choisir les chaînes à masquer</string>
 
+    <string name="settings_custom_channels_title">Chaînes supplémentaires</string>
+    <string name="settings_custom_channels_desc">Ajoutez d\'autres chaînes à votre guide</string>
+    <string name="settings_custom_channels_count">%1$d chaîne(s) ajoutée(s)</string>
+    <string name="add_channel_button">Ajouter une chaîne</string>
+    <string name="dialog_add_channel_title">Ajouter une chaîne</string>
+    <string name="dialog_add_channel_tab_catalog">Chaînes disponibles</string>
+    <string name="dialog_add_channel_tab_custom">Personnalisée</string>
+    <string name="dialog_add_channel_name_label">Nom de la chaîne</string>
+    <string name="dialog_add_channel_number_label">Numéro de la chaîne</string>
+    <string name="dialog_add_channel_icon_label">URL du logo (optionnel)</string>
+    <string name="dialog_add_channel_empty_catalog">Toutes les chaînes du catalogue ont été ajoutées</string>
+    <string name="dialog_add_channel_no_custom">Aucune chaîne supplémentaire pour le moment</string>
+    <string name="toast_channel_added">Chaîne ajoutée avec succès</string>
+    <string name="toast_channel_removed">Chaîne supprimée</string>
+
     <string name="settings_retention_days_title">Durée de conservation hors-ligne</string>
     <string name="retention_3_days">3 jours</string>
     <string name="retention_7_days">7 jours</string>

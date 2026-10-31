@@ -8,7 +8,7 @@ fun ChannelEntity.toDomain(): Channel {
     val catalogNumber = ChannelCatalog.getChannelNumber(id)
     return Channel(
         id = id,
-        displayName = displayName,
+        displayName = if (ChannelCatalog.isCatalogChannel(id)) ChannelCatalog.getDisplayName(id) else displayName,
         iconUrl = ChannelCatalog.getLogoUrl(id) ?: iconUrl,
         packageId = packageId,
         channelNumber = if (catalogNumber > 0) catalogNumber else channelNumber,

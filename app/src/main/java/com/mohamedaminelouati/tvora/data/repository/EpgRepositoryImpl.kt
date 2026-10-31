@@ -15,6 +15,7 @@ import com.mohamedaminelouati.tvora.data.local.entity.ChannelEntity
 import com.mohamedaminelouati.tvora.data.local.entity.ProgramEntity
 import com.mohamedaminelouati.tvora.data.local.entity.SyncMetadataEntity
 import com.mohamedaminelouati.tvora.data.mapper.toDomain
+import com.mohamedaminelouati.tvora.data.mapper.toEntity
 import com.mohamedaminelouati.tvora.data.remote.XmltvDownloader
 import com.mohamedaminelouati.tvora.data.remote.XmltvParser
 import com.mohamedaminelouati.tvora.domain.model.Channel
@@ -33,6 +34,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -94,8 +96,33 @@ class EpgRepositoryImpl @Inject constructor(
     override fun getSyncProgress(): StateFlow<SyncProgress> = _syncProgress.asStateFlow()
 
     override fun getChannels(channelPackage: ChannelPackage): Flow<List<Channel>> {
-        return channelDao.getChannelsByPackage(channelPackage.id).map { list ->
-            list.map { it.toDomain() }.sortedWith(
+        return combine(
+            channelDao.getChannelsByPackage(channelPackage.id),
+            userPreferences.customChannels
+        ) { dbList, customList ->
+            val mapped = dbList.map { it.toDomain() }.toMutableList()
+            val existingNormalized = mapped.map { ChannelCatalog.normalizeId(it.id) }.toSet()
+            customList.forEach { custom ->
+                if (!existingNormalized.contains(ChannelCatalog.normalizeId(custom.id))) {
+                    mapped.add(custom)
+                }
+            }
+            val updatedExisting = mapped.map { ChannelCatalog.normalizeId(it.id) }.toSet()
+            ChannelCatalog.tntChannelIds.forEach { tntId ->
+                if (!updatedExisting.contains(ChannelCatalog.normalizeId(tntId))) {
+                    mapped.add(
+                        Channel(
+                            id = tntId,
+                            displayName = ChannelCatalog.getDisplayName(tntId),
+                            iconUrl = ChannelCatalog.getLogoUrl(tntId) ?: "",
+                            packageId = channelPackage.id,
+                            channelNumber = ChannelCatalog.getChannelNumber(tntId),
+                            isFavorite = false
+                        )
+                    )
+                }
+            }
+            mapped.sortedWith(
                 compareBy<Channel> { if (it.channelNumber > 0) 0 else 1 }
                     .thenBy { it.channelNumber }
                     .thenBy { it.displayName }
@@ -104,13 +131,35 @@ class EpgRepositoryImpl @Inject constructor(
     }
 
     override fun getFavoriteChannels(channelPackage: ChannelPackage): Flow<List<Channel>> {
-        return channelDao.getFavoriteChannels(channelPackage.id).map { list ->
-            list.map { it.toDomain() }.sortedWith(
+        return combine(
+            channelDao.getFavoriteChannels(channelPackage.id),
+            userPreferences.customChannels
+        ) { dbList, customList ->
+            val mapped = dbList.map { it.toDomain() }.toMutableList()
+            val existingNormalized = mapped.map { ChannelCatalog.normalizeId(it.id) }.toSet()
+            customList.filter { it.isFavorite }.forEach { custom ->
+                if (!existingNormalized.contains(ChannelCatalog.normalizeId(custom.id))) {
+                    mapped.add(custom)
+                }
+            }
+            mapped.sortedWith(
                 compareBy<Channel> { if (it.channelNumber > 0) 0 else 1 }
                     .thenBy { it.channelNumber }
                     .thenBy { it.displayName }
             )
         }
+    }
+
+    override fun getCustomChannels(): Flow<List<Channel>> = userPreferences.customChannels
+
+    override suspend fun addCustomChannel(channel: Channel) {
+        userPreferences.addCustomChannel(channel)
+        channelDao.insertChannels(listOf(channel.toEntity()))
+    }
+
+    override suspend fun removeCustomChannel(channelId: String) {
+        userPreferences.removeCustomChannel(channelId)
+        channelDao.deleteChannelById(channelId)
     }
 
     override fun getNowPlaying(): Flow<List<Program>> {
@@ -197,7 +246,26 @@ class EpgRepositoryImpl @Inject constructor(
     }
 
     override suspend fun toggleFavoriteChannel(channelId: String, isFavorite: Boolean) {
-        channelDao.updateFavoriteStatus(channelId, isFavorite)
+        val existing = channelDao.getChannelById(channelId)
+        if (existing != null) {
+            channelDao.updateFavoriteStatus(channelId, isFavorite)
+        } else {
+            val tntChannel = ChannelCatalog.tntChannelIds.firstOrNull {
+                ChannelCatalog.normalizeId(it) == ChannelCatalog.normalizeId(channelId)
+            } ?: channelId
+            channelDao.insertChannels(
+                listOf(
+                    ChannelEntity(
+                        id = tntChannel,
+                        displayName = ChannelCatalog.getDisplayName(tntChannel),
+                        iconUrl = ChannelCatalog.getLogoUrl(tntChannel) ?: "",
+                        packageId = "tnt_fr",
+                        channelNumber = ChannelCatalog.getChannelNumber(tntChannel),
+                        isFavorite = isFavorite
+                    )
+                )
+            )
+        }
     }
 
     override fun getLastSyncTimestamp(channelPackage: ChannelPackage): Flow<Long?> {
@@ -329,6 +397,9 @@ class EpgRepositoryImpl @Inject constructor(
                             }
                         }
                     }
+
+                    val customs = userPreferences.customChannels.first()
+                    customs.forEach { allChannels.add(it.toEntity()) }
 
                     database.withTransaction {
                         programDao.clearAll()
@@ -465,6 +536,9 @@ class EpgRepositoryImpl @Inject constructor(
                 }
             }
         }
+
+        val customs = userPreferences.customChannels.first()
+        customs.forEach { allChannels.add(it.toEntity()) }
 
         database.withTransaction {
             programDao.clearAll()

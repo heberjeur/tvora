@@ -31,6 +31,9 @@ interface ChannelDao {
     @Query("UPDATE channels SET isFavorite = :isFavorite WHERE id = :channelId")
     suspend fun updateFavoriteStatus(channelId: String, isFavorite: Boolean)
 
+    @Query("DELETE FROM channels WHERE id = :id")
+    suspend fun deleteChannelById(id: String)
+
     @Query("DELETE FROM channels WHERE packageId = :packageId")
     suspend fun deleteChannelsByPackage(packageId: String)
 

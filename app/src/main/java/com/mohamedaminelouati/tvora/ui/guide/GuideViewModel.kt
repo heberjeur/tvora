@@ -99,7 +99,7 @@ class GuideViewModel @Inject constructor(
         userPreferences.channelSortOrder
     ) { list, hidden, favorites, favoriteOrder, sortOrder ->
         val filtered = list.filter { channel ->
-            !hidden.contains(channel.id)
+            !hidden.any { ChannelCatalog.normalizeId(it) == ChannelCatalog.normalizeId(channel.id) }
         }.map { channel ->
             val isFav = ChannelCatalog.isFavorite(channel.id, favorites) || channel.isFavorite
             if (channel.isFavorite != isFav) channel.copy(isFavorite = isFav) else channel

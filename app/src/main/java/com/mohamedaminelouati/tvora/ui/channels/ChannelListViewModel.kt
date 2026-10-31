@@ -67,7 +67,9 @@ class ChannelListViewModel @Inject constructor(
         channelPrefsFlow
     ) { channels, query, prefs ->
         val filtered = channels.filter { channel ->
-            val notHidden = !prefs.hiddenChannels.contains(channel.id)
+            val notHidden = !prefs.hiddenChannels.any {
+                com.mohamedaminelouati.tvora.data.local.ChannelCatalog.normalizeId(it) == com.mohamedaminelouati.tvora.data.local.ChannelCatalog.normalizeId(channel.id)
+            }
             val matchesQuery = query.isBlank() ||
                 channel.displayName.contains(query, ignoreCase = true) ||
                 (channel.channelNumber > 0 && channel.channelNumber.toString() == query.trim())
