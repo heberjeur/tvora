@@ -5,23 +5,25 @@ import com.mohamedaminelouati.tvora.data.local.entity.ChannelEntity
 import com.mohamedaminelouati.tvora.domain.model.Channel
 
 fun ChannelEntity.toDomain(): Channel {
+    val catalogNumber = ChannelCatalog.getChannelNumber(id)
     return Channel(
         id = id,
         displayName = displayName,
         iconUrl = ChannelCatalog.getLogoUrl(id) ?: iconUrl,
         packageId = packageId,
-        channelNumber = if (channelNumber > 0) channelNumber else ChannelCatalog.getChannelNumber(id),
+        channelNumber = if (catalogNumber > 0) catalogNumber else channelNumber,
         isFavorite = isFavorite
     )
 }
 
 fun Channel.toEntity(): ChannelEntity {
+    val catalogNumber = ChannelCatalog.getChannelNumber(id)
     return ChannelEntity(
         id = id,
         displayName = displayName,
         iconUrl = iconUrl,
         packageId = packageId,
-        channelNumber = channelNumber,
+        channelNumber = if (catalogNumber > 0) catalogNumber else channelNumber,
         isFavorite = isFavorite
     )
 }

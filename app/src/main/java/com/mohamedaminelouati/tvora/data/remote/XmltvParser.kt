@@ -116,7 +116,8 @@ class XmltvParser @Inject constructor() {
             }
         }
 
-        val resolvedNumber = if (lcnNumber > 0) lcnNumber else ChannelCatalog.getChannelNumber(id)
+        val catalogNumber = ChannelCatalog.getChannelNumber(id)
+        val resolvedNumber = if (catalogNumber > 0) catalogNumber else lcnNumber
         val resolvedIcon = ChannelCatalog.getLogoUrl(id) ?: iconUrl
 
         return ChannelEntity(

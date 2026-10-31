@@ -72,7 +72,7 @@ class EpgRepositoryImpl @Inject constructor(
     private val _syncProgress = MutableStateFlow(SyncProgress())
 
     companion object {
-        const val CURRENT_EPG_ASSET_VERSION = 2
+        const val CURRENT_EPG_ASSET_VERSION = 3
     }
 
     init {
@@ -95,13 +95,21 @@ class EpgRepositoryImpl @Inject constructor(
 
     override fun getChannels(channelPackage: ChannelPackage): Flow<List<Channel>> {
         return channelDao.getChannelsByPackage(channelPackage.id).map { list ->
-            list.map { it.toDomain() }
+            list.map { it.toDomain() }.sortedWith(
+                compareBy<Channel> { if (it.channelNumber > 0) 0 else 1 }
+                    .thenBy { it.channelNumber }
+                    .thenBy { it.displayName }
+            )
         }
     }
 
     override fun getFavoriteChannels(channelPackage: ChannelPackage): Flow<List<Channel>> {
         return channelDao.getFavoriteChannels(channelPackage.id).map { list ->
-            list.map { it.toDomain() }
+            list.map { it.toDomain() }.sortedWith(
+                compareBy<Channel> { if (it.channelNumber > 0) 0 else 1 }
+                    .thenBy { it.channelNumber }
+                    .thenBy { it.displayName }
+            )
         }
     }
 
