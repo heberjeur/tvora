@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
     lateinit var epgRepository: EpgRepository
 
     private var pendingProgramId by mutableStateOf<Long?>(null)
+    private var pendingKeyword by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -107,7 +108,9 @@ class MainActivity : ComponentActivity() {
                     ) {
                         TvoraAppNavigation(
                             deepLinkProgramId = pendingProgramId,
-                            onDeepLinkConsumed = { pendingProgramId = null }
+                            deepLinkKeyword = pendingKeyword,
+                            onDeepLinkConsumed = { pendingProgramId = null },
+                            onDeepLinkKeywordConsumed = { pendingKeyword = null }
                         )
                     }
                 }
@@ -122,9 +125,20 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        val id = intent?.getLongExtra("program_id", -1L) ?: -1L
+        if (intent == null) return
+        val dataId = intent.data?.takeIf { it.scheme == "tvora" && it.host == "program" }?.lastPathSegment?.toLongOrNull()
+        val extraId = intent.getLongExtra("program_id", -1L).takeIf { it > 0 }
+            ?: intent.getLongExtra("extra_program_id", -1L).takeIf { it > 0 }
+        val id = dataId ?: extraId ?: -1L
         if (id > 0) {
             pendingProgramId = id
+        }
+
+        val dataKeyword = intent.data?.takeIf { it.scheme == "tvora" && it.host == "calendar" }?.getQueryParameter("keyword")
+        val extraKeyword = intent.getStringExtra("extra_keyword")
+        val keyword = dataKeyword ?: extraKeyword
+        if (!keyword.isNullOrBlank()) {
+            pendingKeyword = keyword
         }
     }
 

@@ -48,13 +48,16 @@ class NotificationHelper @Inject constructor(
         }
 
         val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            action = Intent.ACTION_VIEW
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("program_id", programId)
             putExtra("extra_program_id", programId)
+            data = Uri.parse("tvora://program/$programId")
         }
 
         val pendingIntent = PendingIntent.getActivity(
             context,
-            programId.toInt(),
+            (programId xor (programId ushr 32)).toInt(),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -103,7 +106,10 @@ class NotificationHelper @Inject constructor(
         }
 
         val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            action = Intent.ACTION_VIEW
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("extra_keyword", keyword)
+            data = Uri.parse("tvora://calendar?keyword=${Uri.encode(keyword)}")
         }
 
         val pendingIntent = PendingIntent.getActivity(

@@ -57,16 +57,42 @@ sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector)
 @Composable
 fun TvoraAppNavigation(
     deepLinkProgramId: Long? = null,
-    onDeepLinkConsumed: () -> Unit = {}
+    deepLinkKeyword: String? = null,
+    onDeepLinkConsumed: () -> Unit = {},
+    onDeepLinkKeywordConsumed: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
     androidx.compose.runtime.LaunchedEffect(deepLinkProgramId) {
-        if (deepLinkProgramId != null && deepLinkProgramId > 0) {
-            navController.navigate("program/$deepLinkProgramId")
-            onDeepLinkConsumed()
+        val targetId = deepLinkProgramId
+        if (targetId != null && targetId > 0) {
+            try {
+                navController.navigate("program/$targetId") {
+                    launchSingleTop = true
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("TvoraNav", "Error navigating to program deep link: $targetId", e)
+            } finally {
+                onDeepLinkConsumed()
+            }
+        }
+    }
+
+    androidx.compose.runtime.LaunchedEffect(deepLinkKeyword) {
+        val keyword = deepLinkKeyword
+        if (!keyword.isNullOrBlank()) {
+            try {
+                val encoded = java.net.URLEncoder.encode(keyword, "UTF-8")
+                navController.navigate("calendar?keyword=$encoded") {
+                    launchSingleTop = true
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("TvoraNav", "Error navigating to calendar deep link: $keyword", e)
+            } finally {
+                onDeepLinkKeywordConsumed()
+            }
         }
     }
 
@@ -80,8 +106,8 @@ fun TvoraAppNavigation(
 
     val showBottomBar = bottomNavItems.any { screen ->
         currentRoute == screen.route ||
-            (screen == Screen.Guide && currentRoute?.startsWith("guide") == true) ||
-            (screen == Screen.Categories && currentRoute?.startsWith("categories") == true)
+            currentRoute?.startsWith("${screen.route}?") == true ||
+            currentRoute?.startsWith("${screen.route}/") == true
     }
 
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
@@ -99,9 +125,8 @@ fun TvoraAppNavigation(
                     androidx.compose.foundation.layout.Spacer(modifier = Modifier.weight(1f))
                     bottomNavItems.forEach { screen ->
                         val isSelected = currentRoute == screen.route ||
-                            (screen == Screen.Guide && currentRoute?.startsWith("guide") == true) ||
-                            (screen == Screen.Categories && currentRoute?.startsWith("categories") == true) ||
-                            (screen == Screen.Calendar && currentRoute?.startsWith("calendar") == true)
+                            currentRoute?.startsWith("${screen.route}?") == true ||
+                            currentRoute?.startsWith("${screen.route}/") == true
                         androidx.compose.material3.NavigationRailItem(
                             selected = isSelected,
                             onClick = {
@@ -158,9 +183,8 @@ fun TvoraAppNavigation(
                     ) {
                         bottomNavItems.forEach { screen ->
                             val isSelected = currentRoute == screen.route ||
-                                (screen == Screen.Guide && currentRoute?.startsWith("guide") == true) ||
-                                (screen == Screen.Categories && currentRoute?.startsWith("categories") == true) ||
-                                (screen == Screen.Calendar && currentRoute?.startsWith("calendar") == true)
+                                currentRoute?.startsWith("${screen.route}?") == true ||
+                                currentRoute?.startsWith("${screen.route}/") == true
                             NavigationBarItem(
                                 selected = isSelected,
                                 onClick = {
