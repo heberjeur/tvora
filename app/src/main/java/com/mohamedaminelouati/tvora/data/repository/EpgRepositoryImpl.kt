@@ -90,6 +90,14 @@ class EpgRepositoryImpl @Inject constructor(
                 if (cachedCount == 0 || (lastLang != null && lastLang != lang) || latestTimestamp < now || assetVersionOutdated || canalPlusCount == 0) {
                     preloadFeed(ChannelPackage.COMMUNITY_ENRICHED, lang)
                 }
+                val customs = userPreferences.customChannels.first()
+                val missingCustoms = customs.filter {
+                    val canonicalId = ChannelCatalog.canonicalChannelId(it.id)
+                    programDao.getProgramCountForChannel(canonicalId) == 0
+                }
+                if (missingCustoms.isNotEmpty()) {
+                    syncProgramsForChannels(missingCustoms.map { it.id }.toSet())
+                }
             }
         }
     }
@@ -174,6 +182,9 @@ class EpgRepositoryImpl @Inject constructor(
     override suspend fun addCustomChannel(channel: Channel) {
         userPreferences.addCustomChannel(channel)
         channelDao.insertChannels(listOf(channel.toEntity()))
+        repositoryScope.launch {
+            syncProgramsForChannels(setOf(channel.id))
+        }
     }
 
     override suspend fun removeCustomChannel(channelId: String) {
@@ -420,8 +431,11 @@ class EpgRepositoryImpl @Inject constructor(
                     val customs = userPreferences.customChannels.first()
                     customs.forEach { allChannels.add(it.toEntity()) }
 
+                    val parsedChannelIds = allPrograms.map { it.channelId }.distinct()
                     database.withTransaction {
-                        programDao.clearAll()
+                        parsedChannelIds.forEach { chId ->
+                            programDao.deleteProgramsForChannel(chId)
+                        }
                         if (allChannels.isNotEmpty()) {
                             channelDao.insertChannels(allChannels)
                         }
@@ -505,59 +519,63 @@ class EpgRepositoryImpl @Inject constructor(
             if (!connectivityObserver.isConnected()) return@withContext Result.success(Unit)
 
             val canonicalTargets = channelIds.map { ChannelCatalog.canonicalChannelId(it) }.toSet()
-            val extraFeedUrl = "https://xmltvfr.fr/xmltv/xmltv.xml.gz"
+            val candidateUrls = listOf(
+                "https://xmltvfr.fr/xmltv/xmltv_fr.xml.gz",
+                "https://xmltvfr.fr/xmltv/xmltv.xml.gz"
+            )
+            val clearedChannels = mutableSetOf<String>()
+            val foundChannels = mutableSetOf<String>()
 
-            try {
-                val downloadResult = downloader.downloadFeed(extraFeedUrl, null)
-                val stream = downloadResult.inputStream
-                    ?: return@withContext Result.failure(IOException("Empty stream for extra channels"))
-                val programsList = mutableListOf<ProgramEntity>()
-                val channelsList = mutableListOf<ChannelEntity>()
-                val imageList = mutableListOf<String>()
+            for (url in candidateUrls) {
+                val neededTargets = canonicalTargets.filter { target ->
+                    !foundChannels.any { ChannelCatalog.normalizeId(it) == ChannelCatalog.normalizeId(target) }
+                }.toSet()
+                if (neededTargets.isEmpty()) break
 
-                stream.use { parsedInput ->
-                    parser.parse(parsedInput, ChannelPackage.COMMUNITY_ENRICHED.id, canonicalTargets) { channels, programs ->
-                        if (channels.isNotEmpty()) {
-                            channelsList.addAll(channels)
-                            channels.forEach { c ->
-                                val icon = ChannelCatalog.getLogoUrl(c.id) ?: c.iconUrl
-                                if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
-                                    imageList.add(icon)
+                try {
+                    val downloadResult = downloader.downloadFeed(url, null)
+                    val stream = downloadResult.inputStream ?: continue
+                    val imageList = mutableListOf<String>()
+
+                    stream.use { parsedInput ->
+                        parser.parse(parsedInput, ChannelPackage.COMMUNITY_ENRICHED.id, neededTargets) { channels, programs ->
+                            if (channels.isNotEmpty()) {
+                                channelDao.insertChannels(channels)
+                                channels.forEach { c ->
+                                    val icon = ChannelCatalog.getLogoUrl(c.id) ?: c.iconUrl
+                                    if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
+                                        imageList.add(icon)
+                                    }
                                 }
                             }
-                        }
-                        if (programs.isNotEmpty()) {
-                            programsList.addAll(programs)
-                            programs.forEach { p ->
-                                val icon = p.iconUrl
-                                if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
-                                    imageList.add(icon)
+                            if (programs.isNotEmpty()) {
+                                database.withTransaction {
+                                    val channelsInBatch = programs.map { it.channelId }.distinct()
+                                    for (chId in channelsInBatch) {
+                                        if (clearedChannels.add(chId)) {
+                                            programDao.deleteProgramsForChannel(chId)
+                                        }
+                                        foundChannels.add(chId)
+                                    }
+                                    programDao.insertPrograms(programs)
+                                }
+                                programs.forEach { p ->
+                                    val icon = p.iconUrl
+                                    if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
+                                        imageList.add(icon)
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                if (channelsList.isNotEmpty() || programsList.isNotEmpty()) {
-                    database.withTransaction {
-                        canonicalTargets.forEach { targetId ->
-                            programDao.deleteProgramsForChannel(targetId)
-                        }
-                        if (channelsList.isNotEmpty()) {
-                            channelDao.insertChannels(channelsList)
-                        }
-                        if (programsList.isNotEmpty()) {
-                            programDao.insertPrograms(programsList)
-                        }
-                    }
                     if (imageList.isNotEmpty()) {
                         prefetchImages(imageList)
                     }
+                } catch (_: Exception) {
                 }
-                Result.success(Unit)
-            } catch (e: Exception) {
-                Result.failure(e)
             }
+            Result.success(Unit)
         }
 
     private fun openAssetStream(channelPackage: ChannelPackage, lang: String): InputStream? {
@@ -621,8 +639,11 @@ class EpgRepositoryImpl @Inject constructor(
         val customs = userPreferences.customChannels.first()
         customs.forEach { allChannels.add(it.toEntity()) }
 
+        val parsedChannelIds = allPrograms.map { it.channelId }.distinct()
         database.withTransaction {
-            programDao.clearAll()
+            parsedChannelIds.forEach { chId ->
+                programDao.deleteProgramsForChannel(chId)
+            }
             if (allChannels.isNotEmpty()) {
                 channelDao.insertChannels(allChannels)
             }

@@ -214,7 +214,8 @@ class NowPlayingViewModel @Inject constructor(
                 }
             }
 
-            val targetChannelIds = (allChannels.map { it.id } + ChannelCatalog.tntChannelIds).distinct()
+            val targetChannelIds = (allChannels.map { it.id } + ChannelCatalog.tntChannelIds)
+                .distinctBy { ChannelCatalog.normalizeId(it) }
             val selectedPrograms = targetChannelIds.mapNotNull { channelId ->
                 val channelProgs = progsByChannel[channelId] ?: progsByChannel.entries.firstOrNull {
                     ChannelCatalog.normalizeId(it.key) == ChannelCatalog.normalizeId(channelId)
@@ -267,7 +268,7 @@ class NowPlayingViewModel @Inject constructor(
                 }
             }
 
-            val filtered = selectedPrograms.filter { program ->
+            val filtered = selectedPrograms.distinctBy { ChannelCatalog.normalizeId(it.channelId) }.filter { program ->
                 val notHidden = !prefs.hiddenChannels.any {
                     ChannelCatalog.normalizeId(it) == ChannelCatalog.normalizeId(program.channelId)
                 }

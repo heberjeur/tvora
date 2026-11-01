@@ -148,7 +148,6 @@ class SettingsViewModel @Inject constructor(
                 isFavorite = false
             )
             epgRepository.addCustomChannel(channel)
-            epgRepository.syncProgramsForChannels(setOf(preset.id))
         }
     }
 

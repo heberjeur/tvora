@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import android.content.res.Configuration
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -493,10 +495,10 @@ fun NowPlayingScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            items(
+                            itemsIndexed(
                                 items = pagePrograms,
-                                key = { "${it.channelId}_${it.id}" }
-                            ) { program ->
+                                key = { index, program -> "${program.channelId}_${program.id}_$index" }
+                            ) { _, program ->
                                 ProgramCard(
                                     program = program,
                                     onClick = {
@@ -514,10 +516,10 @@ fun NowPlayingScreen(
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            items(
+                            itemsIndexed(
                                 items = pagePrograms,
-                                key = { "${it.channelId}_${it.id}" }
-                            ) { program ->
+                                key = { index, program -> "${program.channelId}_${program.id}_$index" }
+                            ) { _, program ->
                                 ProgramCard(
                                     program = program,
                                     onClick = {
