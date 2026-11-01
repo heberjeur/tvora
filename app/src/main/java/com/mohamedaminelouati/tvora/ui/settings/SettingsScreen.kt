@@ -160,7 +160,7 @@ fun SettingsScreen(
 
     if (showAddChannelDialog) {
         AddChannelDialog(
-            existingChannels = allChannels,
+            existingChannels = customChannels,
             onAddPreset = { preset ->
                 viewModel.addPresetChannel(preset)
                 Toast.makeText(context, context.getString(R.string.toast_channel_added), Toast.LENGTH_SHORT).show()

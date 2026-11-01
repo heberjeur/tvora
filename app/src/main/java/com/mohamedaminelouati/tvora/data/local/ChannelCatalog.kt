@@ -124,7 +124,7 @@ object ChannelCatalog {
         "NationalGeographic.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~c00912008deb7144.png/480x480/quality/100/national-geographic.png",
         "13eRue.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~c7a8275787244ffe.png/480x480/quality/100/13eme-rue.png",
         "13emeRue.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~c7a8275787244ffe.png/480x480/quality/100/13eme-rue.png",
-        "Syfy.fr" to "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/SciFi_2026.svg/500px-SciFi_2026.svg.png",
+        "Syfy.fr" to "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/syfy-us.png",
         "DisneyChannel.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~ab11120cc94674c8.png/480x480/quality/100/disney-channel.png",
         "GameOne.fr" to "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/france/game-one-fr.png",
         "Mangas.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~a624ee4f7be827c4.png/480x480/quality/100/mangas.png",
@@ -266,67 +266,33 @@ object ChannelCatalog {
     }
 
     fun normalizeId(id: String): String {
-        return id.trim().lowercase().removeSuffix(".fr")
+        val norm = id.trim().lowercase().removeSuffix(".fr")
             .replace("+", "plus")
             .replace("[^a-z0-9]".toRegex(), "")
+        return when (norm) {
+            "canalplus", "canal", "c" -> "canalplus"
+            "nt1", "tfx" -> "tfx"
+            "lachaineparlementaire", "lcp" -> "lcp"
+            "lequipe21", "lequipe" -> "lequipe"
+            "numero23", "rmcstory" -> "rmcstory"
+            "cherie25", "rmclife" -> "rmclife"
+            "13emerue", "13erue" -> "13erue"
+            "scifi", "syfy" -> "syfy"
+            else -> norm
+        }
     }
 
     fun canonicalChannelId(id: String): String {
         val norm = normalizeId(id)
         return when (norm) {
-            "canalplus", "canal" -> "CanalPlus.fr"
-            "tf1" -> "TF1.fr"
-            "france2" -> "France2.fr"
-            "france3" -> "France3.fr"
-            "france4" -> "France4.fr"
-            "france5" -> "France5.fr"
-            "m6" -> "M6.fr"
-            "arte" -> "Arte.fr"
-            "lcp", "lachaineparlementaire" -> "LCP.fr"
-            "w9" -> "W9.fr"
-            "tmc" -> "TMC.fr"
-            "tfx", "nt1" -> "TFX.fr"
-            "gulli" -> "Gulli.fr"
-            "bfmtv", "bfm" -> "BFMTV.fr"
-            "cnews" -> "CNews.fr"
-            "lci" -> "LCI.fr"
-            "franceinfo" -> "FranceInfo.fr"
-            "cstar" -> "CStar.fr"
-            "t18" -> "T18.fr"
-            "novo19" -> "NOVO19.fr"
-            "tf1seriesfilms" -> "TF1SeriesFilms.fr"
-            "lequipe", "lequipe21" -> "LEquipe.fr"
-            "6ter" -> "6ter.fr"
-            "rmcstory", "numero23" -> "RMCStory.fr"
-            "rmcdecouverte" -> "RMCDecouverte.fr"
-            "rmclife", "cherie25" -> "RMCLife.fr"
-            "tv5monde" -> "TV5Monde.fr"
-            "france24" -> "France24.fr"
-            "parispremiere" -> "ParisPremiere.fr"
-            "rtl9" -> "RTL9.fr"
-            "teva" -> "Teva.fr"
-            "canalpluscinema" -> "CanalPlusCinema.fr"
-            "canalplussport" -> "CanalPlusSport.fr"
-            "canalplusseries" -> "CanalPlusSeries.fr"
-            "beinsports1" -> "beINSPORTS1.fr"
-            "beinsports2" -> "beINSPORTS2.fr"
-            "eurosport1" -> "Eurosport1.fr"
-            "eurosport2" -> "Eurosport2.fr"
-            "tvbreizh" -> "TvBreizh.fr"
-            "ushuaiatv" -> "UshuaiaTV.fr"
-            "histoiretv", "histoire" -> "Histoire.fr"
-            "ab1" -> "AB1.fr"
-            "warnertv" -> "WarnerTV.fr"
-            "comedieplus", "comedie" -> "ComediePlus.fr"
-            "planeteplus", "planete" -> "PlanetePlus.fr"
-            "nationalgeographic" -> "NationalGeographic.fr"
-            "13emerue", "13erue" -> "13eRue.fr"
-            "syfy", "scifi" -> "Syfy.fr"
-            "disneychannel" -> "DisneyChannel.fr"
-            "gameone" -> "GameOne.fr"
-            "mangas" -> "Mangas.fr"
-            "bfmbusiness" -> "BFMBusiness.fr"
-            "euronews" -> "Euronews.fr"
+            "canalplus" -> "CanalPlus.fr"
+            "tfx" -> "TFX.fr"
+            "lcp" -> "LCP.fr"
+            "lequipe" -> "LEquipe.fr"
+            "rmcstory" -> "RMCStory.fr"
+            "rmclife" -> "RMCLife.fr"
+            "13erue" -> "13eRue.fr"
+            "syfy" -> "Syfy.fr"
             else -> id
         }
     }
@@ -358,7 +324,7 @@ object ChannelCatalog {
         PresetChannel("PlanetePlus.fr", "Planète+", 45, "https://www.programme-tv.net/imgre/fit/~2~channel~475677d45988adc5.png/480x480/quality/100/planete.png"),
         PresetChannel("NationalGeographic.fr", "National Geographic", 46, "https://www.programme-tv.net/imgre/fit/~2~channel~c00912008deb7144.png/480x480/quality/100/national-geographic.png"),
         PresetChannel("13eRue.fr", "13ème Rue", 47, "https://www.programme-tv.net/imgre/fit/~2~channel~c7a8275787244ffe.png/480x480/quality/100/13eme-rue.png"),
-        PresetChannel("Syfy.fr", "Syfy", 48, "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/SciFi_2026.svg/500px-SciFi_2026.svg.png"),
+        PresetChannel("Syfy.fr", "Syfy", 48, "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/syfy-us.png"),
         PresetChannel("DisneyChannel.fr", "Disney Channel", 49, "https://www.programme-tv.net/imgre/fit/~2~channel~ab11120cc94674c8.png/480x480/quality/100/disney-channel.png"),
         PresetChannel("GameOne.fr", "Game One", 50, "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/france/game-one-fr.png"),
         PresetChannel("Mangas.fr", "Mangas", 51, "https://www.programme-tv.net/imgre/fit/~2~channel~a624ee4f7be827c4.png/480x480/quality/100/mangas.png"),

@@ -101,16 +101,42 @@ class EpgRepositoryImpl @Inject constructor(
             channelDao.getChannelsByPackage(channelPackage.id),
             userPreferences.customChannels
         ) { dbList, customList ->
-            val mapped = dbList.map { it.toDomain() }.toMutableList()
-            val existingNormalized = mapped.map { ChannelCatalog.normalizeId(it.id) }.toSet()
-            customList.forEach { custom ->
-                if (!existingNormalized.contains(ChannelCatalog.normalizeId(custom.id))) {
-                    mapped.add(custom)
+            val customMap = customList.associateBy { ChannelCatalog.normalizeId(it.id) }
+            val tntNormalized = ChannelCatalog.tntChannelIds.map { ChannelCatalog.normalizeId(it) }.toSet()
+
+            val mapped = mutableListOf<Channel>()
+            val seenNormalized = mutableSetOf<String>()
+
+            dbList.forEach { entity ->
+                val norm = ChannelCatalog.normalizeId(entity.id)
+                if (seenNormalized.add(norm)) {
+                    val custom = customMap[norm]
+                    if (custom != null) {
+                        mapped.add(custom.copy(iconUrl = ChannelCatalog.getLogoUrl(custom.id) ?: custom.iconUrl))
+                    } else if (tntNormalized.contains(norm) || ChannelCatalog.isCatalogChannel(entity.id)) {
+                        val tntNumber = ChannelCatalog.getChannelNumber(entity.id)
+                        val resolvedNumber = if (tntNumber > 0) tntNumber else entity.channelNumber
+                        mapped.add(
+                            entity.toDomain().copy(
+                                channelNumber = resolvedNumber,
+                                displayName = ChannelCatalog.getDisplayName(entity.id),
+                                iconUrl = ChannelCatalog.getLogoUrl(entity.id) ?: entity.iconUrl
+                            )
+                        )
+                    }
                 }
             }
-            val updatedExisting = mapped.map { ChannelCatalog.normalizeId(it.id) }.toSet()
+
+            customList.forEach { custom ->
+                val norm = ChannelCatalog.normalizeId(custom.id)
+                if (seenNormalized.add(norm)) {
+                    mapped.add(custom.copy(iconUrl = ChannelCatalog.getLogoUrl(custom.id) ?: custom.iconUrl))
+                }
+            }
+
             ChannelCatalog.tntChannelIds.forEach { tntId ->
-                if (!updatedExisting.contains(ChannelCatalog.normalizeId(tntId))) {
+                val norm = ChannelCatalog.normalizeId(tntId)
+                if (seenNormalized.add(norm)) {
                     mapped.add(
                         Channel(
                             id = tntId,
@@ -123,6 +149,7 @@ class EpgRepositoryImpl @Inject constructor(
                     )
                 }
             }
+
             mapped.sortedWith(
                 compareBy<Channel> { if (it.channelNumber > 0) 0 else 1 }
                     .thenBy { it.channelNumber }
@@ -133,21 +160,12 @@ class EpgRepositoryImpl @Inject constructor(
 
     override fun getFavoriteChannels(channelPackage: ChannelPackage): Flow<List<Channel>> {
         return combine(
-            channelDao.getFavoriteChannels(channelPackage.id),
-            userPreferences.customChannels
-        ) { dbList, customList ->
-            val mapped = dbList.map { it.toDomain() }.toMutableList()
-            val existingNormalized = mapped.map { ChannelCatalog.normalizeId(it.id) }.toSet()
-            customList.filter { it.isFavorite }.forEach { custom ->
-                if (!existingNormalized.contains(ChannelCatalog.normalizeId(custom.id))) {
-                    mapped.add(custom)
-                }
+            getChannels(channelPackage),
+            userPreferences.favoriteChannels
+        ) { channels, favIds ->
+            channels.filter { ch ->
+                ChannelCatalog.isFavorite(ch.id, favIds) || ch.isFavorite
             }
-            mapped.sortedWith(
-                compareBy<Channel> { if (it.channelNumber > 0) 0 else 1 }
-                    .thenBy { it.channelNumber }
-                    .thenBy { it.displayName }
-            )
         }
     }
 
@@ -497,7 +515,7 @@ class EpgRepositoryImpl @Inject constructor(
                 val channelsList = mutableListOf<ChannelEntity>()
                 val imageList = mutableListOf<String>()
 
-                GZIPInputStream(stream).use { parsedInput ->
+                stream.use { parsedInput ->
                     parser.parse(parsedInput, ChannelPackage.COMMUNITY_ENRICHED.id, canonicalTargets) { channels, programs ->
                         if (channels.isNotEmpty()) {
                             channelsList.addAll(channels)

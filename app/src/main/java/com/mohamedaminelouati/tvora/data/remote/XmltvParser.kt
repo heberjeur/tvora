@@ -110,7 +110,7 @@ class XmltvParser @Inject constructor() {
             skipElement(parser)
             return null
         }
-        val id = if (rawId.equals("canal+", ignoreCase = true) || rawId.equals("c+", ignoreCase = true)) "CanalPlus.fr" else rawId
+        val id = ChannelCatalog.canonicalChannelId(rawId)
         var displayName = ""
         var iconUrl: String? = null
         var lcnNumber = 0
@@ -123,7 +123,11 @@ class XmltvParser @Inject constructor() {
                 "icon" -> {
                     val rawIcon = parser.getAttributeValue(null, "src")
                     if (!rawIcon.isNullOrBlank()) {
-                        iconUrl = if (rawIcon.startsWith("//")) "https:$rawIcon" else rawIcon
+                        var resolved = if (rawIcon.startsWith("//")) "https:$rawIcon" else rawIcon
+                        if (resolved.startsWith("http://")) {
+                            resolved = resolved.replaceFirst("http://", "https://")
+                        }
+                        iconUrl = resolved
                     }
                     skipElement(parser)
                 }
@@ -153,7 +157,7 @@ class XmltvParser @Inject constructor() {
             skipElement(parser)
             return null
         }
-        val channelId = if (rawChannelId.equals("canal+", ignoreCase = true) || rawChannelId.equals("c+", ignoreCase = true)) "CanalPlus.fr" else rawChannelId
+        val channelId = ChannelCatalog.canonicalChannelId(rawChannelId)
         val startString = parser.getAttributeValue(null, "start") ?: run {
             skipElement(parser)
             return null
@@ -233,6 +237,9 @@ class XmltvParser @Inject constructor() {
                     val rawIcon = parser.getAttributeValue(null, "src")
                     if (!rawIcon.isNullOrBlank()) {
                         var resolved = if (rawIcon.startsWith("//")) "https:$rawIcon" else rawIcon
+                        if (resolved.startsWith("http://")) {
+                            resolved = resolved.replaceFirst("http://", "https://")
+                        }
                         if (resolved.contains("/64x90/")) {
                             resolved = resolved.replace("/64x90/quality/80/", "/640x360/quality/90/")
                         }

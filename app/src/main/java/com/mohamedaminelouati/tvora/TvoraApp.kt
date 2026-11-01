@@ -54,7 +54,17 @@ class TvoraApp : Application(), Configuration.Provider, ImageLoaderFactory {
     }
 
     override fun newImageLoader(): ImageLoader {
+        val okHttpClient = okhttp3.OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .header("User-Agent", "Mozilla/5.0 (Linux; Android 14) TVora/1.0")
+                    .build()
+                chain.proceed(request)
+            }
+            .build()
+
         return ImageLoader.Builder(this)
+            .okHttpClient(okHttpClient)
             .memoryCache {
                 MemoryCache.Builder(this)
                     .maxSizePercent(0.25)

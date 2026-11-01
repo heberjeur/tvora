@@ -495,7 +495,7 @@ fun NowPlayingScreen(
                         ) {
                             items(
                                 items = pagePrograms,
-                                key = { it.id }
+                                key = { "${it.channelId}_${it.id}" }
                             ) { program ->
                                 ProgramCard(
                                     program = program,
@@ -516,7 +516,7 @@ fun NowPlayingScreen(
                         ) {
                             items(
                                 items = pagePrograms,
-                                key = { it.id }
+                                key = { "${it.channelId}_${it.id}" }
                             ) { program ->
                                 ProgramCard(
                                     program = program,

@@ -223,8 +223,9 @@ class NowPlayingViewModel @Inject constructor(
                     if (query.isBlank() && tag.isNullOrBlank()) {
                         val ch = allChannels.firstOrNull { ChannelCatalog.normalizeId(it.id) == ChannelCatalog.normalizeId(channelId) }
                         val logo = ch?.iconUrl?.takeIf { it.isNotBlank() } ?: ChannelCatalog.getLogoUrl(channelId)
+                        val stableOffset = (targetChannelIds.indexOf(channelId) + 1).toLong()
                         Program(
-                            id = -(channelId.hashCode().toLong().coerceAtLeast(1L)),
+                            id = -100_000L - stableOffset,
                             channelId = channelId,
                             startTimestamp = targetTime,
                             stopTimestamp = targetTime + 3600_000L,
