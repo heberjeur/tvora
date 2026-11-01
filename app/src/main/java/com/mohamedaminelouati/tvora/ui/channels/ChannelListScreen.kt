@@ -2,6 +2,7 @@ package com.mohamedaminelouati.tvora.ui.channels
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -272,6 +274,11 @@ private fun ChannelListCard(
     onFavoriteClick: () -> Unit
 ) {
     val showChannelNumbers = com.mohamedaminelouati.tvora.ui.theme.LocalShowChannelNumbers.current
+    val isOled = MaterialTheme.colorScheme.background == Color.Black
+    val isDark = MaterialTheme.colorScheme.surface == com.mohamedaminelouati.tvora.ui.theme.RawDarkSurface || isOled
+    val logoContainerColor = if (isDark) Color.White.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant
+    val logoBorderModifier = if (isDark) Modifier.border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp)) else Modifier
+    val logoUrl = com.mohamedaminelouati.tvora.data.local.ChannelCatalog.getLogoUrl(channel.id) ?: channel.iconUrl
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -289,12 +296,13 @@ private fun ChannelListCard(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                    .background(logoContainerColor)
+                    .then(logoBorderModifier),
                 contentAlignment = Alignment.Center
             ) {
-                if (!channel.iconUrl.isNullOrBlank() && !channel.iconUrl.startsWith("data:")) {
+                if (!logoUrl.isNullOrBlank() && !logoUrl.startsWith("data:")) {
                     AsyncImage(
-                        model = channel.iconUrl,
+                        model = logoUrl,
                         contentDescription = channel.displayName,
                         modifier = Modifier
                             .size(36.dp)
@@ -347,6 +355,11 @@ private fun ChannelGridCard(
     onFavoriteClick: () -> Unit
 ) {
     val showChannelNumbers = com.mohamedaminelouati.tvora.ui.theme.LocalShowChannelNumbers.current
+    val isOled = MaterialTheme.colorScheme.background == Color.Black
+    val isDark = MaterialTheme.colorScheme.surface == com.mohamedaminelouati.tvora.ui.theme.RawDarkSurface || isOled
+    val logoContainerColor = if (isDark) Color.White.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant
+    val logoBorderModifier = if (isDark) Modifier.border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp)) else Modifier
+    val logoUrl = com.mohamedaminelouati.tvora.data.local.ChannelCatalog.getLogoUrl(channel.id) ?: channel.iconUrl
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -365,12 +378,13 @@ private fun ChannelGridCard(
                 modifier = Modifier
                     .size(54.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                    .background(logoContainerColor)
+                    .then(logoBorderModifier),
                 contentAlignment = Alignment.Center
             ) {
-                if (!channel.iconUrl.isNullOrBlank() && !channel.iconUrl.startsWith("data:")) {
+                if (!logoUrl.isNullOrBlank() && !logoUrl.startsWith("data:")) {
                     AsyncImage(
-                        model = channel.iconUrl,
+                        model = logoUrl,
                         contentDescription = channel.displayName,
                         modifier = Modifier
                             .size(44.dp)

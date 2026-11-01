@@ -418,12 +418,6 @@ class EpgRepositoryImpl @Inject constructor(
                             }
                             if (programs.isNotEmpty()) {
                                 allPrograms.addAll(programs)
-                                programs.forEach { p ->
-                                    val icon = p.iconUrl
-                                    if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
-                                        imageList.add(icon)
-                                    }
-                                }
                             }
                         }
                     }
@@ -471,8 +465,7 @@ class EpgRepositoryImpl @Inject constructor(
                         lastSyncTimestamp = now
                     )
 
-                    imageList.addAll(ChannelCatalog.getAllLogoUrls())
-                    prefetchImages(imageList)
+                    prefetchImages(ChannelCatalog.getAllLogoUrls())
 
                     _syncProgress.value = SyncProgress(
                         state = SyncState.SUCCESS,
@@ -559,12 +552,6 @@ class EpgRepositoryImpl @Inject constructor(
                                     }
                                     programDao.insertPrograms(programs)
                                 }
-                                programs.forEach { p ->
-                                    val icon = p.iconUrl
-                                    if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
-                                        imageList.add(icon)
-                                    }
-                                }
                             }
                         }
                     }
@@ -626,12 +613,6 @@ class EpgRepositoryImpl @Inject constructor(
                 }
                 if (batchPrograms.isNotEmpty()) {
                     allPrograms.addAll(batchPrograms)
-                    batchPrograms.forEach { p ->
-                        val icon = p.iconUrl
-                        if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
-                            imageList.add(icon)
-                        }
-                    }
                 }
             }
         }
@@ -671,8 +652,7 @@ class EpgRepositoryImpl @Inject constructor(
             lastSyncTimestamp = now
         )
 
-        imageList.addAll(ChannelCatalog.getAllLogoUrls())
-        prefetchImages(imageList)
+        prefetchImages(ChannelCatalog.getAllLogoUrls())
 
         if (customs.isNotEmpty()) {
             repositoryScope.launch {
@@ -683,7 +663,7 @@ class EpgRepositoryImpl @Inject constructor(
 
     private suspend fun prefetchImages(urls: List<String>) {
         if (urls.isEmpty()) return
-        val distinctUrls = urls.filter { it.isNotBlank() && !it.startsWith("data:") }.distinct()
+        val distinctUrls = urls.filter { it.isNotBlank() && !it.startsWith("data:") }.distinct().take(60)
         val loader = context.imageLoader
 
         withContext(Dispatchers.IO) {

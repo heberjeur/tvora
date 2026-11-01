@@ -8,11 +8,13 @@ import com.mohamedaminelouati.tvora.domain.model.Program
 import com.mohamedaminelouati.tvora.domain.model.TvCategory
 import com.mohamedaminelouati.tvora.domain.repository.EpgRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -133,6 +135,19 @@ class CategoriesViewModel @Inject constructor(
             }
         }
 
+        if (selectedCat == null && query.isBlank()) {
+            return@combine CategoriesUiState(
+                categories = cardList,
+                selectedCategory = null,
+                subCategories = emptyList(),
+                selectedSubCategory = null,
+                searchQuery = "",
+                programs = emptyList(),
+                totalProgramsCount = 0,
+                isLoading = false
+            )
+        }
+
         val programsInParent = if (selectedCat == null) {
             programs
         } else {
@@ -181,7 +196,8 @@ class CategoriesViewModel @Inject constructor(
             totalProgramsCount = programsInParent.size,
             isLoading = false
         )
-    }.stateIn(
+    }.flowOn(Dispatchers.Default)
+    .stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         CategoriesUiState(isLoading = true)

@@ -14,6 +14,7 @@ import com.mohamedaminelouati.tvora.domain.repository.EpgRepository
 import com.mohamedaminelouati.tvora.data.local.ChannelCatalog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -121,7 +123,7 @@ class NowPlayingViewModel @Inject constructor(
     private val currentTimeFlow: Flow<Long> = flow {
         while (true) {
             emit(System.currentTimeMillis())
-            delay(5000L)
+            delay(30_000L)
         }
     }
 
@@ -184,7 +186,7 @@ class NowPlayingViewModel @Inject constructor(
         val (part, query, tag, prefs) = filterParams
         val originZone = com.mohamedaminelouati.tvora.util.TimezoneUtils.ORIGIN_ZONE
         val today = LocalDate.now(originZone)
-        val progsByChannel = rawList.groupBy { it.channelId }
+        val progsByNormalizedChannel = rawList.groupBy { ChannelCatalog.normalizeId(it.channelId) }
 
         BroadcastPeriod.entries.associateWith { period ->
             val targetTime = when (period) {
@@ -217,9 +219,8 @@ class NowPlayingViewModel @Inject constructor(
             val targetChannelIds = (allChannels.map { it.id } + ChannelCatalog.tntChannelIds)
                 .distinctBy { ChannelCatalog.normalizeId(it) }
             val selectedPrograms = targetChannelIds.mapNotNull { channelId ->
-                val channelProgs = progsByChannel[channelId] ?: progsByChannel.entries.firstOrNull {
-                    ChannelCatalog.normalizeId(it.key) == ChannelCatalog.normalizeId(channelId)
-                }?.value
+                val normalizedId = ChannelCatalog.normalizeId(channelId)
+                val channelProgs = progsByNormalizedChannel[normalizedId]
                 if (channelProgs.isNullOrEmpty()) {
                     if (query.isBlank() && tag.isNullOrBlank()) {
                         val ch = allChannels.firstOrNull { ChannelCatalog.normalizeId(it.id) == ChannelCatalog.normalizeId(channelId) }
@@ -318,7 +319,8 @@ class NowPlayingViewModel @Inject constructor(
                 )
             }
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+    }.flowOn(Dispatchers.Default)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     val programs: StateFlow<List<Program>> = combine(
         periodPrograms,

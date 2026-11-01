@@ -10,6 +10,7 @@ import com.mohamedaminelouati.tvora.domain.model.Program
 import com.mohamedaminelouati.tvora.domain.model.TvCategory
 import com.mohamedaminelouati.tvora.domain.repository.EpgRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -37,10 +39,6 @@ class GuideViewModel @Inject constructor(
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
-
-    init {
-        refresh(force = false)
-    }
 
     fun refresh(force: Boolean = true) {
         viewModelScope.launch {
@@ -128,7 +126,8 @@ class GuideViewModel @Inject constructor(
                     .thenBy { it.displayName }
             )
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.flowOn(Dispatchers.Default)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private data class FilterPreferences(
         val hiddenChannels: Set<String>,
@@ -167,7 +166,7 @@ class GuideViewModel @Inject constructor(
     private val currentTimeFlow: Flow<Long> = flow {
         while (true) {
             emit(System.currentTimeMillis())
-            delay(10_000L)
+            delay(30_000L)
         }
     }
 
@@ -258,7 +257,8 @@ class GuideViewModel @Inject constructor(
         } else {
             sorted
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.flowOn(Dispatchers.Default)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun selectCategory(category: TvCategory?) {
         _selectedCategory.value = category
