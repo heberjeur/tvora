@@ -165,10 +165,6 @@ fun SettingsScreen(
                 viewModel.addPresetChannel(preset)
                 Toast.makeText(context, context.getString(R.string.toast_channel_added), Toast.LENGTH_SHORT).show()
             },
-            onAddCustom = { name, number, iconUrl ->
-                viewModel.addCustomChannel(name, number, iconUrl)
-                Toast.makeText(context, context.getString(R.string.toast_channel_added), Toast.LENGTH_SHORT).show()
-            },
             onDismiss = { showAddChannelDialog = false }
         )
     }

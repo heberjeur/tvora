@@ -207,11 +207,8 @@
     <string name="settings_custom_channels_count">%1$d channel(s) added</string>
     <string name="add_channel_button">Add a channel</string>
     <string name="dialog_add_channel_title">Add a Channel</string>
-    <string name="dialog_add_channel_tab_catalog">Available Channels</string>
-    <string name="dialog_add_channel_tab_custom">Custom</string>
-    <string name="dialog_add_channel_name_label">Channel name</string>
-    <string name="dialog_add_channel_number_label">Channel number</string>
-    <string name="dialog_add_channel_icon_label">Logo URL (optional)</string>
+    <string name="search_channel_hint">Search a channel…</string>
+    <string name="program_unavailable">Program information unavailable</string>
     <string name="dialog_add_channel_empty_catalog">All catalog channels have been added</string>
     <string name="dialog_add_channel_no_custom">No additional channels added yet</string>
     <string name="toast_channel_added">Channel added successfully</string>

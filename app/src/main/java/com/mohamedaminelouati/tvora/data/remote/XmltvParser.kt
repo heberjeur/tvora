@@ -25,6 +25,7 @@ class XmltvParser @Inject constructor() {
     suspend fun parse(
         inputStream: InputStream,
         packageId: String,
+        targetChannelIds: Set<String>? = null,
         onBatchParsed: suspend (channels: List<ChannelEntity>, programs: List<ProgramEntity>) -> Unit
     ) {
         val parser = XmlPullParserFactory.newInstance().newPullParser()
@@ -41,38 +42,54 @@ class XmltvParser @Inject constructor() {
             if (eventType == XmlPullParser.START_TAG) {
                 when (parser.name) {
                     XML_TAG_CHANNEL -> {
-                        val channel = parseChannel(parser, packageId)
-                        if (channel != null) {
-                            channelsBatch.add(channel)
+                        val rawId = parser.getAttributeValue(null, "id")
+                        val isTarget = targetChannelIds == null || (rawId != null && targetChannelIds.any {
+                            ChannelCatalog.normalizeId(it) == ChannelCatalog.normalizeId(rawId)
+                        })
+                        if (!isTarget) {
+                            skipElement(parser)
+                        } else {
+                            val channel = parseChannel(parser, packageId)
+                            if (channel != null) {
+                                channelsBatch.add(channel)
+                            }
                         }
                     }
                     XML_TAG_PROGRAM -> {
-                        val program = parseProgram(parser)
-                        if (program != null) {
-                            var finalProgram = program
-                            val prev = lastProgram
-                            if (prev != null &&
-                                prev.channelId == program.channelId &&
-                                prev.title.equals(program.title, ignoreCase = true) &&
-                                prev.seasonNumber != null &&
-                                prev.seasonNumber == program.seasonNumber &&
-                                !prev.subTitle.isNullOrBlank() &&
-                                !program.subTitle.isNullOrBlank() &&
-                                !prev.subTitle.trim().equals(program.subTitle.trim(), ignoreCase = true) &&
-                                (program.startTimestamp - prev.stopTimestamp) in -300_000L..1_800_000L
-                            ) {
-                                val prevEp = prev.episodeNumber
-                                val currEp = program.episodeNumber
-                                if (prevEp != null && (currEp == null || currEp <= prevEp)) {
-                                    finalProgram = program.copy(episodeNumber = prevEp + 1)
+                        val rawChannel = parser.getAttributeValue(null, "channel")
+                        val isTarget = targetChannelIds == null || (rawChannel != null && targetChannelIds.any {
+                            ChannelCatalog.normalizeId(it) == ChannelCatalog.normalizeId(rawChannel)
+                        })
+                        if (!isTarget) {
+                            skipElement(parser)
+                        } else {
+                            val program = parseProgram(parser)
+                            if (program != null) {
+                                var finalProgram = program
+                                val prev = lastProgram
+                                if (prev != null &&
+                                    prev.channelId == program.channelId &&
+                                    prev.title.equals(program.title, ignoreCase = true) &&
+                                    prev.seasonNumber != null &&
+                                    prev.seasonNumber == program.seasonNumber &&
+                                    !prev.subTitle.isNullOrBlank() &&
+                                    !program.subTitle.isNullOrBlank() &&
+                                    !prev.subTitle.trim().equals(program.subTitle.trim(), ignoreCase = true) &&
+                                    (program.startTimestamp - prev.stopTimestamp) in -300_000L..1_800_000L
+                                ) {
+                                    val prevEp = prev.episodeNumber
+                                    val currEp = program.episodeNumber
+                                    if (prevEp != null && (currEp == null || currEp <= prevEp)) {
+                                        finalProgram = program.copy(episodeNumber = prevEp + 1)
+                                    }
                                 }
-                            }
-                            lastProgram = finalProgram
-                            programsBatch.add(finalProgram)
-                            if (programsBatch.size >= batchLimit) {
-                                onBatchParsed(channelsBatch.toList(), programsBatch.toList())
-                                channelsBatch.clear()
-                                programsBatch.clear()
+                                lastProgram = finalProgram
+                                programsBatch.add(finalProgram)
+                                if (programsBatch.size >= batchLimit) {
+                                    onBatchParsed(channelsBatch.toList(), programsBatch.toList())
+                                    channelsBatch.clear()
+                                    programsBatch.clear()
+                                }
                             }
                         }
                     }
@@ -89,10 +106,11 @@ class XmltvParser @Inject constructor() {
     }
 
     private fun parseChannel(parser: XmlPullParser, packageId: String): ChannelEntity? {
-        val id = parser.getAttributeValue(null, "id") ?: run {
+        val rawId = parser.getAttributeValue(null, "id") ?: run {
             skipElement(parser)
             return null
         }
+        val id = if (rawId.equals("canal+", ignoreCase = true) || rawId.equals("c+", ignoreCase = true)) "CanalPlus.fr" else rawId
         var displayName = ""
         var iconUrl: String? = null
         var lcnNumber = 0
@@ -131,10 +149,11 @@ class XmltvParser @Inject constructor() {
     }
 
     private fun parseProgram(parser: XmlPullParser): ProgramEntity? {
-        val channelId = parser.getAttributeValue(null, "channel") ?: run {
+        val rawChannelId = parser.getAttributeValue(null, "channel") ?: run {
             skipElement(parser)
             return null
         }
+        val channelId = if (rawChannelId.equals("canal+", ignoreCase = true) || rawChannelId.equals("c+", ignoreCase = true)) "CanalPlus.fr" else rawChannelId
         val startString = parser.getAttributeValue(null, "start") ?: run {
             skipElement(parser)
             return null

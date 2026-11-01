@@ -1,15 +1,19 @@
 package com.mohamedaminelouati.tvora.ui.now
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mohamedaminelouati.tvora.R
 import com.mohamedaminelouati.tvora.data.connectivity.ConnectivityObserver
 import com.mohamedaminelouati.tvora.data.local.prefs.UserPreferences
 import com.mohamedaminelouati.tvora.domain.model.ChannelPackage
 import com.mohamedaminelouati.tvora.domain.model.Program
+import com.mohamedaminelouati.tvora.domain.model.Credit
 import com.mohamedaminelouati.tvora.domain.model.SyncProgress
 import com.mohamedaminelouati.tvora.domain.repository.EpgRepository
 import com.mohamedaminelouati.tvora.data.local.ChannelCatalog
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -65,6 +69,7 @@ data class NowPlayingUiState(
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class NowPlayingViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val epgRepository: EpgRepository,
     private val userPreferences: UserPreferences,
     connectivityObserver: ConnectivityObserver
@@ -214,18 +219,50 @@ class NowPlayingViewModel @Inject constructor(
                 val channelProgs = progsByChannel[channelId] ?: progsByChannel.entries.firstOrNull {
                     ChannelCatalog.normalizeId(it.key) == ChannelCatalog.normalizeId(channelId)
                 }?.value
-                if (channelProgs.isNullOrEmpty()) return@mapNotNull null
-
-                val overlapping = channelProgs.filter { targetTime in it.startTimestamp until it.stopTimestamp }
-                if (overlapping.isNotEmpty()) {
-                    val meaningful = if (overlapping.size > 1 && overlapping.any { it.stopTimestamp - it.startTimestamp >= 5 * 60 * 1000L }) {
-                        overlapping.filter { it.stopTimestamp - it.startTimestamp >= 5 * 60 * 1000L }
+                if (channelProgs.isNullOrEmpty()) {
+                    if (query.isBlank() && tag.isNullOrBlank()) {
+                        val ch = allChannels.firstOrNull { ChannelCatalog.normalizeId(it.id) == ChannelCatalog.normalizeId(channelId) }
+                        val logo = ch?.iconUrl?.takeIf { it.isNotBlank() } ?: ChannelCatalog.getLogoUrl(channelId)
+                        Program(
+                            id = -(channelId.hashCode().toLong().coerceAtLeast(1L)),
+                            channelId = channelId,
+                            startTimestamp = targetTime,
+                            stopTimestamp = targetTime + 3600_000L,
+                            title = context.getString(R.string.program_unavailable),
+                            subTitle = null,
+                            description = "",
+                            secondaryDescription = null,
+                            categories = emptyList(),
+                            iconUrl = logo,
+                            seasonNumber = null,
+                            episodeNumber = null,
+                            episodeDisplay = null,
+                            credit = Credit(),
+                            contentRating = null,
+                            starRating = null,
+                            isUnreleased = false,
+                            hasSubtitles = false,
+                            isHd = false,
+                            durationMinutes = 60,
+                            productionYear = null,
+                            seriesYear = null,
+                            country = null
+                        )
                     } else {
-                        overlapping
+                        null
                     }
-                    meaningful.maxByOrNull { it.startTimestamp }
                 } else {
-                    channelProgs.minByOrNull { kotlin.math.abs(it.startTimestamp - targetTime) }
+                    val overlapping = channelProgs.filter { targetTime in it.startTimestamp until it.stopTimestamp }
+                    if (overlapping.isNotEmpty()) {
+                        val meaningful = if (overlapping.size > 1 && overlapping.any { it.stopTimestamp - it.startTimestamp >= 5 * 60 * 1000L }) {
+                            overlapping.filter { it.stopTimestamp - it.startTimestamp >= 5 * 60 * 1000L }
+                        } else {
+                            overlapping
+                        }
+                        meaningful.maxByOrNull { it.startTimestamp }
+                    } else {
+                        channelProgs.minByOrNull { kotlin.math.abs(it.startTimestamp - targetTime) }
+                    }
                 }
             }
 

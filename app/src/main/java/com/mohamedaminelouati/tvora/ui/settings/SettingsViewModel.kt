@@ -137,21 +137,6 @@ class SettingsViewModel @Inject constructor(
     val customChannels: StateFlow<List<Channel>> = epgRepository.getCustomChannels()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun addCustomChannel(name: String, number: Int, iconUrl: String?) {
-        viewModelScope.launch {
-            val baseId = name.trim().lowercase().replace("[^a-z0-9]".toRegex(), "") + ".fr"
-            val channel = Channel(
-                id = baseId,
-                displayName = name.trim(),
-                iconUrl = iconUrl?.trim()?.ifEmpty { null } ?: ChannelCatalog.getLogoUrl(baseId),
-                packageId = ChannelPackage.COMMUNITY_ENRICHED.id,
-                channelNumber = if (number > 0) number else 99,
-                isFavorite = false
-            )
-            epgRepository.addCustomChannel(channel)
-        }
-    }
-
     fun addPresetChannel(preset: ChannelCatalog.PresetChannel) {
         viewModelScope.launch {
             val channel = Channel(
@@ -163,6 +148,7 @@ class SettingsViewModel @Inject constructor(
                 isFavorite = false
             )
             epgRepository.addCustomChannel(channel)
+            epgRepository.syncProgramsForChannels(setOf(preset.id))
         }
     }
 

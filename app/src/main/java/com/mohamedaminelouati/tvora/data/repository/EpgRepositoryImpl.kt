@@ -74,7 +74,7 @@ class EpgRepositoryImpl @Inject constructor(
     private val _syncProgress = MutableStateFlow(SyncProgress())
 
     companion object {
-        const val CURRENT_EPG_ASSET_VERSION = 3
+        const val CURRENT_EPG_ASSET_VERSION = 5
     }
 
     init {
@@ -84,9 +84,10 @@ class EpgRepositoryImpl @Inject constructor(
                 val lastAssetVersion = userPreferences.lastSyncedAssetVersion.first()
                 val assetVersionOutdated = lastAssetVersion < CURRENT_EPG_ASSET_VERSION
                 val cachedCount = programDao.getProgramCount()
+                val canalPlusCount = programDao.getProgramCountForChannel("CanalPlus.fr")
                 val latestTimestamp = programDao.getLatestProgramTimestamp() ?: 0L
                 val now = System.currentTimeMillis()
-                if (cachedCount == 0 || (lastLang != null && lastLang != lang) || latestTimestamp < now || assetVersionOutdated) {
+                if (cachedCount == 0 || (lastLang != null && lastLang != lang) || latestTimestamp < now || assetVersionOutdated || canalPlusCount == 0) {
                     preloadFeed(ChannelPackage.COMMUNITY_ENRICHED, lang)
                 }
             }
@@ -447,6 +448,10 @@ class EpgRepositoryImpl @Inject constructor(
                         lastSyncTimestamp = now
                     )
 
+                    if (customs.isNotEmpty()) {
+                        syncProgramsForChannels(customs.map { it.id }.toSet())
+                    }
+
                     syncSucceeded = true
                     break
                 } catch (exception: Exception) {
@@ -476,14 +481,68 @@ class EpgRepositoryImpl @Inject constructor(
             preloadFeed(channelPackage, lang)
         }
 
-    private fun openFeedStream(channelPackage: ChannelPackage, lang: String): InputStream? {
-        val diskCache = File(context.filesDir, "epg_feed_${lang}.xml.gz")
-        if (diskCache.exists() && diskCache.length() > 0) {
+    override suspend fun syncProgramsForChannels(channelIds: Set<String>): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            if (channelIds.isEmpty()) return@withContext Result.success(Unit)
+            if (!connectivityObserver.isConnected()) return@withContext Result.success(Unit)
+
+            val canonicalTargets = channelIds.map { ChannelCatalog.canonicalChannelId(it) }.toSet()
+            val extraFeedUrl = "https://xmltvfr.fr/xmltv/xmltv.xml.gz"
+
             try {
-                return GZIPInputStream(FileInputStream(diskCache))
-            } catch (_: Exception) {
+                val downloadResult = downloader.downloadFeed(extraFeedUrl, null)
+                val stream = downloadResult.inputStream
+                    ?: return@withContext Result.failure(IOException("Empty stream for extra channels"))
+                val programsList = mutableListOf<ProgramEntity>()
+                val channelsList = mutableListOf<ChannelEntity>()
+                val imageList = mutableListOf<String>()
+
+                GZIPInputStream(stream).use { parsedInput ->
+                    parser.parse(parsedInput, ChannelPackage.COMMUNITY_ENRICHED.id, canonicalTargets) { channels, programs ->
+                        if (channels.isNotEmpty()) {
+                            channelsList.addAll(channels)
+                            channels.forEach { c ->
+                                val icon = ChannelCatalog.getLogoUrl(c.id) ?: c.iconUrl
+                                if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
+                                    imageList.add(icon)
+                                }
+                            }
+                        }
+                        if (programs.isNotEmpty()) {
+                            programsList.addAll(programs)
+                            programs.forEach { p ->
+                                val icon = p.iconUrl
+                                if (!icon.isNullOrBlank() && !icon.startsWith("data:")) {
+                                    imageList.add(icon)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (channelsList.isNotEmpty() || programsList.isNotEmpty()) {
+                    database.withTransaction {
+                        canonicalTargets.forEach { targetId ->
+                            programDao.deleteProgramsForChannel(targetId)
+                        }
+                        if (channelsList.isNotEmpty()) {
+                            channelDao.insertChannels(channelsList)
+                        }
+                        if (programsList.isNotEmpty()) {
+                            programDao.insertPrograms(programsList)
+                        }
+                    }
+                    if (imageList.isNotEmpty()) {
+                        prefetchImages(imageList)
+                    }
+                }
+                Result.success(Unit)
+            } catch (e: Exception) {
+                Result.failure(e)
             }
         }
+
+    private fun openAssetStream(channelPackage: ChannelPackage, lang: String): InputStream? {
         val preferredAsset = channelPackage.getFeedFileName(lang)
         val rawStream = try {
             context.assets.open(preferredAsset)
@@ -509,7 +568,11 @@ class EpgRepositoryImpl @Inject constructor(
     }
 
     private suspend fun preloadFeed(channelPackage: ChannelPackage, lang: String) {
-        val stream = openFeedStream(channelPackage, lang) ?: return
+        val diskCache = File(context.filesDir, "epg_feed_${lang}.xml.gz")
+        if (diskCache.exists()) {
+            diskCache.delete()
+        }
+        val stream = openAssetStream(channelPackage, lang) ?: return
         val allChannels = mutableListOf<ChannelEntity>()
         val allPrograms = mutableListOf<ProgramEntity>()
         val imageList = mutableListOf<String>()
@@ -571,6 +634,12 @@ class EpgRepositoryImpl @Inject constructor(
 
         imageList.addAll(ChannelCatalog.getAllLogoUrls())
         prefetchImages(imageList)
+
+        if (customs.isNotEmpty()) {
+            repositoryScope.launch {
+                syncProgramsForChannels(customs.map { it.id }.toSet())
+            }
+        }
     }
 
     private suspend fun prefetchImages(urls: List<String>) {

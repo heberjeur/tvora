@@ -8,7 +8,7 @@ enum class ChannelPackage(
     COMMUNITY_ENRICHED(
         id = "community_enriched",
         feedFileName = "epg_tnt.xml.gz",
-        feedUrl = "https://heberjeur.github.io/tvora/epg_tnt.xml.gz"
+        feedUrl = "https://xmltvfr.fr/xmltv/xmltv_tnt.xml.gz"
     );
 
     fun getFeedUrl(lang: String): String = when (lang) {
@@ -18,7 +18,7 @@ enum class ChannelPackage(
 
     fun getFallbackUrl(lang: String): String = when (lang) {
         "en" -> "https://raw.githubusercontent.com/heberjeur/tvora/gh-pages/epg_tnt_en.xml.gz"
-        else -> "https://raw.githubusercontent.com/heberjeur/tvora/gh-pages/epg_tnt.xml.gz"
+        else -> "https://heberjeur.github.io/tvora/epg_tnt.xml.gz"
     }
 
     fun getFeedFileName(lang: String): String = when (lang) {

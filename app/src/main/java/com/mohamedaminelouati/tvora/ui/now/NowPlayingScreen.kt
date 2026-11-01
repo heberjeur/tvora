@@ -499,7 +499,9 @@ fun NowPlayingScreen(
                             ) { program ->
                                 ProgramCard(
                                     program = program,
-                                    onClick = { onProgramClick(program.id) },
+                                    onClick = {
+                                        if (program.id > 0) onProgramClick(program.id) else onChannelClick(program.channelId)
+                                    },
                                     channelName = ChannelCatalog.getDisplayName(program.channelId),
                                     onCategoryClick = { tag -> viewModel.filterByTag(tag) },
                                     onChannelClick = onChannelClick
@@ -518,7 +520,9 @@ fun NowPlayingScreen(
                             ) { program ->
                                 ProgramCard(
                                     program = program,
-                                    onClick = { onProgramClick(program.id) },
+                                    onClick = {
+                                        if (program.id > 0) onProgramClick(program.id) else onChannelClick(program.channelId)
+                                    },
                                     channelName = ChannelCatalog.getDisplayName(program.channelId),
                                     onCategoryClick = { tag -> viewModel.filterByTag(tag) },
                                     onChannelClick = onChannelClick

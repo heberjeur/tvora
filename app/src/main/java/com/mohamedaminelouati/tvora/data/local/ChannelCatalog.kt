@@ -99,7 +99,37 @@ object ChannelCatalog {
         "CanalPlus" to "https://www.programme-tv.net/imgre/fit/~2~channel~897223a57e2e8ae5.png/480x480/quality/100/canal.png",
         "Canal+" to "https://www.programme-tv.net/imgre/fit/~2~channel~897223a57e2e8ae5.png/480x480/quality/100/canal.png",
         "TV5Monde.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~0231873fab336015.png/480x480/quality/100/tv5monde.png",
-        "France24.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~afbbeba076c073d9.png/480x480/quality/100/france-24.png"
+        "France24.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~afbbeba076c073d9.png/480x480/quality/100/france-24.png",
+        "ParisPremiere.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~ecf598fd002ccb9a.png/480x480/quality/100/paris-premiere.png",
+        "RTL9.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~39e76725dfcc33a3.png/480x480/quality/100/rtl-9.png",
+        "Teva.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~4421904d874fa072.png/480x480/quality/100/teva.png",
+        "CanalPlusCinema.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~0b078790aeb2d121.png/480x480/quality/100/canal-cinema.png",
+        "CanalPlusSport.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~2b97b0fb1264c28d.png/480x480/quality/100/canal-sport.png",
+        "CanalPlusSeries.fr" to "https://focus.telerama.fr/500x500/0000/00/01/clear-1563.png",
+        "beINSPORTS1.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~8884f09c3361af44.png/480x480/quality/100/bein-sports-1.png",
+        "BeInSports1.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~8884f09c3361af44.png/480x480/quality/100/bein-sports-1.png",
+        "beINSPORTS2.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~2fa633f39d6c3033.png/480x480/quality/100/bein-sports-2.png",
+        "BeInSports2.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~2fa633f39d6c3033.png/480x480/quality/100/bein-sports-2.png",
+        "Eurosport1.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~277882f801bd3f7b.png/480x480/quality/100/eurosport-1.png",
+        "Eurosport2.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~196acf0142c66a68.png/480x480/quality/100/eurosport-2.png",
+        "TvBreizh.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~eda4c23255b4fed2.png/480x480/quality/100/tvbreizh.png",
+        "TVBreizh.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~eda4c23255b4fed2.png/480x480/quality/100/tvbreizh.png",
+        "UshuaiaTV.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~778073cbbd827d7a.png/480x480/quality/100/ushuaia-tv.png",
+        "Histoire.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~354060da3ea6eca2.png/480x480/quality/100/histoire-tv.png",
+        "HistoireTV.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~354060da3ea6eca2.png/480x480/quality/100/histoire-tv.png",
+        "AB1.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~a15b4a2cb74dfd54.png/480x480/quality/100/ab-1.png",
+        "WarnerTV.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~6d75450123e766d6.png/480x480/quality/100/warner-tv.png",
+        "ComediePlus.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~b419616020702bc2.png/480x480/quality/100/comedie.png",
+        "PlanetePlus.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~475677d45988adc5.png/480x480/quality/100/planete.png",
+        "NationalGeographic.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~c00912008deb7144.png/480x480/quality/100/national-geographic.png",
+        "13eRue.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~c7a8275787244ffe.png/480x480/quality/100/13eme-rue.png",
+        "13emeRue.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~c7a8275787244ffe.png/480x480/quality/100/13eme-rue.png",
+        "Syfy.fr" to "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/SciFi_2026.svg/500px-SciFi_2026.svg.png",
+        "DisneyChannel.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~ab11120cc94674c8.png/480x480/quality/100/disney-channel.png",
+        "GameOne.fr" to "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/france/game-one-fr.png",
+        "Mangas.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~a624ee4f7be827c4.png/480x480/quality/100/mangas.png",
+        "BFMBusiness.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~7eb91da112d351e5.png/480x480/quality/100/bfm-business.png",
+        "Euronews.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~648eb1fd8a151da0.png/480x480/quality/100/euronews.png"
     )
 
     private val popularityRankMap = mapOf(
@@ -241,6 +271,66 @@ object ChannelCatalog {
             .replace("[^a-z0-9]".toRegex(), "")
     }
 
+    fun canonicalChannelId(id: String): String {
+        val norm = normalizeId(id)
+        return when (norm) {
+            "canalplus", "canal" -> "CanalPlus.fr"
+            "tf1" -> "TF1.fr"
+            "france2" -> "France2.fr"
+            "france3" -> "France3.fr"
+            "france4" -> "France4.fr"
+            "france5" -> "France5.fr"
+            "m6" -> "M6.fr"
+            "arte" -> "Arte.fr"
+            "lcp", "lachaineparlementaire" -> "LCP.fr"
+            "w9" -> "W9.fr"
+            "tmc" -> "TMC.fr"
+            "tfx", "nt1" -> "TFX.fr"
+            "gulli" -> "Gulli.fr"
+            "bfmtv", "bfm" -> "BFMTV.fr"
+            "cnews" -> "CNews.fr"
+            "lci" -> "LCI.fr"
+            "franceinfo" -> "FranceInfo.fr"
+            "cstar" -> "CStar.fr"
+            "t18" -> "T18.fr"
+            "novo19" -> "NOVO19.fr"
+            "tf1seriesfilms" -> "TF1SeriesFilms.fr"
+            "lequipe", "lequipe21" -> "LEquipe.fr"
+            "6ter" -> "6ter.fr"
+            "rmcstory", "numero23" -> "RMCStory.fr"
+            "rmcdecouverte" -> "RMCDecouverte.fr"
+            "rmclife", "cherie25" -> "RMCLife.fr"
+            "tv5monde" -> "TV5Monde.fr"
+            "france24" -> "France24.fr"
+            "parispremiere" -> "ParisPremiere.fr"
+            "rtl9" -> "RTL9.fr"
+            "teva" -> "Teva.fr"
+            "canalpluscinema" -> "CanalPlusCinema.fr"
+            "canalplussport" -> "CanalPlusSport.fr"
+            "canalplusseries" -> "CanalPlusSeries.fr"
+            "beinsports1" -> "beINSPORTS1.fr"
+            "beinsports2" -> "beINSPORTS2.fr"
+            "eurosport1" -> "Eurosport1.fr"
+            "eurosport2" -> "Eurosport2.fr"
+            "tvbreizh" -> "TvBreizh.fr"
+            "ushuaiatv" -> "UshuaiaTV.fr"
+            "histoiretv", "histoire" -> "Histoire.fr"
+            "ab1" -> "AB1.fr"
+            "warnertv" -> "WarnerTV.fr"
+            "comedieplus", "comedie" -> "ComediePlus.fr"
+            "planeteplus", "planete" -> "PlanetePlus.fr"
+            "nationalgeographic" -> "NationalGeographic.fr"
+            "13emerue", "13erue" -> "13eRue.fr"
+            "syfy", "scifi" -> "Syfy.fr"
+            "disneychannel" -> "DisneyChannel.fr"
+            "gameone" -> "GameOne.fr"
+            "mangas" -> "Mangas.fr"
+            "bfmbusiness" -> "BFMBusiness.fr"
+            "euronews" -> "Euronews.fr"
+            else -> id
+        }
+    }
+
     data class PresetChannel(
         val id: String,
         val displayName: String,
@@ -249,30 +339,30 @@ object ChannelCatalog {
     )
 
     val popularExtraChannels: List<PresetChannel> = listOf(
-        PresetChannel("ParisPremiere.fr", "Paris Première", 29, "https://www.programme-tv.net/imgre/fit/~2~channel~8ff2cb380fa0e52b.png/480x480/quality/100/paris-premiere.png"),
-        PresetChannel("RTL9.fr", "RTL9", 30, "https://www.programme-tv.net/imgre/fit/~2~channel~4e29729864fe78d6.png/480x480/quality/100/rtl9.png"),
-        PresetChannel("Teva.fr", "Téva", 31, "https://www.programme-tv.net/imgre/fit/~2~channel~f5be979f4ea5475e.png/480x480/quality/100/teva.png"),
-        PresetChannel("CanalPlusCinema.fr", "Canal+ Cinéma", 32, "https://www.programme-tv.net/imgre/fit/~2~channel~b0cb329c362140bb.png/480x480/quality/100/canal-cinema.png"),
-        PresetChannel("CanalPlusSport.fr", "Canal+ Sport", 33, "https://www.programme-tv.net/imgre/fit/~2~channel~bf7d99a9a08e6f1a.png/480x480/quality/100/canal-sport.png"),
-        PresetChannel("CanalPlusSeries.fr", "Canal+ Séries", 34, "https://www.programme-tv.net/imgre/fit/~2~channel~cf7494191c95a02f.png/480x480/quality/100/canal-series.png"),
-        PresetChannel("BeInSports1.fr", "beIN SPORTS 1", 35, "https://www.programme-tv.net/imgre/fit/~2~channel~6ae2e70e9a5e12f6.png/480x480/quality/100/bein-sports-1.png"),
-        PresetChannel("BeInSports2.fr", "beIN SPORTS 2", 36, "https://www.programme-tv.net/imgre/fit/~2~channel~6e31b67e5bbdb25d.png/480x480/quality/100/bein-sports-2.png"),
-        PresetChannel("Eurosport1.fr", "Eurosport 1", 37, "https://www.programme-tv.net/imgre/fit/~2~channel~bbdf25db8ec3dc76.png/480x480/quality/100/eurosport-1.png"),
-        PresetChannel("Eurosport2.fr", "Eurosport 2", 38, "https://www.programme-tv.net/imgre/fit/~2~channel~cb5ec1dbf6b553e1.png/480x480/quality/100/eurosport-2.png"),
-        PresetChannel("TVBreizh.fr", "TV Breizh", 39, "https://www.programme-tv.net/imgre/fit/~2~channel~1cebf08d23e59002.png/480x480/quality/100/tv-breizh.png"),
-        PresetChannel("UshuaiaTV.fr", "Ushuaïa TV", 40, "https://www.programme-tv.net/imgre/fit/~2~channel~3a37dc68fec3dc87.png/480x480/quality/100/ushuaia-tv.png"),
-        PresetChannel("HistoireTV.fr", "Histoire TV", 41, "https://www.programme-tv.net/imgre/fit/~2~channel~9b67482ea0824b42.png/480x480/quality/100/histoire-tv.png"),
-        PresetChannel("AB1.fr", "AB1", 42, "https://www.programme-tv.net/imgre/fit/~2~channel~4e89bbde92cfb302.png/480x480/quality/100/ab-1.png"),
-        PresetChannel("WarnerTV.fr", "Warner TV", 43, "https://www.programme-tv.net/imgre/fit/~2~channel~cf7494191c95a02f.png/480x480/quality/100/warner-tv.png"),
-        PresetChannel("ComediePlus.fr", "Comédie+", 44, "https://www.programme-tv.net/imgre/fit/~2~channel~1a9e34fe37e50c42.png/480x480/quality/100/comedie.png"),
-        PresetChannel("PlanetePlus.fr", "Planète+", 45, "https://www.programme-tv.net/imgre/fit/~2~channel~d36c57f20e7df65a.png/480x480/quality/100/planete.png"),
-        PresetChannel("NationalGeographic.fr", "National Geographic", 46, "https://www.programme-tv.net/imgre/fit/~2~channel~ea693cb83e921d60.png/480x480/quality/100/national-geographic.png"),
-        PresetChannel("13emeRue.fr", "13ème Rue", 47, "https://www.programme-tv.net/imgre/fit/~2~channel~b0cb329c362140bb.png/480x480/quality/100/13eme-rue.png"),
-        PresetChannel("Syfy.fr", "Syfy", 48, "https://www.programme-tv.net/imgre/fit/~2~channel~f5be979f4ea5475e.png/480x480/quality/100/syfy.png"),
-        PresetChannel("DisneyChannel.fr", "Disney Channel", 49, "https://www.programme-tv.net/imgre/fit/~2~channel~1cebf08d23e59002.png/480x480/quality/100/disney-channel.png"),
-        PresetChannel("GameOne.fr", "Game One", 50, "https://www.programme-tv.net/imgre/fit/~2~channel~6ae2e70e9a5e12f6.png/480x480/quality/100/game-one.png"),
-        PresetChannel("Mangas.fr", "Mangas", 51, "https://www.programme-tv.net/imgre/fit/~2~channel~bbdf25db8ec3dc76.png/480x480/quality/100/mangas.png"),
-        PresetChannel("BFMBusiness.fr", "BFM Business", 52, "https://www.programme-tv.net/imgre/fit/~2~channel~9048e02338fb1134.png/480x480/quality/100/bfm-business.png"),
-        PresetChannel("Euronews.fr", "Euronews", 53, "https://www.programme-tv.net/imgre/fit/~2~channel~afbbeba076c073d9.png/480x480/quality/100/euronews.png")
+        PresetChannel("ParisPremiere.fr", "Paris Première", 29, "https://www.programme-tv.net/imgre/fit/~2~channel~ecf598fd002ccb9a.png/480x480/quality/100/paris-premiere.png"),
+        PresetChannel("RTL9.fr", "RTL9", 30, "https://www.programme-tv.net/imgre/fit/~2~channel~39e76725dfcc33a3.png/480x480/quality/100/rtl-9.png"),
+        PresetChannel("Teva.fr", "Téva", 31, "https://www.programme-tv.net/imgre/fit/~2~channel~4421904d874fa072.png/480x480/quality/100/teva.png"),
+        PresetChannel("CanalPlusCinema.fr", "Canal+ Cinéma", 32, "https://www.programme-tv.net/imgre/fit/~2~channel~0b078790aeb2d121.png/480x480/quality/100/canal-cinema.png"),
+        PresetChannel("CanalPlusSport.fr", "Canal+ Sport", 33, "https://www.programme-tv.net/imgre/fit/~2~channel~2b97b0fb1264c28d.png/480x480/quality/100/canal-sport.png"),
+        PresetChannel("CanalPlusSeries.fr", "Canal+ Séries", 34, "https://focus.telerama.fr/500x500/0000/00/01/clear-1563.png"),
+        PresetChannel("beINSPORTS1.fr", "beIN SPORTS 1", 35, "https://www.programme-tv.net/imgre/fit/~2~channel~8884f09c3361af44.png/480x480/quality/100/bein-sports-1.png"),
+        PresetChannel("beINSPORTS2.fr", "beIN SPORTS 2", 36, "https://www.programme-tv.net/imgre/fit/~2~channel~2fa633f39d6c3033.png/480x480/quality/100/bein-sports-2.png"),
+        PresetChannel("Eurosport1.fr", "Eurosport 1", 37, "https://www.programme-tv.net/imgre/fit/~2~channel~277882f801bd3f7b.png/480x480/quality/100/eurosport-1.png"),
+        PresetChannel("Eurosport2.fr", "Eurosport 2", 38, "https://www.programme-tv.net/imgre/fit/~2~channel~196acf0142c66a68.png/480x480/quality/100/eurosport-2.png"),
+        PresetChannel("TvBreizh.fr", "TV Breizh", 39, "https://www.programme-tv.net/imgre/fit/~2~channel~eda4c23255b4fed2.png/480x480/quality/100/tvbreizh.png"),
+        PresetChannel("UshuaiaTV.fr", "Ushuaïa TV", 40, "https://www.programme-tv.net/imgre/fit/~2~channel~778073cbbd827d7a.png/480x480/quality/100/ushuaia-tv.png"),
+        PresetChannel("Histoire.fr", "Histoire TV", 41, "https://www.programme-tv.net/imgre/fit/~2~channel~354060da3ea6eca2.png/480x480/quality/100/histoire-tv.png"),
+        PresetChannel("AB1.fr", "AB1", 42, "https://www.programme-tv.net/imgre/fit/~2~channel~a15b4a2cb74dfd54.png/480x480/quality/100/ab-1.png"),
+        PresetChannel("WarnerTV.fr", "Warner TV", 43, "https://www.programme-tv.net/imgre/fit/~2~channel~6d75450123e766d6.png/480x480/quality/100/warner-tv.png"),
+        PresetChannel("ComediePlus.fr", "Comédie+", 44, "https://www.programme-tv.net/imgre/fit/~2~channel~b419616020702bc2.png/480x480/quality/100/comedie.png"),
+        PresetChannel("PlanetePlus.fr", "Planète+", 45, "https://www.programme-tv.net/imgre/fit/~2~channel~475677d45988adc5.png/480x480/quality/100/planete.png"),
+        PresetChannel("NationalGeographic.fr", "National Geographic", 46, "https://www.programme-tv.net/imgre/fit/~2~channel~c00912008deb7144.png/480x480/quality/100/national-geographic.png"),
+        PresetChannel("13eRue.fr", "13ème Rue", 47, "https://www.programme-tv.net/imgre/fit/~2~channel~c7a8275787244ffe.png/480x480/quality/100/13eme-rue.png"),
+        PresetChannel("Syfy.fr", "Syfy", 48, "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/SciFi_2026.svg/500px-SciFi_2026.svg.png"),
+        PresetChannel("DisneyChannel.fr", "Disney Channel", 49, "https://www.programme-tv.net/imgre/fit/~2~channel~ab11120cc94674c8.png/480x480/quality/100/disney-channel.png"),
+        PresetChannel("GameOne.fr", "Game One", 50, "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/france/game-one-fr.png"),
+        PresetChannel("Mangas.fr", "Mangas", 51, "https://www.programme-tv.net/imgre/fit/~2~channel~a624ee4f7be827c4.png/480x480/quality/100/mangas.png"),
+        PresetChannel("BFMBusiness.fr", "BFM Business", 52, "https://www.programme-tv.net/imgre/fit/~2~channel~7eb91da112d351e5.png/480x480/quality/100/bfm-business.png"),
+        PresetChannel("Euronews.fr", "Euronews", 53, "https://www.programme-tv.net/imgre/fit/~2~channel~648eb1fd8a151da0.png/480x480/quality/100/euronews.png")
     )
 }

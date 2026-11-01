@@ -63,6 +63,9 @@ interface ProgramDao {
     @Query("SELECT COUNT(*) FROM programs")
     suspend fun getProgramCount(): Int
 
+    @Query("SELECT COUNT(*) FROM programs WHERE channelId = :channelId")
+    suspend fun getProgramCountForChannel(channelId: String): Int
+
     @Query("SELECT MAX(stopTimestamp) FROM programs")
     suspend fun getLatestProgramTimestamp(): Long?
 
