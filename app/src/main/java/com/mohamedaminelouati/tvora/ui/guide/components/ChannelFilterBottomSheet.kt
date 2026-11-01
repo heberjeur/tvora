@@ -43,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -234,7 +235,7 @@ fun ChannelFilterBottomSheet(
                                 modifier = Modifier
                                     .size(44.dp)
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(MaterialTheme.colorScheme.surface),
+                                    .background(Color.White),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (!channel.iconUrl.isNullOrBlank() && !channel.iconUrl.startsWith("data:")) {

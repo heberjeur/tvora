@@ -159,7 +159,7 @@ fun ProgramCard(
                             onClick = { onChannelClick?.invoke(program.channelId) },
                             enabled = onChannelClick != null,
                             shape = RoundedCornerShape(8.dp),
-                            color = Color.White.copy(alpha = 0.08f),
+                            color = Color.White,
                             modifier = Modifier.size(channelLogoSize)
                         ) {
                             if (!channelLogoUrl.isNullOrBlank()) {
@@ -184,7 +184,7 @@ fun ProgramCard(
                                         },
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = TextPrimary
+                                        color = AccentRed
                                     )
                                 }
                             }

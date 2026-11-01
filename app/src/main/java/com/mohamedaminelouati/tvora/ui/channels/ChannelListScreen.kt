@@ -274,10 +274,6 @@ private fun ChannelListCard(
     onFavoriteClick: () -> Unit
 ) {
     val showChannelNumbers = com.mohamedaminelouati.tvora.ui.theme.LocalShowChannelNumbers.current
-    val isOled = MaterialTheme.colorScheme.background == Color.Black
-    val isDark = MaterialTheme.colorScheme.surface == com.mohamedaminelouati.tvora.ui.theme.RawDarkSurface || isOled
-    val logoContainerColor = if (isDark) Color.White.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant
-    val logoBorderModifier = if (isDark) Modifier.border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp)) else Modifier
     val logoUrl = com.mohamedaminelouati.tvora.data.local.ChannelCatalog.getLogoUrl(channel.id) ?: channel.iconUrl
     Card(
         modifier = Modifier
@@ -296,17 +292,15 @@ private fun ChannelListCard(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(logoContainerColor)
-                    .then(logoBorderModifier),
+                    .background(Color.White)
+                    .padding(3.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (!logoUrl.isNullOrBlank() && !logoUrl.startsWith("data:")) {
                     AsyncImage(
                         model = logoUrl,
                         contentDescription = channel.displayName,
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(6.dp)),
+                        modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Fit
                     )
                 } else {
@@ -355,10 +349,6 @@ private fun ChannelGridCard(
     onFavoriteClick: () -> Unit
 ) {
     val showChannelNumbers = com.mohamedaminelouati.tvora.ui.theme.LocalShowChannelNumbers.current
-    val isOled = MaterialTheme.colorScheme.background == Color.Black
-    val isDark = MaterialTheme.colorScheme.surface == com.mohamedaminelouati.tvora.ui.theme.RawDarkSurface || isOled
-    val logoContainerColor = if (isDark) Color.White.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant
-    val logoBorderModifier = if (isDark) Modifier.border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(8.dp)) else Modifier
     val logoUrl = com.mohamedaminelouati.tvora.data.local.ChannelCatalog.getLogoUrl(channel.id) ?: channel.iconUrl
     Card(
         modifier = Modifier
@@ -378,17 +368,15 @@ private fun ChannelGridCard(
                 modifier = Modifier
                     .size(54.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(logoContainerColor)
-                    .then(logoBorderModifier),
+                    .background(Color.White)
+                    .padding(4.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (!logoUrl.isNullOrBlank() && !logoUrl.startsWith("data:")) {
                     AsyncImage(
                         model = logoUrl,
                         contentDescription = channel.displayName,
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(6.dp)),
+                        modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Fit
                     )
                 } else {

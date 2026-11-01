@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -94,7 +95,9 @@ fun AdditionalChannelsSettingsSection(
                                     contentDescription = channel.displayName,
                                     modifier = Modifier
                                         .size(32.dp)
-                                        .clip(RoundedCornerShape(4.dp)),
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(Color.White)
+                                        .padding(2.dp),
                                     contentScale = ContentScale.Fit
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))

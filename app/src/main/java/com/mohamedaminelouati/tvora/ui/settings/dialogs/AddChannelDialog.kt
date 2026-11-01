@@ -135,7 +135,8 @@ fun AddChannelDialog(
                                     modifier = Modifier
                                         .size(36.dp)
                                         .clip(RoundedCornerShape(6.dp))
-                                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                                        .background(Color.White)
+                                        .padding(2.dp),
                                     contentScale = ContentScale.Fit
                                 )
 

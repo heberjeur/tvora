@@ -1,6 +1,7 @@
 package com.mohamedaminelouati.tvora.ui.guide.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -63,7 +64,9 @@ fun FilterPill(
                     contentDescription = null,
                     modifier = Modifier
                         .size(18.dp)
-                        .clip(RoundedCornerShape(4.dp)),
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color.White)
+                        .padding(1.dp),
                     contentScale = ContentScale.Fit
                 )
             } else {

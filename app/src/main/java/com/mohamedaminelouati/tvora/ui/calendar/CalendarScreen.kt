@@ -855,7 +855,7 @@ private fun CalendarReminderItem(
             Surface(
                 onClick = { onChannelClick(reminder.channelId) },
                 shape = RoundedCornerShape(8.dp),
-                color = Color.White.copy(alpha = 0.08f),
+                color = Color.White,
                 modifier = Modifier.size(44.dp)
             ) {
                 if (!channelLogoUrl.isNullOrBlank()) {
@@ -876,7 +876,7 @@ private fun CalendarReminderItem(
                             text = channelDisplayName.take(3).uppercase(),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = AccentRed
                         )
                     }
                 }

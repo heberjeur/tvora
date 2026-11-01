@@ -299,7 +299,7 @@ private fun EpisodeCard(
                 ) {
                     Surface(
                         shape = RoundedCornerShape(6.dp),
-                        color = Color.White.copy(alpha = 0.08f),
+                        color = Color.White,
                         modifier = Modifier.size(26.dp)
                     ) {
                         if (!channelLogoUrl.isNullOrBlank()) {
@@ -320,7 +320,7 @@ private fun EpisodeCard(
                                     text = channelDisplayName.take(2).uppercase(),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
+                                    color = AccentRed
                                 )
                             }
                         }

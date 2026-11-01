@@ -112,7 +112,7 @@ fun ProgramHeaderSection(
                 val channelDisplayName = ChannelCatalog.getDisplayName(program.channelId)
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = Color.White.copy(alpha = 0.08f),
+                    color = Color.White,
                     modifier = Modifier.size(36.dp)
                 ) {
                     if (!channelLogoUrl.isNullOrBlank()) {
@@ -133,7 +133,7 @@ fun ProgramHeaderSection(
                                 text = channelDisplayName.take(3).uppercase(),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = TextPrimary
+                                color = AccentRed
                             )
                         }
                     }
