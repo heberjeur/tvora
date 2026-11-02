@@ -127,7 +127,7 @@ class GuideViewModel @Inject constructor(
             )
         }
     }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     private data class FilterPreferences(
         val hiddenChannels: Set<String>,
@@ -258,7 +258,7 @@ class GuideViewModel @Inject constructor(
             sorted
         }
     }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun selectCategory(category: TvCategory?) {
         _selectedCategory.value = category

@@ -126,7 +126,6 @@ object ChannelCatalog {
         "13emeRue.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~c7a8275787244ffe.png/480x480/quality/100/13eme-rue.png",
         "Syfy.fr" to "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/syfy-us.png",
         "DisneyChannel.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~ab11120cc94674c8.png/480x480/quality/100/disney-channel.png",
-        "GameOne.fr" to "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/france/game-one-fr.png",
         "Mangas.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~a624ee4f7be827c4.png/480x480/quality/100/mangas.png",
         "BFMBusiness.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~7eb91da112d351e5.png/480x480/quality/100/bfm-business.png",
         "Euronews.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~648eb1fd8a151da0.png/480x480/quality/100/euronews.png"
@@ -293,6 +292,8 @@ object ChannelCatalog {
             "rmclife" -> "RMCLife.fr"
             "13erue" -> "13eRue.fr"
             "syfy" -> "Syfy.fr"
+            "tv5monde" -> "TV5Monde.fr"
+            "france24" -> "France24.fr"
             else -> id
         }
     }
@@ -326,9 +327,8 @@ object ChannelCatalog {
         PresetChannel("13eRue.fr", "13ème Rue", 47, "https://www.programme-tv.net/imgre/fit/~2~channel~c7a8275787244ffe.png/480x480/quality/100/13eme-rue.png"),
         PresetChannel("Syfy.fr", "Syfy", 48, "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/syfy-us.png"),
         PresetChannel("DisneyChannel.fr", "Disney Channel", 49, "https://www.programme-tv.net/imgre/fit/~2~channel~ab11120cc94674c8.png/480x480/quality/100/disney-channel.png"),
-        PresetChannel("GameOne.fr", "Game One", 50, "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/france/game-one-fr.png"),
-        PresetChannel("Mangas.fr", "Mangas", 51, "https://www.programme-tv.net/imgre/fit/~2~channel~a624ee4f7be827c4.png/480x480/quality/100/mangas.png"),
-        PresetChannel("BFMBusiness.fr", "BFM Business", 52, "https://www.programme-tv.net/imgre/fit/~2~channel~7eb91da112d351e5.png/480x480/quality/100/bfm-business.png"),
-        PresetChannel("Euronews.fr", "Euronews", 53, "https://www.programme-tv.net/imgre/fit/~2~channel~648eb1fd8a151da0.png/480x480/quality/100/euronews.png")
+        PresetChannel("Mangas.fr", "Mangas", 50, "https://www.programme-tv.net/imgre/fit/~2~channel~a624ee4f7be827c4.png/480x480/quality/100/mangas.png"),
+        PresetChannel("BFMBusiness.fr", "BFM Business", 51, "https://www.programme-tv.net/imgre/fit/~2~channel~7eb91da112d351e5.png/480x480/quality/100/bfm-business.png"),
+        PresetChannel("Euronews.fr", "Euronews", 52, "https://www.programme-tv.net/imgre/fit/~2~channel~648eb1fd8a151da0.png/480x480/quality/100/euronews.png")
     )
 }

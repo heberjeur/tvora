@@ -28,7 +28,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
@@ -65,7 +67,8 @@ private data class Params(
 
 data class NowPlayingUiState(
     val isRefreshing: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isLoading: Boolean = true
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -218,14 +221,14 @@ class NowPlayingViewModel @Inject constructor(
 
             val targetChannelIds = (allChannels.map { it.id } + ChannelCatalog.tntChannelIds)
                 .distinctBy { ChannelCatalog.normalizeId(it) }
-            val selectedPrograms = targetChannelIds.mapNotNull { channelId ->
+            val selectedPrograms = targetChannelIds.mapIndexedNotNull { index, channelId ->
                 val normalizedId = ChannelCatalog.normalizeId(channelId)
                 val channelProgs = progsByNormalizedChannel[normalizedId]
                 if (channelProgs.isNullOrEmpty()) {
                     if (query.isBlank() && tag.isNullOrBlank()) {
-                        val ch = allChannels.firstOrNull { ChannelCatalog.normalizeId(it.id) == ChannelCatalog.normalizeId(channelId) }
+                        val ch = allChannels.firstOrNull { ChannelCatalog.normalizeId(it.id) == normalizedId }
                         val logo = ch?.iconUrl?.takeIf { it.isNotBlank() } ?: ChannelCatalog.getLogoUrl(channelId)
-                        val stableOffset = (targetChannelIds.indexOf(channelId) + 1).toLong()
+                        val stableOffset = (index + 1).toLong()
                         Program(
                             id = -100_000L - stableOffset,
                             channelId = channelId,
@@ -319,15 +322,19 @@ class NowPlayingViewModel @Inject constructor(
                 )
             }
         }
+    }.onEach {
+        if (_uiState.value.isLoading) {
+            _uiState.update { it.copy(isLoading = false) }
+        }
     }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+    .stateIn(viewModelScope, SharingStarted.Lazily, emptyMap())
 
     val programs: StateFlow<List<Program>> = combine(
         periodPrograms,
         _selectedPeriod
     ) { map, period ->
         map[period] ?: emptyList()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
@@ -366,12 +373,15 @@ class NowPlayingViewModel @Inject constructor(
     fun refresh(force: Boolean = true) {
         _manualRefreshTrigger.value = System.currentTimeMillis()
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isRefreshing = true, errorMessage = null)
+            _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
             val result = epgRepository.syncEpg(ChannelPackage.COMMUNITY_ENRICHED, forceRefresh = force)
-            _uiState.value = _uiState.value.copy(
-                isRefreshing = false,
-                errorMessage = result.exceptionOrNull()?.localizedMessage
-            )
+            _uiState.update {
+                it.copy(
+                    isRefreshing = false,
+                    isLoading = false,
+                    errorMessage = result.exceptionOrNull()?.localizedMessage
+                )
+            }
         }
     }
 }

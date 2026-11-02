@@ -332,9 +332,18 @@ class EpgRepositoryImpl @Inject constructor(
             val isStale = metadata == null || (now - metadata.lastSyncTimestamp) > staleThresholdMillis || !hasActivePrograms
 
             if (!effectiveForceRefresh && !isStale && cachedCount > 0) {
+                val customs = userPreferences.customChannels.first()
+                val missingTnt = ChannelCatalog.tntChannelIds.filter { tntId ->
+                    programDao.getProgramCountForChannel(tntId) == 0 &&
+                    programDao.getProgramCountForChannel(ChannelCatalog.canonicalChannelId(tntId)) == 0
+                }
+                val extraTargets = (customs.map { it.id }.filter { programDao.getProgramCountForChannel(it) == 0 } + missingTnt).toSet()
+                if (extraTargets.isNotEmpty() && connectivityObserver.isConnected()) {
+                    syncProgramsForChannels(extraTargets)
+                }
                 _syncProgress.value = SyncProgress(
                     state = SyncState.IDLE,
-                    programCount = cachedCount,
+                    programCount = programDao.getProgramCount(),
                     lastSyncTimestamp = metadata?.lastSyncTimestamp ?: now
                 )
                 return@withContext Result.success(Unit)
@@ -473,8 +482,12 @@ class EpgRepositoryImpl @Inject constructor(
                         lastSyncTimestamp = now
                     )
 
-                    if (customs.isNotEmpty()) {
-                        syncProgramsForChannels(customs.map { it.id }.toSet())
+                    val missingTnt = ChannelCatalog.tntChannelIds.filter { tntId ->
+                        allPrograms.none { ChannelCatalog.normalizeId(it.channelId) == ChannelCatalog.normalizeId(tntId) }
+                    }
+                    val extraTargets = (customs.map { it.id } + missingTnt).toSet()
+                    if (extraTargets.isNotEmpty()) {
+                        syncProgramsForChannels(extraTargets)
                     }
 
                     syncSucceeded = true

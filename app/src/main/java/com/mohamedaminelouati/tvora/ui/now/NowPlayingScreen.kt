@@ -448,14 +448,18 @@ fun NowPlayingScreen(
                             .padding(24.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (uiState.isRefreshing) {
+                        if (uiState.isLoading || uiState.isRefreshing) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 CircularProgressIndicator(color = AccentRed)
                                 Text(
-                                    text = stringResource(R.string.sync_state_downloading),
+                                    text = if (uiState.isRefreshing) {
+                                        stringResource(R.string.sync_state_downloading)
+                                    } else {
+                                        stringResource(R.string.sync_state_parsing)
+                                    },
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = TextSecondary
                                 )
