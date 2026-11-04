@@ -1,13 +1,17 @@
 package com.mohamedaminelouati.tvora.data.repository
 
+import com.mohamedaminelouati.tvora.data.local.ChannelCatalog
 import com.mohamedaminelouati.tvora.data.local.db.ReminderDao
 import com.mohamedaminelouati.tvora.data.mapper.toDomain
 import com.mohamedaminelouati.tvora.data.mapper.toEntity
 import com.mohamedaminelouati.tvora.domain.model.Program
 import com.mohamedaminelouati.tvora.domain.model.Reminder
 import com.mohamedaminelouati.tvora.domain.repository.ReminderRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,9 +20,19 @@ class ReminderRepositoryImpl @Inject constructor(
     private val reminderDao: ReminderDao
 ) : ReminderRepository {
 
+    init {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                reminderDao.purgeDuplicateReminders()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
     override fun getAllReminders(): Flow<List<Reminder>> {
         return reminderDao.getAllReminders().map { list ->
             list.map { it.toDomain() }
+                .distinctBy { Triple(ChannelCatalog.normalizeId(it.channelId), it.startTimestamp, it.title.trim().lowercase()) }
         }
     }
 
@@ -62,10 +76,21 @@ class ReminderRepositoryImpl @Inject constructor(
     }
 
     override suspend fun deleteReminder(programId: Long) {
-        reminderDao.deleteReminderByProgramId(programId)
+        val existing = reminderDao.getReminderForProgramDirect(programId)
+            ?: reminderDao.getReminderById(programId)
+        if (existing != null) {
+            reminderDao.deleteReminder(existing)
+            reminderDao.deleteRemindersMatching(existing.title, existing.startTimestamp)
+        } else {
+            reminderDao.deleteReminderByProgramId(programId)
+        }
     }
 
     override suspend fun deleteExpiredReminders(cutoffTimestamp: Long) {
         reminderDao.deleteExpiredReminders(cutoffTimestamp)
+    }
+
+    override suspend fun purgeDuplicateReminders() {
+        reminderDao.purgeDuplicateReminders()
     }
 }

@@ -285,6 +285,7 @@ object ChannelCatalog {
         val norm = normalizeId(id)
         return when (norm) {
             "canalplus" -> "CanalPlus.fr"
+            "tmc" -> "TMC.fr"
             "tfx" -> "TFX.fr"
             "lcp" -> "LCP.fr"
             "lequipe" -> "LEquipe.fr"
@@ -296,6 +297,31 @@ object ChannelCatalog {
             "france24" -> "France24.fr"
             else -> id
         }
+    }
+
+    fun getChannelAliases(channelId: String): List<String> {
+        val canonical = canonicalChannelId(channelId)
+        val aliases = mutableSetOf(channelId, canonical)
+        val norm = normalizeId(channelId)
+        when (norm) {
+            "canalplus" -> aliases.addAll(listOf("CanalPlus.fr", "CanalPlus", "canalplus", "Canal+", "c"))
+            "tmc" -> aliases.addAll(listOf("TMC.fr", "TMC", "tmc", "TeleMonteCarlo"))
+            "tfx" -> aliases.addAll(listOf("TFX.fr", "TFX", "tfx", "NT1.fr", "NT1", "nt1"))
+            "lcp" -> aliases.addAll(listOf("LCP.fr", "LCP", "lcp", "LaChaineParlementaire.fr", "LaChaineParlementaire"))
+            "lequipe" -> aliases.addAll(listOf("LEquipe.fr", "LEquipe", "lequipe", "LEquipe21.fr", "LEquipe21", "lequipe21"))
+            "rmcstory" -> aliases.addAll(listOf("RMCStory.fr", "RMCStory", "rmcstory", "Numero23.fr", "Numero23", "numero23"))
+            "rmcdecouverte" -> aliases.addAll(listOf("RMCDecouverte.fr", "RMCDecouverte", "rmcdecouverte"))
+            "rmclife" -> aliases.addAll(listOf("RMCLife.fr", "RMCLife", "rmclife", "Cherie25.fr", "Cherie25", "cherie25"))
+            "13erue" -> aliases.addAll(listOf("13eRue.fr", "13emeRue.fr", "13eme-rue.fr", "13erue", "13emerue"))
+            "syfy" -> aliases.addAll(listOf("Syfy.fr", "SciFi.fr", "scifi", "syfy"))
+            "tv5monde" -> aliases.addAll(listOf("TV5Monde.fr", "tv5monde", "TV5.ca", "TV5MondeEurope.fr"))
+            "france24" -> aliases.addAll(listOf("France24.fr", "france24", "France 24"))
+            "tvbreizh" -> aliases.addAll(listOf("TVBreizh.fr", "TvBreizh.fr", "tvbreizh"))
+            "histoire" -> aliases.addAll(listOf("Histoire.fr", "HistoireTV.fr", "histoire"))
+            "beinsports1" -> aliases.addAll(listOf("beINSPORTS1.fr", "BeInSports1.fr", "beinsports1"))
+            "beinsports2" -> aliases.addAll(listOf("beINSPORTS2.fr", "BeInSports2.fr", "beinsports2"))
+        }
+        return aliases.toList()
     }
 
     data class PresetChannel(

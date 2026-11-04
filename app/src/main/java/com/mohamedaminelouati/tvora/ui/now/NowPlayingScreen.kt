@@ -29,9 +29,7 @@ import androidx.compose.ui.graphics.Color
 import com.mohamedaminelouati.tvora.util.CategoryUtils
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -74,14 +72,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mohamedaminelouati.tvora.R
 import com.mohamedaminelouati.tvora.data.local.ChannelCatalog
-import com.mohamedaminelouati.tvora.domain.model.SyncState
 import com.mohamedaminelouati.tvora.ui.components.OfflineBanner
 import com.mohamedaminelouati.tvora.ui.components.ProgramCard
 import com.mohamedaminelouati.tvora.ui.theme.AccentRed
 import com.mohamedaminelouati.tvora.ui.theme.DarkBackground
 import com.mohamedaminelouati.tvora.ui.theme.DarkSurface
 import com.mohamedaminelouati.tvora.ui.theme.DarkSurfaceVariant
-import com.mohamedaminelouati.tvora.ui.theme.IndicatorGreen
 import com.mohamedaminelouati.tvora.ui.theme.SurfaceBorder
 import com.mohamedaminelouati.tvora.ui.theme.TextPrimary
 import com.mohamedaminelouati.tvora.ui.theme.TextSecondary
@@ -100,7 +96,6 @@ fun NowPlayingScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val selectedPeriod by viewModel.selectedPeriod.collectAsStateWithLifecycle()
     val selectedEveningPart by viewModel.selectedEveningPart.collectAsStateWithLifecycle()
-    val syncProgress by viewModel.syncProgress.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val selectedTag by viewModel.selectedTag.collectAsStateWithLifecycle()
     var isSearchActive by remember { mutableStateOf(false) }
@@ -130,15 +125,6 @@ fun NowPlayingScreen(
         if (pagerState.currentPage != selectedPeriod.ordinal) {
             pagerState.animateScrollToPage(selectedPeriod.ordinal)
         }
-    }
-
-    val syncMessage = when (syncProgress.state) {
-        SyncState.DOWNLOADING -> stringResource(R.string.sync_state_downloading)
-        SyncState.PARSING -> stringResource(R.string.sync_state_parsing)
-        SyncState.CACHING_IMAGES -> stringResource(R.string.sync_state_caching_images)
-        SyncState.SUCCESS -> stringResource(R.string.sync_state_success, syncProgress.programCount)
-        SyncState.ERROR -> stringResource(R.string.sync_state_error)
-        SyncState.IDLE -> ""
     }
 
     Scaffold(
@@ -238,62 +224,6 @@ fun NowPlayingScreen(
                 .padding(padding)
         ) {
             OfflineBanner(isOffline = !isOnline && (periodPrograms[selectedPeriod]?.isEmpty() != false))
-
-            AnimatedVisibility(visible = syncProgress.state != SyncState.IDLE && syncMessage.isNotBlank()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(DarkSurfaceVariant)
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (syncProgress.state == SyncState.SUCCESS) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = IndicatorGreen,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        } else if (syncProgress.state == SyncState.ERROR) {
-                            Icon(
-                                imageVector = Icons.Default.CloudDownload,
-                                contentDescription = null,
-                                tint = AccentRed,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        } else {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                color = AccentRed,
-                                strokeWidth = 2.dp
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = syncMessage,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = TextPrimary,
-                            modifier = Modifier.weight(1f)
-                        )
-                        IconButton(
-                            onClick = viewModel::dismissSyncBanner,
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = null,
-                                tint = TextSecondary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-                }
-            }
 
             PrimaryTabRow(
                 selectedTabIndex = pagerState.currentPage,

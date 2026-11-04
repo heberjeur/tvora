@@ -68,7 +68,7 @@ private data class Params(
 data class NowPlayingUiState(
     val isRefreshing: Boolean = false,
     val errorMessage: String? = null,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = false
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -327,14 +327,14 @@ class NowPlayingViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = false) }
         }
     }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.Lazily, emptyMap())
+    .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
     val programs: StateFlow<List<Program>> = combine(
         periodPrograms,
         _selectedPeriod
     ) { map, period ->
         map[period] ?: emptyList()
-    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query

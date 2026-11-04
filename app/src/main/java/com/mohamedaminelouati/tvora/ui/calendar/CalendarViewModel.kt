@@ -2,6 +2,7 @@ package com.mohamedaminelouati.tvora.ui.calendar
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mohamedaminelouati.tvora.data.local.ChannelCatalog
 import com.mohamedaminelouati.tvora.domain.model.KeywordAlert
 import com.mohamedaminelouati.tvora.domain.model.Reminder
 import com.mohamedaminelouati.tvora.domain.repository.KeywordAlertRepository
@@ -38,6 +39,15 @@ class CalendarViewModel @Inject constructor(
         com.mohamedaminelouati.tvora.util.TimezoneUtils.resolveZoneId(it)
     }
 
+    init {
+        viewModelScope.launch {
+            try {
+                reminderRepository.purgeDuplicateReminders()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
     private val _selectedDate = MutableStateFlow(LocalDate.now(com.mohamedaminelouati.tvora.util.TimezoneUtils.ORIGIN_ZONE))
     val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
 
@@ -58,7 +68,9 @@ class CalendarViewModel @Inject constructor(
 
     val totalUpcomingCount: StateFlow<Int> = allReminders.map { reminders ->
         val now = System.currentTimeMillis()
-        reminders.count { it.startTimestamp >= now - 60_000L }
+        reminders.filter { it.startTimestamp >= now - 60_000L }
+            .distinctBy { Triple(ChannelCatalog.normalizeId(it.channelId), it.startTimestamp, it.title.trim().lowercase()) }
+            .size
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     private data class FilterParams(
@@ -107,6 +119,8 @@ class CalendarViewModel @Inject constructor(
                 else -> reminder.originKeyword.equals(filter, ignoreCase = true)
             }
             matchesScope && matchesQuery && matchesKeyword
+        }.distinctBy {
+            Triple(ChannelCatalog.normalizeId(it.channelId), it.startTimestamp, it.title.trim().lowercase())
         }.sortedBy { it.startTimestamp }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

@@ -23,8 +23,20 @@ interface ReminderDao {
     @Query("SELECT * FROM reminders WHERE programId = :programId LIMIT 1")
     suspend fun getReminderForProgramDirect(programId: Long): ReminderEntity?
 
+    @Query("SELECT * FROM reminders WHERE (channelId = :channelId OR channelId IN (:channelAliases)) AND startTimestamp = :startTimestamp LIMIT 1")
+    suspend fun getReminderForBroadcast(channelId: String, channelAliases: List<String>, startTimestamp: Long): ReminderEntity?
+
+    @Query("SELECT * FROM reminders WHERE startTimestamp = :startTimestamp AND LOWER(title) = LOWER(:title) LIMIT 1")
+    suspend fun getReminderByTitleAndStart(title: String, startTimestamp: Long): ReminderEntity?
+
+    @Query("SELECT * FROM reminders")
+    suspend fun getAllRemindersDirect(): List<ReminderEntity>
+
     @Query("SELECT * FROM reminders WHERE id = :id LIMIT 1")
     suspend fun getReminderById(id: Long): ReminderEntity?
+
+    @Query("DELETE FROM reminders WHERE id NOT IN (SELECT MIN(id) FROM reminders GROUP BY LOWER(title), startTimestamp)")
+    suspend fun purgeDuplicateReminders()
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertReminder(reminder: ReminderEntity): Long
@@ -37,6 +49,9 @@ interface ReminderDao {
 
     @Query("DELETE FROM reminders WHERE programId = :programId")
     suspend fun deleteReminderByProgramId(programId: Long)
+
+    @Query("DELETE FROM reminders WHERE LOWER(title) = LOWER(:title) AND startTimestamp = :startTimestamp")
+    suspend fun deleteRemindersMatching(title: String, startTimestamp: Long)
 
     @Query("DELETE FROM reminders WHERE triggerTimestamp < :cutoffTimestamp")
     suspend fun deleteExpiredReminders(cutoffTimestamp: Long)

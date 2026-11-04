@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -36,6 +37,12 @@ class GuideViewModel @Inject constructor(
     private val epgRepository: EpgRepository,
     private val userPreferences: UserPreferences
 ) : ViewModel() {
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _hasLoadedOnce = MutableStateFlow(false)
+    val hasLoadedOnce: StateFlow<Boolean> = _hasLoadedOnce.asStateFlow()
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
@@ -127,7 +134,7 @@ class GuideViewModel @Inject constructor(
             )
         }
     }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private data class FilterPreferences(
         val hiddenChannels: Set<String>,
@@ -145,7 +152,11 @@ class GuideViewModel @Inject constructor(
         userPreferences.hideReruns
     ) { hidden, favorites, favoriteOrder, sortOrder, hideReruns ->
         FilterPreferences(hidden, favorites, favoriteOrder, sortOrder, hideReruns)
-    }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.Eagerly,
+        FilterPreferences(emptySet(), emptySet(), emptyList(), "number", false)
+    )
 
     private data class GuideFilter(
         val category: TvCategory?,
@@ -182,7 +193,13 @@ class GuideViewModel @Inject constructor(
             val end = filter.date.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
             start to end
         } else {
-            0L to 0L
+            val start = System.currentTimeMillis() - 2 * 3600 * 1000L
+            val end = if (filter.channelId == null) {
+                System.currentTimeMillis() + 36 * 3600 * 1000L
+            } else {
+                0L
+            }
+            start to end
         }
         val keyword = filter.subCategory ?: filter.category?.searchKeyword ?: ""
         epgRepository.getFilteredPrograms(keyword, filter.channelId, dayStart, dayEnd)
@@ -257,21 +274,29 @@ class GuideViewModel @Inject constructor(
         } else {
             sorted
         }
+    }.onEach { list ->
+        if (list.isNotEmpty()) {
+            _hasLoadedOnce.value = true
+        }
+        _isLoading.value = false
     }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun selectCategory(category: TvCategory?) {
+        _isLoading.value = true
         _selectedCategory.value = category
         _selectedSubCategory.value = null
     }
 
     fun selectSubCategory(subCategory: String?) {
+        _isLoading.value = true
         _selectedSubCategory.value = subCategory
     }
 
     fun filterByTag(tag: String) {
         val trimmed = tag.trim()
         if (trimmed.isBlank()) return
+        _isLoading.value = true
         val matchingParent = TvCategory.entries.find {
             it.searchKeyword.equals(trimmed, ignoreCase = true) ||
                 it.name.equals(trimmed, ignoreCase = true)
@@ -297,15 +322,18 @@ class GuideViewModel @Inject constructor(
     }
 
     fun clearCategoryFilter() {
+        _isLoading.value = true
         _selectedCategory.value = null
         _selectedSubCategory.value = null
     }
 
     fun selectDate(date: LocalDate?) {
+        _isLoading.value = true
         _selectedDate.value = date
     }
 
     fun selectChannel(channelId: String?) {
+        _isLoading.value = true
         _selectedChannelId.value = channelId
     }
 

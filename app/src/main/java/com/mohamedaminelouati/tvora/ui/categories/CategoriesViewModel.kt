@@ -65,7 +65,7 @@ class CategoriesViewModel @Inject constructor(
     )
 
     private val allActivePrograms: StateFlow<List<Program>> = epgRepository.getAllActivePrograms()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val _selectedCategory = MutableStateFlow<TvCategory?>(null)
     val selectedCategory: StateFlow<TvCategory?> = _selectedCategory.asStateFlow()
@@ -199,7 +199,7 @@ class CategoriesViewModel @Inject constructor(
     }.flowOn(Dispatchers.Default)
     .stateIn(
         viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
+        SharingStarted.Eagerly,
         CategoriesUiState(isLoading = true)
     )
 

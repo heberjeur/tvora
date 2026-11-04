@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -38,7 +39,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.mohamedaminelouati.tvora.R
 import com.mohamedaminelouati.tvora.data.local.ChannelCatalog
@@ -49,6 +52,7 @@ import com.mohamedaminelouati.tvora.ui.theme.AccentRed
 fun AddChannelDialog(
     existingChannels: List<Channel>,
     onAddPreset: (ChannelCatalog.PresetChannel) -> Unit,
+    onRemovePreset: (ChannelCatalog.PresetChannel) -> Unit,
     onDismiss: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -63,7 +67,8 @@ fun AddChannelDialog(
             Text(
                 text = stringResource(R.string.dialog_add_channel_title),
                 color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 10.dp)
             )
         },
         text = {
@@ -71,14 +76,28 @@ fun AddChannelDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(440.dp)
+                    .padding(vertical = 4.dp)
             ) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(stringResource(R.string.search_channel_hint)) },
+                    placeholder = {
+                        Text(
+                            text = stringResource(R.string.search_channel_hint),
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp)
+                        )
+                    },
                     leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
                     },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
@@ -88,6 +107,7 @@ fun AddChannelDialog(
                         }
                     },
                     singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyMedium,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AccentRed,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
@@ -157,12 +177,26 @@ fun AddChannelDialog(
                                 }
 
                                 if (isAlreadyAdded) {
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = null,
-                                        tint = Color(0xFF4CAF50),
-                                        modifier = Modifier.size(24.dp)
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = Color(0xFF4CAF50),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        IconButton(
+                                            onClick = { onRemovePreset(preset) },
+                                            modifier = Modifier.size(36.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = stringResource(R.string.action_delete_channel),
+                                                tint = AccentRed,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
                                 } else {
                                     IconButton(onClick = { onAddPreset(preset) }) {
                                         Icon(
@@ -179,7 +213,10 @@ fun AddChannelDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.padding(bottom = 10.dp, end = 8.dp)
+            ) {
                 Text(
                     text = stringResource(R.string.action_cancel),
                     color = AccentRed

@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -50,7 +51,9 @@ fun GuideProgramList(
     onProgramClick: (Long) -> Unit,
     onCategoryClick: (String) -> Unit,
     onChannelClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
+    hasLoadedOnce: Boolean = false
 ) {
     if (programs.isEmpty()) {
         Box(
@@ -59,26 +62,34 @@ fun GuideProgramList(
                 .padding(32.dp),
             contentAlignment = Alignment.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Schedule,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                    modifier = Modifier.size(56.dp)
+            if (isLoading || !hasLoadedOnce) {
+                CircularProgressIndicator(
+                    color = AccentRed,
+                    modifier = Modifier.size(36.dp),
+                    strokeWidth = 3.dp
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = if (searchQuery.isNotEmpty()) {
-                        stringResource(R.string.search_empty)
-                    } else {
-                        stringResource(R.string.no_programs_for_date)
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            } else {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Schedule,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(56.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = if (searchQuery.isNotEmpty()) {
+                            stringResource(R.string.search_empty)
+                        } else {
+                            stringResource(R.string.no_programs_for_date)
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     } else if (isLandscape) {

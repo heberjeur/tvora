@@ -107,6 +107,7 @@ class MainActivity : ComponentActivity() {
                         color = MaterialTheme.colorScheme.background
                     ) {
                         TvoraAppNavigation(
+                            epgRepository = epgRepository,
                             deepLinkProgramId = pendingProgramId,
                             deepLinkKeyword = pendingKeyword,
                             onDeepLinkConsumed = { pendingProgramId = null },

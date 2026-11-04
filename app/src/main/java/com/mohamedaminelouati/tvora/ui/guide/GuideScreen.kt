@@ -79,6 +79,8 @@ fun GuideScreen(
     val programs by viewModel.programs.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
+    val isInitialLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val hasLoadedOnce by viewModel.hasLoadedOnce.collectAsStateWithLifecycle()
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -284,7 +286,9 @@ fun GuideScreen(
                 isLandscape = isLandscape,
                 onProgramClick = onProgramClick,
                 onCategoryClick = { tag -> viewModel.filterByTag(tag) },
-                onChannelClick = { chId -> viewModel.selectChannel(chId) }
+                onChannelClick = { chId -> viewModel.selectChannel(chId) },
+                isLoading = isInitialLoading,
+                hasLoadedOnce = hasLoadedOnce
             )
         }
     }

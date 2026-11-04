@@ -1,10 +1,12 @@
 package com.mohamedaminelouati.tvora.ui.navigation
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -24,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -33,6 +36,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.compose.material3.MaterialTheme
 import com.mohamedaminelouati.tvora.R
+import com.mohamedaminelouati.tvora.domain.model.SyncProgress
+import com.mohamedaminelouati.tvora.domain.repository.EpgRepository
+import com.mohamedaminelouati.tvora.ui.components.GlobalSyncBanner
 import com.mohamedaminelouati.tvora.ui.calendar.CalendarScreen
 import com.mohamedaminelouati.tvora.ui.categories.CategoriesScreen
 import com.mohamedaminelouati.tvora.ui.channels.ChannelListScreen
@@ -56,6 +62,7 @@ sealed class Screen(val route: String, val titleRes: Int, val icon: ImageVector)
 
 @Composable
 fun TvoraAppNavigation(
+    epgRepository: EpgRepository? = null,
     deepLinkProgramId: Long? = null,
     deepLinkKeyword: String? = null,
     onDeepLinkConsumed: () -> Unit = {},
@@ -64,6 +71,7 @@ fun TvoraAppNavigation(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val syncProgress = epgRepository?.getSyncProgress()?.collectAsStateWithLifecycle(initialValue = SyncProgress())?.value ?: SyncProgress()
 
     androidx.compose.runtime.LaunchedEffect(deepLinkProgramId) {
         val targetId = deepLinkProgramId
@@ -166,12 +174,22 @@ fun TvoraAppNavigation(
                     androidx.compose.foundation.layout.Spacer(modifier = Modifier.weight(1f))
                 }
             }
-            androidx.compose.foundation.layout.Box(
+            Column(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             ) {
-                AppNavHost(navController = navController, modifier = Modifier.fillMaxSize())
+                GlobalSyncBanner(
+                    syncProgress = syncProgress,
+                    onDismiss = { epgRepository?.resetSyncProgress() }
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                ) {
+                    AppNavHost(navController = navController, modifier = Modifier.fillMaxSize())
+                }
             }
         }
     } else {
@@ -226,7 +244,23 @@ fun TvoraAppNavigation(
             },
             containerColor = MaterialTheme.colorScheme.background
         ) { padding ->
-            AppNavHost(navController = navController, modifier = Modifier.padding(padding))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                GlobalSyncBanner(
+                    syncProgress = syncProgress,
+                    onDismiss = { epgRepository?.resetSyncProgress() }
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                ) {
+                    AppNavHost(navController = navController, modifier = Modifier.fillMaxSize())
+                }
+            }
         }
     }
 }

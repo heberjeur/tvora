@@ -74,29 +74,41 @@ class EpgRepositoryImpl @Inject constructor(
     private val _syncProgress = MutableStateFlow(SyncProgress())
 
     companion object {
-        const val CURRENT_EPG_ASSET_VERSION = 5
+        const val CURRENT_EPG_ASSET_VERSION = 6
     }
 
     init {
         repositoryScope.launch {
+            try {
+                programDao.normalizeAllChannelIds()
+            } catch (_: Exception) {
+            }
             userPreferences.appLanguage.distinctUntilChanged().collect { lang ->
                 val lastLang = userPreferences.lastSyncedLanguage.first()
                 val lastAssetVersion = userPreferences.lastSyncedAssetVersion.first()
                 val assetVersionOutdated = lastAssetVersion < CURRENT_EPG_ASSET_VERSION
                 val cachedCount = programDao.getProgramCount()
-                val canalPlusCount = programDao.getProgramCountForChannel("CanalPlus.fr")
+                val canalPlusCount = programDao.getProgramCountForChannelAliases(ChannelCatalog.getChannelAliases("CanalPlus.fr"))
+                val tmcCount = programDao.getProgramCountForChannelAliases(ChannelCatalog.getChannelAliases("TMC.fr"))
+                val tfxCount = programDao.getProgramCountForChannelAliases(ChannelCatalog.getChannelAliases("TFX.fr"))
+                val lequipeCount = programDao.getProgramCountForChannelAliases(ChannelCatalog.getChannelAliases("LEquipe.fr"))
+                val rmcStoryCount = programDao.getProgramCountForChannelAliases(ChannelCatalog.getChannelAliases("RMCStory.fr"))
+                val rmcLifeCount = programDao.getProgramCountForChannelAliases(ChannelCatalog.getChannelAliases("RMCLife.fr"))
+                val hasMissingEssentialChannels = canalPlusCount == 0 || tmcCount == 0 || tfxCount == 0 || lequipeCount == 0 || rmcStoryCount == 0 || rmcLifeCount == 0
                 val latestTimestamp = programDao.getLatestProgramTimestamp() ?: 0L
                 val now = System.currentTimeMillis()
-                if (cachedCount == 0 || (lastLang != null && lastLang != lang) || latestTimestamp < now || assetVersionOutdated || canalPlusCount == 0) {
+                if (cachedCount == 0 || (lastLang != null && lastLang != lang) || latestTimestamp < now || assetVersionOutdated || hasMissingEssentialChannels) {
                     preloadFeed(ChannelPackage.COMMUNITY_ENRICHED, lang)
                 }
                 val customs = userPreferences.customChannels.first()
                 val missingCustoms = customs.filter {
-                    val canonicalId = ChannelCatalog.canonicalChannelId(it.id)
-                    programDao.getProgramCountForChannel(canonicalId) == 0
+                    val aliases = ChannelCatalog.getChannelAliases(it.id)
+                    programDao.getProgramCountForChannelAliases(aliases) == 0
                 }
                 if (missingCustoms.isNotEmpty()) {
-                    syncProgramsForChannels(missingCustoms.map { it.id }.toSet())
+                    repositoryScope.launch(Dispatchers.IO) {
+                        syncProgramsForChannels(missingCustoms.map { it.id }.toSet())
+                    }
                 }
             }
         }
@@ -120,12 +132,13 @@ class EpgRepositoryImpl @Inject constructor(
                 if (seenNormalized.add(norm)) {
                     val custom = customMap[norm]
                     if (custom != null) {
-                        mapped.add(custom.copy(iconUrl = ChannelCatalog.getLogoUrl(custom.id) ?: custom.iconUrl))
+                        mapped.add(custom.copy(id = ChannelCatalog.canonicalChannelId(custom.id), iconUrl = ChannelCatalog.getLogoUrl(custom.id) ?: custom.iconUrl))
                     } else if (tntNormalized.contains(norm) || ChannelCatalog.isCatalogChannel(entity.id)) {
                         val tntNumber = ChannelCatalog.getChannelNumber(entity.id)
                         val resolvedNumber = if (tntNumber > 0) tntNumber else entity.channelNumber
                         mapped.add(
                             entity.toDomain().copy(
+                                id = ChannelCatalog.canonicalChannelId(entity.id),
                                 channelNumber = resolvedNumber,
                                 displayName = ChannelCatalog.getDisplayName(entity.id),
                                 iconUrl = ChannelCatalog.getLogoUrl(entity.id) ?: entity.iconUrl
@@ -138,16 +151,17 @@ class EpgRepositoryImpl @Inject constructor(
             customList.forEach { custom ->
                 val norm = ChannelCatalog.normalizeId(custom.id)
                 if (seenNormalized.add(norm)) {
-                    mapped.add(custom.copy(iconUrl = ChannelCatalog.getLogoUrl(custom.id) ?: custom.iconUrl))
+                    mapped.add(custom.copy(id = ChannelCatalog.canonicalChannelId(custom.id), iconUrl = ChannelCatalog.getLogoUrl(custom.id) ?: custom.iconUrl))
                 }
             }
 
             ChannelCatalog.tntChannelIds.forEach { tntId ->
                 val norm = ChannelCatalog.normalizeId(tntId)
                 if (seenNormalized.add(norm)) {
+                    val canonical = ChannelCatalog.canonicalChannelId(tntId)
                     mapped.add(
                         Channel(
-                            id = tntId,
+                            id = canonical,
                             displayName = ChannelCatalog.getDisplayName(tntId),
                             iconUrl = ChannelCatalog.getLogoUrl(tntId) ?: "",
                             packageId = channelPackage.id,
@@ -204,7 +218,8 @@ class EpgRepositoryImpl @Inject constructor(
         dayStart: Long,
         dayEnd: Long
     ): Flow<List<Program>> {
-        return programDao.getProgramsForChannel(channelId, dayStart, dayEnd).map { list ->
+        val aliases = ChannelCatalog.getChannelAliases(channelId)
+        return programDao.getProgramsForChannelAliases(aliases, dayStart, dayEnd).map { list ->
             list.map { it.toDomain() }
         }
     }
@@ -251,7 +266,14 @@ class EpgRepositoryImpl @Inject constructor(
     ): Flow<List<Program>> {
         val now = System.currentTimeMillis() - 2 * 3600 * 1000L
         val fromTime = if (dayStart > 0L) minOf(now, dayStart) else now
-        return programDao.getFilteredPrograms(category, channelId, dayStart, dayEnd, fromTime).map { list ->
+        val flow = if (!channelId.isNullOrBlank()) {
+            val aliases = ChannelCatalog.getChannelAliases(channelId)
+            val lowerAliases = aliases.map { it.lowercase() }
+            programDao.getFilteredProgramsForChannels(category, aliases, lowerAliases, dayStart, dayEnd, fromTime)
+        } else {
+            programDao.getFilteredProgramsAll(category, dayStart, dayEnd, fromTime)
+        }
+        return flow.map { list ->
             list.map { it.toDomain() }
         }
     }
@@ -332,20 +354,30 @@ class EpgRepositoryImpl @Inject constructor(
             val isStale = metadata == null || (now - metadata.lastSyncTimestamp) > staleThresholdMillis || !hasActivePrograms
 
             if (!effectiveForceRefresh && !isStale && cachedCount > 0) {
-                val customs = userPreferences.customChannels.first()
-                val missingTnt = ChannelCatalog.tntChannelIds.filter { tntId ->
-                    programDao.getProgramCountForChannel(tntId) == 0 &&
-                    programDao.getProgramCountForChannel(ChannelCatalog.canonicalChannelId(tntId)) == 0
-                }
-                val extraTargets = (customs.map { it.id }.filter { programDao.getProgramCountForChannel(it) == 0 } + missingTnt).toSet()
-                if (extraTargets.isNotEmpty() && connectivityObserver.isConnected()) {
-                    syncProgramsForChannels(extraTargets)
-                }
                 _syncProgress.value = SyncProgress(
                     state = SyncState.IDLE,
-                    programCount = programDao.getProgramCount(),
+                    programCount = cachedCount,
                     lastSyncTimestamp = metadata?.lastSyncTimestamp ?: now
                 )
+                val missingTnt = ChannelCatalog.tntChannelIds.filter { tntId ->
+                    val aliases = ChannelCatalog.getChannelAliases(tntId)
+                    programDao.getProgramCountForChannelAliases(aliases) == 0
+                }
+                if (missingTnt.isNotEmpty()) {
+                    repositoryScope.launch(Dispatchers.IO) {
+                        preloadMissingFromAssets(channelPackage, currentLanguage, missingTnt)
+                    }
+                }
+                val customs = userPreferences.customChannels.first()
+                val missingCustoms = customs.filter {
+                    val aliases = ChannelCatalog.getChannelAliases(it.id)
+                    programDao.getProgramCountForChannelAliases(aliases) == 0
+                }
+                if (missingCustoms.isNotEmpty() && connectivityObserver.isConnected()) {
+                    repositoryScope.launch(Dispatchers.IO) {
+                        syncProgramsForChannels(missingCustoms.map { it.id }.toSet())
+                    }
+                }
                 return@withContext Result.success(Unit)
             }
 
@@ -431,13 +463,48 @@ class EpgRepositoryImpl @Inject constructor(
                         }
                     }
 
+                    val missingTnt = ChannelCatalog.tntChannelIds.filter { tntId ->
+                        allPrograms.none { ChannelCatalog.normalizeId(it.channelId) == ChannelCatalog.normalizeId(tntId) }
+                    }
+                    if (missingTnt.isNotEmpty()) {
+                        try {
+                            val fallbackUrl = channelPackage.getFallbackUrl(currentLanguage)
+                            val fallbackResult = downloader.downloadFeed(fallbackUrl, null)
+                            val fallbackStream = fallbackResult.inputStream
+                            if (fallbackStream != null) {
+                                GZIPInputStream(fallbackStream).use { fallbackInput ->
+                                    parser.parse(fallbackInput, channelPackage.id, missingTnt.toSet()) { channels, programs ->
+                                        if (channels.isNotEmpty()) allChannels.addAll(channels)
+                                        if (programs.isNotEmpty()) allPrograms.addAll(programs)
+                                    }
+                                }
+                            }
+                        } catch (_: Exception) {
+                        }
+                        val stillMissingTnt = ChannelCatalog.tntChannelIds.filter { tntId ->
+                            allPrograms.none { ChannelCatalog.normalizeId(it.channelId) == ChannelCatalog.normalizeId(tntId) }
+                        }
+                        if (stillMissingTnt.isNotEmpty()) {
+                            val assetStream = openAssetStream(channelPackage, currentLanguage)
+                            if (assetStream != null) {
+                                assetStream.use { assetInput ->
+                                    parser.parse(assetInput, channelPackage.id, stillMissingTnt.toSet()) { channels, programs ->
+                                        if (channels.isNotEmpty()) allChannels.addAll(channels)
+                                        if (programs.isNotEmpty()) allPrograms.addAll(programs)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     val customs = userPreferences.customChannels.first()
                     customs.forEach { allChannels.add(it.toEntity()) }
 
                     val parsedChannelIds = allPrograms.map { it.channelId }.distinct()
                     database.withTransaction {
                         parsedChannelIds.forEach { chId ->
-                            programDao.deleteProgramsForChannel(chId)
+                            val aliases = ChannelCatalog.getChannelAliases(chId)
+                            programDao.deleteProgramsForChannels(aliases)
                         }
                         if (allChannels.isNotEmpty()) {
                             channelDao.insertChannels(allChannels)
@@ -446,6 +513,7 @@ class EpgRepositoryImpl @Inject constructor(
                             programDao.insertPrograms(allPrograms)
                         }
                     }
+                    programDao.normalizeAllChannelIds()
 
                     val totalPrograms = allPrograms.size
 
@@ -482,12 +550,10 @@ class EpgRepositoryImpl @Inject constructor(
                         lastSyncTimestamp = now
                     )
 
-                    val missingTnt = ChannelCatalog.tntChannelIds.filter { tntId ->
-                        allPrograms.none { ChannelCatalog.normalizeId(it.channelId) == ChannelCatalog.normalizeId(tntId) }
-                    }
-                    val extraTargets = (customs.map { it.id } + missingTnt).toSet()
-                    if (extraTargets.isNotEmpty()) {
-                        syncProgramsForChannels(extraTargets)
+                    if (customs.isNotEmpty()) {
+                        repositoryScope.launch(Dispatchers.IO) {
+                            syncProgramsForChannels(customs.map { it.id }.toSet())
+                        }
                     }
 
                     syncSucceeded = true
@@ -565,6 +631,7 @@ class EpgRepositoryImpl @Inject constructor(
                                     }
                                     programDao.insertPrograms(programs)
                                 }
+                                programDao.normalizeAllChannelIds()
                             }
                         }
                     }
@@ -636,7 +703,8 @@ class EpgRepositoryImpl @Inject constructor(
         val parsedChannelIds = allPrograms.map { it.channelId }.distinct()
         database.withTransaction {
             parsedChannelIds.forEach { chId ->
-                programDao.deleteProgramsForChannel(chId)
+                val aliases = ChannelCatalog.getChannelAliases(chId)
+                programDao.deleteProgramsForChannels(aliases)
             }
             if (allChannels.isNotEmpty()) {
                 channelDao.insertChannels(allChannels)
@@ -645,6 +713,7 @@ class EpgRepositoryImpl @Inject constructor(
                 programDao.insertPrograms(allPrograms)
             }
         }
+        programDao.normalizeAllChannelIds()
 
         val now = System.currentTimeMillis()
         syncMetadataDao.insertSyncMetadata(
@@ -671,6 +740,32 @@ class EpgRepositoryImpl @Inject constructor(
             repositoryScope.launch {
                 syncProgramsForChannels(customs.map { it.id }.toSet())
             }
+        }
+    }
+
+    private suspend fun preloadMissingFromAssets(
+        channelPackage: ChannelPackage,
+        lang: String,
+        missingChannelIds: List<String>
+    ) {
+        val stream = openAssetStream(channelPackage, lang) ?: return
+        val targets = missingChannelIds.map { ChannelCatalog.canonicalChannelId(it) }.toSet()
+        val extraChannels = mutableListOf<ChannelEntity>()
+        val extraPrograms = mutableListOf<ProgramEntity>()
+
+        stream.use { input ->
+            parser.parse(input, channelPackage.id, targets) { batchChannels, batchPrograms ->
+                if (batchChannels.isNotEmpty()) extraChannels.addAll(batchChannels)
+                if (batchPrograms.isNotEmpty()) extraPrograms.addAll(batchPrograms)
+            }
+        }
+
+        if (extraChannels.isNotEmpty() || extraPrograms.isNotEmpty()) {
+            database.withTransaction {
+                if (extraChannels.isNotEmpty()) channelDao.insertChannels(extraChannels)
+                if (extraPrograms.isNotEmpty()) programDao.insertPrograms(extraPrograms)
+            }
+            programDao.normalizeAllChannelIds()
         }
     }
 

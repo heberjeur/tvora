@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.mohamedaminelouati.tvora.data.local.entity.ProgramEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -17,6 +18,9 @@ interface ProgramDao {
 
     @Query("SELECT * FROM programs WHERE channelId = :channelId AND stopTimestamp > :dayStart AND startTimestamp < :dayEnd ORDER BY startTimestamp ASC")
     fun getProgramsForChannel(channelId: String, dayStart: Long, dayEnd: Long): Flow<List<ProgramEntity>>
+
+    @Query("SELECT * FROM programs WHERE channelId IN (:channelIds) AND (:dayStart = 0 OR (stopTimestamp > :dayStart AND startTimestamp < :dayEnd)) ORDER BY startTimestamp ASC")
+    fun getProgramsForChannelAliases(channelIds: List<String>, dayStart: Long, dayEnd: Long): Flow<List<ProgramEntity>>
 
     @Query("SELECT * FROM programs WHERE id = :id LIMIT 1")
     fun getProgramById(id: Long): Flow<ProgramEntity?>
@@ -48,7 +52,13 @@ interface ProgramDao {
     @Query("SELECT * FROM programs WHERE (:category = '' OR categories LIKE '%' || :category || '%') AND stopTimestamp > :fromTime ORDER BY startTimestamp ASC LIMIT 250")
     fun getProgramsByCategory(category: String, fromTime: Long): Flow<List<ProgramEntity>>
 
-    @Query("SELECT * FROM programs WHERE (:category = '' OR categories LIKE '%' || :category || '%') AND (:channelId IS NULL OR channelId = :channelId) AND (:dayStart = 0 OR (stopTimestamp > :dayStart AND startTimestamp < :dayEnd)) AND stopTimestamp > :fromTime ORDER BY startTimestamp ASC LIMIT 1000")
+    @Query("SELECT * FROM programs WHERE (:category = '' OR categories LIKE '%' || :category || '%') AND (channelId IN (:channelIds) OR LOWER(channelId) IN (:lowerChannelIds)) AND (:dayStart = 0 OR stopTimestamp > :dayStart) AND (:dayEnd = 0 OR startTimestamp < :dayEnd) AND stopTimestamp > :fromTime ORDER BY startTimestamp ASC LIMIT 2500")
+    fun getFilteredProgramsForChannels(category: String, channelIds: List<String>, lowerChannelIds: List<String>, dayStart: Long, dayEnd: Long, fromTime: Long): Flow<List<ProgramEntity>>
+
+    @Query("SELECT * FROM programs WHERE (:category = '' OR categories LIKE '%' || :category || '%') AND (:dayStart = 0 OR stopTimestamp > :dayStart) AND (:dayEnd = 0 OR startTimestamp < :dayEnd) AND stopTimestamp > :fromTime ORDER BY startTimestamp ASC LIMIT 5000")
+    fun getFilteredProgramsAll(category: String, dayStart: Long, dayEnd: Long, fromTime: Long): Flow<List<ProgramEntity>>
+
+    @Query("SELECT * FROM programs WHERE (:category = '' OR categories LIKE '%' || :category || '%') AND (:channelId IS NULL OR channelId = :channelId) AND (:dayStart = 0 OR (stopTimestamp > :dayStart AND startTimestamp < :dayEnd)) AND stopTimestamp > :fromTime ORDER BY startTimestamp ASC LIMIT 2500")
     fun getFilteredPrograms(category: String, channelId: String?, dayStart: Long, dayEnd: Long, fromTime: Long): Flow<List<ProgramEntity>>
 
     @Query("SELECT * FROM programs WHERE stopTimestamp > :startTime AND startTimestamp < :endTime ORDER BY channelId ASC, startTimestamp ASC")
@@ -66,6 +76,9 @@ interface ProgramDao {
     @Query("SELECT COUNT(*) FROM programs WHERE channelId = :channelId")
     suspend fun getProgramCountForChannel(channelId: String): Int
 
+    @Query("SELECT COUNT(*) FROM programs WHERE channelId IN (:channelIds)")
+    suspend fun getProgramCountForChannelAliases(channelIds: List<String>): Int
+
     @Query("SELECT MAX(stopTimestamp) FROM programs")
     suspend fun getLatestProgramTimestamp(): Long?
 
@@ -78,6 +91,41 @@ interface ProgramDao {
     @Query("DELETE FROM programs WHERE channelId = :channelId")
     suspend fun deleteProgramsForChannel(channelId: String)
 
+    @Query("DELETE FROM programs WHERE channelId IN (:channelIds)")
+    suspend fun deleteProgramsForChannels(channelIds: List<String>)
+
     @Query("DELETE FROM programs")
     suspend fun clearAll()
+
+    @Query("UPDATE programs SET channelId = 'LCP.fr' WHERE LOWER(channelId) IN ('lachaineparlementaire.fr', 'lachaineparlementaire', 'lcp.fr', 'lcp')")
+    suspend fun normalizeLcp()
+
+    @Query("UPDATE programs SET channelId = 'TFX.fr' WHERE LOWER(channelId) IN ('nt1.fr', 'nt1', 'tfx.fr', 'tfx')")
+    suspend fun normalizeTfx()
+
+    @Query("UPDATE programs SET channelId = 'LEquipe.fr' WHERE LOWER(channelId) IN ('lequipe21.fr', 'lequipe21', 'lequipe.fr', 'lequipe')")
+    suspend fun normalizeLEquipe()
+
+    @Query("UPDATE programs SET channelId = 'RMCStory.fr' WHERE LOWER(channelId) IN ('numero23.fr', 'numero23', 'rmcstory.fr', 'rmcstory')")
+    suspend fun normalizeRmcStory()
+
+    @Query("UPDATE programs SET channelId = 'RMCLife.fr' WHERE LOWER(channelId) IN ('cherie25.fr', 'cherie25', 'rmclife.fr', 'rmclife')")
+    suspend fun normalizeRmcLife()
+
+    @Query("UPDATE programs SET channelId = 'CanalPlus.fr' WHERE LOWER(channelId) IN ('canalplus.fr', 'canalplus', 'canal+', 'c')")
+    suspend fun normalizeCanalPlus()
+
+    @Query("UPDATE programs SET channelId = 'TMC.fr' WHERE LOWER(channelId) IN ('tmc.fr', 'tmc', 'telemontecarlo.fr', 'telemontecarlo')")
+    suspend fun normalizeTmc()
+
+    @Transaction
+    suspend fun normalizeAllChannelIds() {
+        normalizeLcp()
+        normalizeTfx()
+        normalizeLEquipe()
+        normalizeRmcStory()
+        normalizeRmcLife()
+        normalizeCanalPlus()
+        normalizeTmc()
+    }
 }

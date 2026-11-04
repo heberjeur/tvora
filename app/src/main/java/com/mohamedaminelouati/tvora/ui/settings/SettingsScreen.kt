@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mohamedaminelouati.tvora.R
+import com.mohamedaminelouati.tvora.data.local.ChannelCatalog
 import com.mohamedaminelouati.tvora.ui.settings.dialogs.AddChannelDialog
 import com.mohamedaminelouati.tvora.ui.settings.dialogs.CustomColorDialog
 import com.mohamedaminelouati.tvora.ui.settings.dialogs.FavoritesOrderDialog
@@ -164,6 +165,15 @@ fun SettingsScreen(
             onAddPreset = { preset ->
                 viewModel.addPresetChannel(preset)
                 Toast.makeText(context, context.getString(R.string.toast_channel_added), Toast.LENGTH_SHORT).show()
+            },
+            onRemovePreset = { preset ->
+                val matching = customChannels.firstOrNull { ChannelCatalog.normalizeId(it.id) == ChannelCatalog.normalizeId(preset.id) }
+                if (matching != null) {
+                    viewModel.removeCustomChannel(matching.id)
+                } else {
+                    viewModel.removeCustomChannel(preset.id)
+                }
+                Toast.makeText(context, context.getString(R.string.toast_channel_removed), Toast.LENGTH_SHORT).show()
             },
             onDismiss = { showAddChannelDialog = false }
         )

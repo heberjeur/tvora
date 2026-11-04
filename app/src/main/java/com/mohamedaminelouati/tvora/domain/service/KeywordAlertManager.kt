@@ -25,6 +25,7 @@ class KeywordAlertManager @Inject constructor(
 
     suspend fun syncKeyword(keywordAlert: KeywordAlert, notifyOnDiscovery: Boolean = true): Int {
         if (!keywordAlert.isEnabled || keywordAlert.keyword.isBlank()) return 0
+        cleanupDuplicateReminders()
         val now = System.currentTimeMillis()
         val cleanKeyword = keywordAlert.keyword.trim().lowercase()
         val matchingPrograms = programDao.searchUpcomingProgramsByText(cleanKeyword, now)
@@ -34,8 +35,16 @@ class KeywordAlertManager @Inject constructor(
 
         var newRemindersCount = 0
         for (prog in matchingPrograms) {
+            val aliases = com.mohamedaminelouati.tvora.data.local.ChannelCatalog.getChannelAliases(prog.channelId)
             val existing = reminderDao.getReminderForProgramDirect(prog.id)
-            if (existing != null) continue
+                ?: reminderDao.getReminderForBroadcast(prog.channelId, aliases, prog.startTimestamp)
+                ?: reminderDao.getReminderByTitleAndStart(prog.title, prog.startTimestamp)
+            if (existing != null) {
+                if (existing.programId != prog.id) {
+                    reminderDao.updateReminder(existing.copy(programId = prog.id))
+                }
+                continue
+            }
 
             val triggerTimestamp = prog.startTimestamp - (keywordAlert.leadTimeMinutes * 60 * 1000L)
             if (triggerTimestamp <= now) continue
@@ -74,12 +83,28 @@ class KeywordAlertManager @Inject constructor(
     }
 
     suspend fun syncAllActiveKeywords(): Int {
+        cleanupDuplicateReminders()
         val activeKeywords = keywordAlertDao.getActiveKeywordAlertsDirect()
         var totalScheduled = 0
         for (entity in activeKeywords) {
             totalScheduled += syncKeyword(entity.toDomain(), notifyOnDiscovery = true)
         }
         return totalScheduled
+    }
+
+    private suspend fun cleanupDuplicateReminders() {
+        try {
+            reminderDao.purgeDuplicateReminders()
+        } catch (_: Exception) {
+        }
+        val all = reminderDao.getAllRemindersDirect()
+        val seen = mutableSetOf<String>()
+        for (rem in all) {
+            val key = "${com.mohamedaminelouati.tvora.data.local.ChannelCatalog.normalizeId(rem.channelId)}_${rem.startTimestamp}_${rem.title.trim().lowercase()}"
+            if (!seen.add(key)) {
+                reminderDao.deleteReminder(rem)
+            }
+        }
     }
 
     suspend fun updateSoundForKeyword(keyword: String, soundUri: String?) {

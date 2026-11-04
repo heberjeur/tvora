@@ -45,7 +45,7 @@ class ChannelListViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     private val allChannels: StateFlow<List<Channel>> = epgRepository.getChannels(ChannelPackage.COMMUNITY_ENRICHED)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private data class ChannelPreferences(
         val hiddenChannels: Set<String>,
@@ -106,7 +106,7 @@ class ChannelListViewModel @Inject constructor(
             )
         }
     }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
