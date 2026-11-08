@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.mohamedaminelouati.tvora.data.local.ChannelCatalog
 import com.mohamedaminelouati.tvora.data.local.ChannelCatalog.PresetChannel
 import com.mohamedaminelouati.tvora.data.local.ChannelClassification
-import com.mohamedaminelouati.tvora.data.local.ChannelPack
 import com.mohamedaminelouati.tvora.data.local.ChannelRegion
 import com.mohamedaminelouati.tvora.data.local.ChannelTheme
 import com.mohamedaminelouati.tvora.data.local.PresetChannelsData
@@ -18,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,7 +28,15 @@ class ChannelManagementViewModel @Inject constructor(
 ) : ViewModel() {
 
     val allPresets: List<PresetChannel> = PresetChannelsData.all
-    val availablePacks: List<ChannelPack> = ChannelClassification.getAvailablePacks(allPresets)
+
+    val defaultTntChannels: List<PresetChannel> = ChannelCatalog.tntChannelIds.take(28).map { id ->
+        PresetChannel(
+            id = ChannelCatalog.canonicalChannelId(id),
+            displayName = ChannelCatalog.getDisplayName(id),
+            channelNumber = ChannelCatalog.getChannelNumber(id),
+            iconUrl = ChannelCatalog.getLogoUrl(id) ?: ""
+        )
+    }
 
     val customChannels: StateFlow<List<Channel>> = epgRepository.getCustomChannels()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -84,6 +92,19 @@ class ChannelManagementViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val filteredTntChannels: StateFlow<List<PresetChannel>> = searchQuery.map { query ->
+        val trimmed = query.trim()
+        if (trimmed.isEmpty()) {
+            defaultTntChannels
+        } else {
+            defaultTntChannels.filter { channel ->
+                channel.displayName.contains(trimmed, ignoreCase = true) ||
+                    channel.id.contains(trimmed, ignoreCase = true) ||
+                    channel.channelNumber.toString() == trimmed
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), defaultTntChannels)
+
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
     }
@@ -122,37 +143,9 @@ class ChannelManagementViewModel @Inject constructor(
         }
     }
 
-    fun togglePack(pack: ChannelPack) {
-        viewModelScope.launch {
-            val currentCustoms = customChannels.value
-            val currentNormalized = currentCustoms.map { ChannelCatalog.normalizeId(it.id) }.toSet()
-            val packNormalized = pack.channelIds.map { ChannelCatalog.normalizeId(it) }.toSet()
-
-            val allPackChannelsAdded = packNormalized.all { currentNormalized.contains(it) }
-            if (allPackChannelsAdded) {
-                epgRepository.removeCustomChannels(pack.channelIds.toSet())
-            } else {
-                val channelsToAdd = allPresets
-                    .filter { packNormalized.contains(ChannelCatalog.normalizeId(it.id)) && !currentNormalized.contains(ChannelCatalog.normalizeId(it.id)) }
-                    .map { preset ->
-                        Channel(
-                            id = preset.id,
-                            displayName = preset.displayName,
-                            iconUrl = preset.iconUrl,
-                            packageId = ChannelPackage.COMMUNITY_ENRICHED.id,
-                            channelNumber = preset.channelNumber,
-                            isFavorite = false
-                        )
-                    }
-                epgRepository.addCustomChannels(channelsToAdd)
-            }
-        }
-    }
-
     fun clearAllCustomChannels() {
         viewModelScope.launch {
             epgRepository.clearCustomChannels()
         }
     }
 }
-
