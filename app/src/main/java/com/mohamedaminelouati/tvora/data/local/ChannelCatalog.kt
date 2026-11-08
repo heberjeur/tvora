@@ -27,7 +27,7 @@ object ChannelCatalog {
         "6ter.fr",
         "RMCStory.fr",
         "RMCDecouverte.fr",
-        "RMCLife.fr",
+        "Cherie25.fr",
         "CanalPlus.fr",
         "TV5Monde.fr",
         "France24.fr"
@@ -42,24 +42,29 @@ object ChannelCatalog {
         "M6.fr" to 6,
         "Arte.fr" to 7,
         "LCP.fr" to 8,
+        "LaChaineParlementaire.fr" to 8,
         "W9.fr" to 9,
         "TMC.fr" to 10,
         "TFX.fr" to 11,
+        "NT1.fr" to 11,
         "Gulli.fr" to 12,
         "BFMTV.fr" to 13,
         "CNews.fr" to 14,
         "LCI.fr" to 15,
         "FranceInfo.fr" to 16,
         "CStar.fr" to 17,
+        "CStar.ch" to 17,
         "T18.fr" to 18,
         "NOVO19.fr" to 19,
         "TF1SeriesFilms.fr" to 20,
         "LEquipe.fr" to 21,
+        "LEquipe21.fr" to 21,
         "6ter.fr" to 22,
         "RMCStory.fr" to 23,
+        "Numero23.fr" to 23,
         "RMCDecouverte.fr" to 24,
-        "RMCLife.fr" to 25,
         "Cherie25.fr" to 25,
+        "RMCLife.fr" to 25,
         "CanalPlus.fr" to 26,
         "CanalPlus" to 26,
         "canalplus" to 26,
@@ -77,21 +82,26 @@ object ChannelCatalog {
         "M6.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~46c2dbade9ac9fed.png/480x480/quality/100/m6.png",
         "Arte.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~d6bb7624abff43ac.png/480x480/quality/100/arte.png",
         "LCP.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~080eb27517dd16c6.png/480x480/quality/100/la-chaine-parlementaire.png",
+        "LaChaineParlementaire.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~080eb27517dd16c6.png/480x480/quality/100/la-chaine-parlementaire.png",
         "W9.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~15acfc705e2d4dd8.png/480x480/quality/100/w9.png",
         "TMC.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~b2c9618d914140d0.png/480x480/quality/100/tmc.png",
         "TFX.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~71e551462d6114e5.png/480x480/quality/100/tfx.png",
+        "NT1.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~71e551462d6114e5.png/480x480/quality/100/tfx.png",
         "Gulli.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~059a8175b83117fd.png/480x480/quality/100/gulli.png",
         "BFMTV.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~9048e02338fb1134.png/480x480/quality/100/bfmtv.png",
         "CNews.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~952ec4ae63b20c1b.png/480x480/quality/100/cnews.png",
         "LCI.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~1314d39cfeea2a5c.png/480x480/quality/100/lci-la-chaine-info.png",
         "FranceInfo.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~367eff2d23ab1357.png/480x480/quality/100/franceinfo.png",
         "CStar.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~9583d8a6fa9d6ade.png/480x480/quality/100/cstar.png",
+        "CStar.ch" to "https://www.programme-tv.net/imgre/fit/~2~channel~9583d8a6fa9d6ade.png/480x480/quality/100/cstar.png",
         "T18.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~3deccc95e7e75463.png/480x480/quality/100/t18.png",
         "NOVO19.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~113b817bb2e5c3a6.png/480x480/quality/100/novo19.png",
         "TF1SeriesFilms.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~3104ccb3015a8669.png/480x480/quality/100/tf1-series-films.png",
         "LEquipe.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~060edf53b072af43.png/480x480/quality/100/l-equipe.png",
+        "LEquipe21.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~060edf53b072af43.png/480x480/quality/100/l-equipe.png",
         "6ter.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~ceee54072118570a.png/480x480/quality/100/6ter.png",
         "RMCStory.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~56b83775344955b8.png/480x480/quality/100/rmc-story.png",
+        "Numero23.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~56b83775344955b8.png/480x480/quality/100/rmc-story.png",
         "RMCDecouverte.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~a95c9fa646201300.png/480x480/quality/100/rmc-decouverte.png",
         "RMCLife.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~91bf2b7762746d0c.png/480x480/quality/100/rmc-life.png",
         "Cherie25.fr" to "https://www.programme-tv.net/imgre/fit/~2~channel~91bf2b7762746d0c.png/480x480/quality/100/rmc-life.png",
@@ -196,24 +206,29 @@ object ChannelCatalog {
         "M6.fr" to "M6",
         "Arte.fr" to "Arte",
         "LCP.fr" to "LCP",
+        "LaChaineParlementaire.fr" to "LCP",
         "W9.fr" to "W9",
         "TMC.fr" to "TMC",
         "TFX.fr" to "TFX",
+        "NT1.fr" to "TFX",
         "Gulli.fr" to "Gulli",
         "BFMTV.fr" to "BFMTV",
         "CNews.fr" to "CNews",
         "LCI.fr" to "LCI",
         "FranceInfo.fr" to "franceinfo",
         "CStar.fr" to "CStar",
+        "CStar.ch" to "CStar",
         "T18.fr" to "T18",
         "NOVO19.fr" to "NOVO19",
         "TF1SeriesFilms.fr" to "TF1 Séries Films",
         "LEquipe.fr" to "L'Équipe",
+        "LEquipe21.fr" to "L'Équipe",
         "6ter.fr" to "6ter",
         "RMCStory.fr" to "RMC Story",
+        "Numero23.fr" to "RMC Story",
         "RMCDecouverte.fr" to "RMC Découverte",
-        "RMCLife.fr" to "RMC Life",
-        "Cherie25.fr" to "RMC Life",
+        "Cherie25.fr" to "Chérie 25",
+        "RMCLife.fr" to "Chérie 25",
         "CanalPlus.fr" to "Canal+",
         "CanalPlus" to "Canal+",
         "Canal+" to "Canal+",
@@ -322,7 +337,7 @@ object ChannelCatalog {
             "lachaineparlementaire", "lcp" -> "lcp"
             "lequipe21", "lequipe" -> "lequipe"
             "numero23", "rmcstory" -> "rmcstory"
-            "cherie25", "rmclife" -> "rmclife"
+            "cherie25", "rmclife" -> "cherie25"
             "13emerue", "13erue" -> "13erue"
             "scifi", "syfy" -> "syfy"
             else -> norm
@@ -338,7 +353,8 @@ object ChannelCatalog {
             "lcp" -> "LCP.fr"
             "lequipe" -> "LEquipe.fr"
             "rmcstory" -> "RMCStory.fr"
-            "rmclife" -> "RMCLife.fr"
+            "cherie25", "rmclife" -> "Cherie25.fr"
+            "cstar" -> "CStar.fr"
             "parispremiere" -> "ParisPremiere.fr"
             "rtl9" -> "RTL9.fr"
             "teva" -> "Teva.fr"
@@ -385,7 +401,8 @@ object ChannelCatalog {
             "lequipe" -> aliases.addAll(listOf("LEquipe.fr", "LEquipe", "lequipe", "LEquipe21.fr", "LEquipe21", "lequipe21"))
             "rmcstory" -> aliases.addAll(listOf("RMCStory.fr", "RMCStory", "rmcstory", "Numero23.fr", "Numero23", "numero23"))
             "rmcdecouverte" -> aliases.addAll(listOf("RMCDecouverte.fr", "RMCDecouverte", "rmcdecouverte"))
-            "rmclife" -> aliases.addAll(listOf("RMCLife.fr", "RMCLife", "rmclife", "Cherie25.fr", "Cherie25", "cherie25"))
+            "cherie25", "rmclife" -> aliases.addAll(listOf("Cherie25.fr", "Cherie25", "cherie25", "RMCLife.fr", "RMCLife", "rmclife", "Chérie 25"))
+            "cstar" -> aliases.addAll(listOf("CStar.fr", "CStar", "cstar", "CStar.ch", "D17.fr", "D17"))
             "13erue" -> aliases.addAll(listOf("13eRue.fr", "13emeRue.fr", "13eme-rue.fr", "13erue", "13emerue"))
             "syfy" -> aliases.addAll(listOf("Syfy.fr", "SciFi.fr", "scifi", "syfy"))
             "tv5monde" -> aliases.addAll(listOf("TV5Monde.fr", "tv5monde", "TV5.ca", "TV5MondeEurope.fr"))
