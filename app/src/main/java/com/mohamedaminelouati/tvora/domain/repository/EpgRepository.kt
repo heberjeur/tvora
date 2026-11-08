@@ -29,5 +29,8 @@ interface EpgRepository {
     fun resetSyncProgress()
     fun getCustomChannels(): Flow<List<Channel>>
     suspend fun addCustomChannel(channel: Channel)
+    suspend fun addCustomChannels(channels: List<Channel>)
     suspend fun removeCustomChannel(channelId: String)
+    suspend fun removeCustomChannels(channelIds: Set<String>)
+    suspend fun clearCustomChannels()
 }

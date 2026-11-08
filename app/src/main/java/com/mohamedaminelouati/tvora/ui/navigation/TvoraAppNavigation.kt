@@ -48,6 +48,7 @@ import com.mohamedaminelouati.tvora.ui.series.SeriesEpisodesScreen
 import com.mohamedaminelouati.tvora.ui.guide.GuideScreen
 import com.mohamedaminelouati.tvora.ui.now.NowPlayingScreen
 import com.mohamedaminelouati.tvora.ui.settings.SettingsScreen
+import com.mohamedaminelouati.tvora.ui.settings.channels.ChannelManagementScreen
 import com.mohamedaminelouati.tvora.ui.settings.keyword.KeywordAlertsScreen
 import com.mohamedaminelouati.tvora.ui.theme.AccentRed
 
@@ -366,7 +367,13 @@ private fun AppNavHost(
             composable(Screen.Settings.route) {
                 SettingsScreen(
                     onBackClick = { navController.popBackStack() },
-                    onNavigateToKeywordAlerts = { navController.navigate("settings/keywords") }
+                    onNavigateToKeywordAlerts = { navController.navigate("settings/keywords") },
+                    onNavigateToChannelManagement = { navController.navigate("settings/channels") }
+                )
+            }
+            composable("settings/channels") {
+                ChannelManagementScreen(
+                    onBackClick = { navController.popBackStack() }
                 )
             }
             composable("settings/keywords") {

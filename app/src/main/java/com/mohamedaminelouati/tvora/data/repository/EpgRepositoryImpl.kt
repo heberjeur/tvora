@@ -201,9 +201,30 @@ class EpgRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun addCustomChannels(channels: List<Channel>) {
+        if (channels.isEmpty()) return
+        userPreferences.addCustomChannels(channels)
+        channelDao.insertChannels(channels.map { it.toEntity() })
+        repositoryScope.launch {
+            syncProgramsForChannels(channels.map { it.id }.toSet())
+        }
+    }
+
     override suspend fun removeCustomChannel(channelId: String) {
         userPreferences.removeCustomChannel(channelId)
         channelDao.deleteChannelById(channelId)
+    }
+
+    override suspend fun removeCustomChannels(channelIds: Set<String>) {
+        if (channelIds.isEmpty()) return
+        userPreferences.removeCustomChannels(channelIds)
+        channelIds.forEach { channelDao.deleteChannelById(it) }
+    }
+
+    override suspend fun clearCustomChannels() {
+        val current = userPreferences.customChannels.first()
+        userPreferences.clearCustomChannels()
+        current.forEach { channelDao.deleteChannelById(it.id) }
     }
 
     override fun getNowPlaying(): Flow<List<Program>> {

@@ -518,4 +518,84 @@ class UserPreferences @Inject constructor(
             }
         }
     }
+
+    suspend fun addCustomChannels(channels: List<Channel>) {
+        if (channels.isEmpty()) return
+        context.dataStore.edit { preferences ->
+            val raw = preferences[keyCustomChannels]
+            val current = if (!raw.isNullOrBlank()) {
+                try {
+                    val array = JSONArray(raw)
+                    val list = mutableListOf<Channel>()
+                    for (i in 0 until array.length()) {
+                        val obj = array.getJSONObject(i)
+                        list.add(
+                            Channel(
+                                id = obj.getString("id"),
+                                displayName = obj.getString("displayName"),
+                                iconUrl = obj.optString("iconUrl", "").ifEmpty { null },
+                                packageId = obj.optString("packageId", "community_enriched"),
+                                channelNumber = obj.optInt("channelNumber", 0),
+                                isFavorite = obj.optBoolean("isFavorite", false)
+                            )
+                        )
+                    }
+                    list
+                } catch (_: Exception) {
+                    mutableListOf()
+                }
+            } else {
+                mutableListOf()
+            }
+
+            channels.forEach { channel ->
+                val index = current.indexOfFirst { ChannelCatalog.normalizeId(it.id) == ChannelCatalog.normalizeId(channel.id) }
+                if (index >= 0) {
+                    current[index] = channel
+                } else {
+                    current.add(channel)
+                }
+            }
+
+            val array = JSONArray()
+            current.forEach { ch ->
+                val obj = JSONObject().apply {
+                    put("id", ch.id)
+                    put("displayName", ch.displayName)
+                    put("iconUrl", ch.iconUrl ?: "")
+                    put("packageId", ch.packageId)
+                    put("channelNumber", ch.channelNumber)
+                    put("isFavorite", ch.isFavorite)
+                }
+                array.put(obj)
+            }
+            preferences[keyCustomChannels] = array.toString()
+        }
+    }
+
+    suspend fun removeCustomChannels(channelIds: Set<String>) {
+        if (channelIds.isEmpty()) return
+        val normalizedTargets = channelIds.map { ChannelCatalog.normalizeId(it) }.toSet()
+        context.dataStore.edit { preferences ->
+            val raw = preferences[keyCustomChannels] ?: return@edit
+            try {
+                val array = JSONArray(raw)
+                val newArray = JSONArray()
+                for (i in 0 until array.length()) {
+                    val obj = array.getJSONObject(i)
+                    if (!normalizedTargets.contains(ChannelCatalog.normalizeId(obj.getString("id")))) {
+                        newArray.put(obj)
+                    }
+                }
+                preferences[keyCustomChannels] = newArray.toString()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    suspend fun clearCustomChannels() {
+        context.dataStore.edit { preferences ->
+            preferences[keyCustomChannels] = "[]"
+        }
+    }
 }

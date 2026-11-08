@@ -40,7 +40,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mohamedaminelouati.tvora.R
 import com.mohamedaminelouati.tvora.data.local.ChannelCatalog
-import com.mohamedaminelouati.tvora.ui.settings.dialogs.AddChannelDialog
 import com.mohamedaminelouati.tvora.ui.settings.dialogs.CustomColorDialog
 import com.mohamedaminelouati.tvora.ui.settings.dialogs.FavoritesOrderDialog
 import com.mohamedaminelouati.tvora.ui.settings.dialogs.HiddenChannelsDialog
@@ -62,6 +61,7 @@ import com.mohamedaminelouati.tvora.ui.settings.sections.WidgetSettingsSection
 fun SettingsScreen(
     onBackClick: (() -> Unit)? = null,
     onNavigateToKeywordAlerts: (() -> Unit)? = null,
+    onNavigateToChannelManagement: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -106,7 +106,6 @@ fun SettingsScreen(
 
     var showFavoritesDialog by remember { mutableStateOf(false) }
     var showHiddenDialog by remember { mutableStateOf(false) }
-    var showAddChannelDialog by remember { mutableStateOf(false) }
     var showTimezoneDialog by remember { mutableStateOf(false) }
     var showCustomColorDialog by remember { mutableStateOf(false) }
 
@@ -156,26 +155,6 @@ fun SettingsScreen(
             hiddenChannels = hiddenChannels,
             onToggleHidden = viewModel::toggleHiddenChannel,
             onDismiss = { showHiddenDialog = false }
-        )
-    }
-
-    if (showAddChannelDialog) {
-        AddChannelDialog(
-            existingChannels = customChannels,
-            onAddPreset = { preset ->
-                viewModel.addPresetChannel(preset)
-                Toast.makeText(context, context.getString(R.string.toast_channel_added), Toast.LENGTH_SHORT).show()
-            },
-            onRemovePreset = { preset ->
-                val matching = customChannels.firstOrNull { ChannelCatalog.normalizeId(it.id) == ChannelCatalog.normalizeId(preset.id) }
-                if (matching != null) {
-                    viewModel.removeCustomChannel(matching.id)
-                } else {
-                    viewModel.removeCustomChannel(preset.id)
-                }
-                Toast.makeText(context, context.getString(R.string.toast_channel_removed), Toast.LENGTH_SHORT).show()
-            },
-            onDismiss = { showAddChannelDialog = false }
         )
     }
 
@@ -265,11 +244,7 @@ fun SettingsScreen(
 
             AdditionalChannelsSettingsSection(
                 customChannels = customChannels,
-                onShowAddDialog = { showAddChannelDialog = true },
-                onRemoveChannel = { channelId ->
-                    viewModel.removeCustomChannel(channelId)
-                    Toast.makeText(context, context.getString(R.string.toast_channel_removed), Toast.LENGTH_SHORT).show()
-                }
+                onNavigateToChannelManagement = { onNavigateToChannelManagement?.invoke() }
             )
 
             WidgetSettingsSection(
