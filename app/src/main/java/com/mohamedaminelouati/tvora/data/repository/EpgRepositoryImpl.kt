@@ -74,7 +74,7 @@ class EpgRepositoryImpl @Inject constructor(
     private val _syncProgress = MutableStateFlow(SyncProgress())
 
     companion object {
-        const val CURRENT_EPG_ASSET_VERSION = 7
+        const val CURRENT_EPG_ASSET_VERSION = 8
     }
 
     init {
@@ -658,28 +658,25 @@ class EpgRepositoryImpl @Inject constructor(
         }
 
     private fun openAssetStream(channelPackage: ChannelPackage, lang: String): InputStream? {
-        val preferredAsset = channelPackage.getFeedFileName(lang)
-        val rawStream = try {
-            context.assets.open(preferredAsset)
-        } catch (_: IOException) {
+        val candidates = if (lang == "en") {
+            listOf("epg_tnt_en.xml", "epg_tnt_en.xml.gz", "epg_tnt.xml", "epg_tnt.xml.gz")
+        } else {
+            listOf("epg_tnt.xml", "epg_tnt.xml.gz", channelPackage.feedFileName)
+        }
+        for (name in candidates) {
             try {
-                context.assets.open(channelPackage.feedFileName)
+                val rawStream = context.assets.open(name)
+                val buffered = if (rawStream is BufferedInputStream) rawStream else BufferedInputStream(rawStream)
+                buffered.mark(2)
+                val header = ByteArray(2)
+                val count = buffered.read(header)
+                buffered.reset()
+                val isGzip = count == 2 && header[0] == 0x1f.toByte() && header[1] == 0x8b.toByte()
+                return if (isGzip) GZIPInputStream(buffered) else buffered
             } catch (_: IOException) {
-                try {
-                    context.assets.open("epg_tnt.xml")
-                } catch (_: IOException) {
-                    null
-                }
             }
-        } ?: return null
-
-        val buffered = if (rawStream is BufferedInputStream) rawStream else BufferedInputStream(rawStream)
-        buffered.mark(2)
-        val header = ByteArray(2)
-        val count = buffered.read(header)
-        buffered.reset()
-        val isGzip = count == 2 && header[0] == 0x1f.toByte() && header[1] == 0x8b.toByte()
-        return if (isGzip) GZIPInputStream(buffered) else buffered
+        }
+        return null
     }
 
     private suspend fun preloadFeed(channelPackage: ChannelPackage, lang: String) {
