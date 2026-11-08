@@ -30,7 +30,31 @@ object ChannelCatalog {
         "RMCLife.fr",
         "CanalPlus.fr",
         "TV5Monde.fr",
-        "France24.fr"
+        "France24.fr",
+        "ParisPremiere.fr",
+        "RTL9.fr",
+        "Teva.fr",
+        "CanalPlusCinema.fr",
+        "CanalPlusSport.fr",
+        "CanalPlusSeries.fr",
+        "beINSPORTS1.fr",
+        "beINSPORTS2.fr",
+        "Eurosport1.fr",
+        "Eurosport2.fr",
+        "TvBreizh.fr",
+        "UshuaiaTV.fr",
+        "Histoire.fr",
+        "AB1.fr",
+        "WarnerTV.fr",
+        "ComediePlus.fr",
+        "PlanetePlus.fr",
+        "NationalGeographic.fr",
+        "13eRue.fr",
+        "Syfy.fr",
+        "DisneyChannel.fr",
+        "Mangas.fr",
+        "BFMBusiness.fr",
+        "Euronews.fr"
     )
 
     private val tntChannelMap = mapOf(
@@ -65,7 +89,36 @@ object ChannelCatalog {
         "canalplus" to 26,
         "Canal+" to 26,
         "TV5Monde.fr" to 27,
-        "France24.fr" to 28
+        "France24.fr" to 28,
+        "ParisPremiere.fr" to 29,
+        "RTL9.fr" to 30,
+        "Teva.fr" to 31,
+        "CanalPlusCinema.fr" to 32,
+        "CanalPlusSport.fr" to 33,
+        "CanalPlusSeries.fr" to 34,
+        "beINSPORTS1.fr" to 35,
+        "BeInSports1.fr" to 35,
+        "beINSPORTS2.fr" to 36,
+        "BeInSports2.fr" to 36,
+        "Eurosport1.fr" to 37,
+        "Eurosport2.fr" to 38,
+        "TvBreizh.fr" to 39,
+        "TVBreizh.fr" to 39,
+        "UshuaiaTV.fr" to 40,
+        "Histoire.fr" to 41,
+        "HistoireTV.fr" to 41,
+        "AB1.fr" to 42,
+        "WarnerTV.fr" to 43,
+        "ComediePlus.fr" to 44,
+        "PlanetePlus.fr" to 45,
+        "NationalGeographic.fr" to 46,
+        "13eRue.fr" to 47,
+        "13emeRue.fr" to 47,
+        "Syfy.fr" to 48,
+        "DisneyChannel.fr" to 49,
+        "Mangas.fr" to 50,
+        "BFMBusiness.fr" to 51,
+        "Euronews.fr" to 52
     )
 
     private val logoMap = mapOf(
@@ -160,7 +213,31 @@ object ChannelCatalog {
         "CNews.fr" to 25,
         "BFMTV.fr" to 26,
         "LCI.fr" to 27,
-        "LCP.fr" to 28
+        "LCP.fr" to 28,
+        "ParisPremiere.fr" to 29,
+        "RTL9.fr" to 30,
+        "Teva.fr" to 31,
+        "CanalPlusCinema.fr" to 32,
+        "CanalPlusSport.fr" to 33,
+        "CanalPlusSeries.fr" to 34,
+        "beINSPORTS1.fr" to 35,
+        "beINSPORTS2.fr" to 36,
+        "Eurosport1.fr" to 37,
+        "Eurosport2.fr" to 38,
+        "TvBreizh.fr" to 39,
+        "UshuaiaTV.fr" to 40,
+        "Histoire.fr" to 41,
+        "AB1.fr" to 42,
+        "WarnerTV.fr" to 43,
+        "ComediePlus.fr" to 44,
+        "PlanetePlus.fr" to 45,
+        "NationalGeographic.fr" to 46,
+        "13eRue.fr" to 47,
+        "Syfy.fr" to 48,
+        "DisneyChannel.fr" to 49,
+        "Mangas.fr" to 50,
+        "BFMBusiness.fr" to 51,
+        "Euronews.fr" to 52
     )
 
     private val channelNameMap = mapOf(
@@ -194,7 +271,36 @@ object ChannelCatalog {
         "CanalPlus" to "Canal+",
         "Canal+" to "Canal+",
         "TV5Monde.fr" to "TV5 Monde",
-        "France24.fr" to "France 24"
+        "France24.fr" to "France 24",
+        "ParisPremiere.fr" to "Paris Première",
+        "RTL9.fr" to "RTL9",
+        "Teva.fr" to "Téva",
+        "CanalPlusCinema.fr" to "Canal+ Cinéma",
+        "CanalPlusSport.fr" to "Canal+ Sport",
+        "CanalPlusSeries.fr" to "Canal+ Séries",
+        "beINSPORTS1.fr" to "beIN SPORTS 1",
+        "BeInSports1.fr" to "beIN SPORTS 1",
+        "beINSPORTS2.fr" to "beIN SPORTS 2",
+        "BeInSports2.fr" to "beIN SPORTS 2",
+        "Eurosport1.fr" to "Eurosport 1",
+        "Eurosport2.fr" to "Eurosport 2",
+        "TvBreizh.fr" to "TV Breizh",
+        "TVBreizh.fr" to "TV Breizh",
+        "UshuaiaTV.fr" to "Ushuaïa TV",
+        "Histoire.fr" to "Histoire TV",
+        "HistoireTV.fr" to "Histoire TV",
+        "AB1.fr" to "AB1",
+        "WarnerTV.fr" to "Warner TV",
+        "ComediePlus.fr" to "Comédie+",
+        "PlanetePlus.fr" to "Planète+",
+        "NationalGeographic.fr" to "National Geographic",
+        "13eRue.fr" to "13ème Rue",
+        "13emeRue.fr" to "13ème Rue",
+        "Syfy.fr" to "Syfy",
+        "DisneyChannel.fr" to "Disney Channel",
+        "Mangas.fr" to "Mangas",
+        "BFMBusiness.fr" to "BFM Business",
+        "Euronews.fr" to "Euronews"
     )
 
     fun getChannelNumber(channelId: String): Int {
@@ -250,7 +356,8 @@ object ChannelCatalog {
     fun isCatalogChannel(channelId: String): Boolean {
         if (channelNameMap.containsKey(channelId)) return true
         val normalized = normalizeId(channelId)
-        return channelNameMap.keys.any { normalizeId(it) == normalized }
+        if (channelNameMap.keys.any { normalizeId(it) == normalized }) return true
+        return popularExtraChannels.any { normalizeId(it.id) == normalized }
     }
 
     fun getAllLogoUrls(): List<String> {
@@ -291,8 +398,30 @@ object ChannelCatalog {
             "lequipe" -> "LEquipe.fr"
             "rmcstory" -> "RMCStory.fr"
             "rmclife" -> "RMCLife.fr"
+            "parispremiere" -> "ParisPremiere.fr"
+            "rtl9" -> "RTL9.fr"
+            "teva" -> "Teva.fr"
+            "canalpluscinema" -> "CanalPlusCinema.fr"
+            "canalplussport" -> "CanalPlusSport.fr"
+            "canalplusseries" -> "CanalPlusSeries.fr"
+            "beinsports1" -> "beINSPORTS1.fr"
+            "beinsports2" -> "beINSPORTS2.fr"
+            "eurosport1" -> "Eurosport1.fr"
+            "eurosport2" -> "Eurosport2.fr"
+            "tvbreizh" -> "TvBreizh.fr"
+            "ushuaia", "ushuaiatv" -> "UshuaiaTV.fr"
+            "histoire", "histoiretv" -> "Histoire.fr"
+            "ab1" -> "AB1.fr"
+            "warnertv" -> "WarnerTV.fr"
+            "comedieplus", "comedie" -> "ComediePlus.fr"
+            "planeteplus", "planete" -> "PlanetePlus.fr"
+            "nationalgeographic" -> "NationalGeographic.fr"
             "13erue" -> "13eRue.fr"
             "syfy" -> "Syfy.fr"
+            "disneychannel" -> "DisneyChannel.fr"
+            "mangas" -> "Mangas.fr"
+            "bfmbusiness" -> "BFMBusiness.fr"
+            "euronews" -> "Euronews.fr"
             "tv5monde" -> "TV5Monde.fr"
             "france24" -> "France24.fr"
             else -> id
@@ -316,10 +445,28 @@ object ChannelCatalog {
             "syfy" -> aliases.addAll(listOf("Syfy.fr", "SciFi.fr", "scifi", "syfy"))
             "tv5monde" -> aliases.addAll(listOf("TV5Monde.fr", "tv5monde", "TV5.ca", "TV5MondeEurope.fr"))
             "france24" -> aliases.addAll(listOf("France24.fr", "france24", "France 24"))
+            "parispremiere" -> aliases.addAll(listOf("ParisPremiere.fr", "ParisPremiere", "parispremiere", "Paris Première"))
+            "rtl9" -> aliases.addAll(listOf("RTL9.fr", "RTL9", "rtl9", "RTL 9"))
+            "teva" -> aliases.addAll(listOf("Teva.fr", "Teva", "teva", "Téva"))
+            "canalpluscinema" -> aliases.addAll(listOf("CanalPlusCinema.fr", "CanalPlusCinema", "canalpluscinema", "Canal+ Cinéma", "Canal+ Cinema"))
+            "canalplussport" -> aliases.addAll(listOf("CanalPlusSport.fr", "CanalPlusSport", "canalplussport", "Canal+ Sport"))
+            "canalplusseries" -> aliases.addAll(listOf("CanalPlusSeries.fr", "CanalPlusSeries", "canalplusseries", "Canal+ Séries", "Canal+ Series"))
             "tvbreizh" -> aliases.addAll(listOf("TVBreizh.fr", "TvBreizh.fr", "tvbreizh"))
             "histoire" -> aliases.addAll(listOf("Histoire.fr", "HistoireTV.fr", "histoire"))
             "beinsports1" -> aliases.addAll(listOf("beINSPORTS1.fr", "BeInSports1.fr", "beinsports1"))
             "beinsports2" -> aliases.addAll(listOf("beINSPORTS2.fr", "BeInSports2.fr", "beinsports2"))
+            "eurosport1" -> aliases.addAll(listOf("Eurosport1.fr", "eurosport1", "Eurosport 1"))
+            "eurosport2" -> aliases.addAll(listOf("Eurosport2.fr", "eurosport2", "Eurosport 2"))
+            "ushuaia", "ushuaiatv" -> aliases.addAll(listOf("UshuaiaTV.fr", "UshuaiaTV", "ushuaia", "ushuaiatv", "Ushuaïa TV"))
+            "ab1" -> aliases.addAll(listOf("AB1.fr", "ab1", "AB 1"))
+            "warnertv" -> aliases.addAll(listOf("WarnerTV.fr", "warnertv", "Warner TV"))
+            "comedieplus" -> aliases.addAll(listOf("ComediePlus.fr", "comedieplus", "Comédie+", "comedie"))
+            "planeteplus" -> aliases.addAll(listOf("PlanetePlus.fr", "planeteplus", "Planète+", "planete"))
+            "nationalgeographic" -> aliases.addAll(listOf("NationalGeographic.fr", "nationalgeographic", "National Geographic"))
+            "disneychannel" -> aliases.addAll(listOf("DisneyChannel.fr", "disneychannel", "Disney Channel"))
+            "mangas" -> aliases.addAll(listOf("Mangas.fr", "mangas", "Mangas"))
+            "bfmbusiness" -> aliases.addAll(listOf("BFMBusiness.fr", "bfmbusiness", "BFM Business"))
+            "euronews" -> aliases.addAll(listOf("Euronews.fr", "euronews", "Euronews"))
         }
         return aliases.toList()
     }

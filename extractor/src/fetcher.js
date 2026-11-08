@@ -22,7 +22,15 @@ const RAW_CHANNEL_ALIASES = {
   'LaChaineParlementaire.fr': 'LCP.fr',
   'LEquipe21.fr': 'LEquipe.fr',
   'Numero23.fr': 'RMCStory.fr',
-  'Cherie25.fr': 'RMCLife.fr'
+  'Cherie25.fr': 'RMCLife.fr',
+  '13emeRue.fr': '13eRue.fr',
+  '13eme-rue.fr': '13eRue.fr',
+  'SciFi.fr': 'Syfy.fr',
+  'HistoireTV.fr': 'Histoire.fr',
+  'TouteHistoire.fr': 'Histoire.fr',
+  'TVBreizh.fr': 'TvBreizh.fr',
+  'BeInSports1.fr': 'beINSPORTS1.fr',
+  'BeInSports2.fr': 'beINSPORTS2.fr'
 };
 
 const detailCache = new Map();

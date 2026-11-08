@@ -74,7 +74,7 @@ class EpgRepositoryImpl @Inject constructor(
     private val _syncProgress = MutableStateFlow(SyncProgress())
 
     companion object {
-        const val CURRENT_EPG_ASSET_VERSION = 6
+        const val CURRENT_EPG_ASSET_VERSION = 7
     }
 
     init {
@@ -591,10 +591,22 @@ class EpgRepositoryImpl @Inject constructor(
             if (!connectivityObserver.isConnected()) return@withContext Result.success(Unit)
 
             val canonicalTargets = channelIds.map { ChannelCatalog.canonicalChannelId(it) }.toSet()
-            val candidateUrls = listOf(
-                "https://xmltvfr.fr/xmltv/xmltv_fr.xml.gz",
-                "https://xmltvfr.fr/xmltv/xmltv.xml.gz"
-            )
+            val currentLanguage = userPreferences.appLanguage.first()
+            val candidateUrls = if (currentLanguage == "en") {
+                listOf(
+                    ChannelPackage.COMMUNITY_ENRICHED.getFeedUrl("en"),
+                    ChannelPackage.COMMUNITY_ENRICHED.getFallbackUrl("en"),
+                    "https://xmltvfr.fr/xmltv/xmltv_fr.xml.gz",
+                    "https://xmltvfr.fr/xmltv/xmltv.xml.gz"
+                )
+            } else {
+                listOf(
+                    ChannelPackage.COMMUNITY_ENRICHED.getFeedUrl("fr"),
+                    ChannelPackage.COMMUNITY_ENRICHED.getFallbackUrl("fr"),
+                    "https://xmltvfr.fr/xmltv/xmltv_fr.xml.gz",
+                    "https://xmltvfr.fr/xmltv/xmltv.xml.gz"
+                )
+            }
             val clearedChannels = mutableSetOf<String>()
             val foundChannels = mutableSetOf<String>()
 
