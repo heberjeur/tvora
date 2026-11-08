@@ -357,19 +357,8 @@
     <string name="settings_keyword_alerts_none">No keyword alerts configured</string>
 
     <string name="channel_management_title">Channel Management</string>
-    <string name="channel_management_stats">%1$d active channels (%2$d TNT + %3$d added)</string>
-    <string name="channel_management_catalog_count">%1$d channels available in catalog</string>
-    <string name="channel_management_tier1_badge">Tier 1</string>
-    <string name="channel_management_tier1_title">Core TNT</string>
-    <string name="channel_management_tier1_desc">28 channels included by default</string>
-    <string name="channel_management_tier2_badge">Tier 2</string>
-    <string name="channel_management_tier2_title">Additional Channels</string>
-    <string name="channel_management_tier2_desc">%1$d active of %2$d</string>
     <string name="tab_catalog">Catalog (%1$d)</string>
     <string name="tab_my_channels">My Channels (%1$d)</string>
-    <string name="tab_tnt_channels">TNT (28)</string>
-    <string name="badge_tnt_included">Included by default</string>
-    <string name="empty_tnt_channels">No TNT channel matches your search</string>
     <string name="search_catalog_channels_hint">Search by name, number, country...</string>
     <string name="filter_country_all">All countries</string>
     <string name="filter_genre_all">All categories</string>
@@ -393,7 +382,6 @@
     <string name="confirm_clear_all_desc">All your custom channels will be removed from the guide.</string>
     <string name="settings_custom_channels_manage_btn">Manage catalog</string>
     <string name="settings_custom_channels_summary">%1$d additional channels active out of %2$d</string>
-    <string name="settings_custom_channels_tier1_summary">Tier 1: 28 TNT channels included by default</string>
     <string name="empty_my_channels_title">No custom channels</string>
     <string name="empty_my_channels_desc">Browse the catalog to add your favorite channels from France, Belgium, Switzerland, Canada, Africa...</string>
     <string name="empty_search_channels">No channels found matching this query</string>

@@ -133,7 +133,7 @@ class EpgRepositoryImpl @Inject constructor(
                     val custom = customMap[norm]
                     if (custom != null) {
                         mapped.add(custom.copy(id = ChannelCatalog.canonicalChannelId(custom.id), iconUrl = ChannelCatalog.getLogoUrl(custom.id) ?: custom.iconUrl))
-                    } else if (tntNormalized.contains(norm) || ChannelCatalog.isCatalogChannel(entity.id)) {
+                    } else if (tntNormalized.contains(norm)) {
                         val tntNumber = ChannelCatalog.getChannelNumber(entity.id)
                         val resolvedNumber = if (tntNumber > 0) tntNumber else entity.channelNumber
                         mapped.add(

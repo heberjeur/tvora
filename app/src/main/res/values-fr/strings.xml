@@ -357,19 +357,8 @@
     <string name="settings_keyword_alerts_none">Aucune alerte mot-clé configurée</string>
 
     <string name="channel_management_title">Gestion des chaînes</string>
-    <string name="channel_management_stats">%1$d chaînes actives (%2$d TNT + %3$d ajoutées)</string>
-    <string name="channel_management_catalog_count">%1$d chaînes disponibles au catalogue</string>
-    <string name="channel_management_tier1_badge">Niveau 1</string>
-    <string name="channel_management_tier1_title">TNT Fondamentale</string>
-    <string name="channel_management_tier1_desc">28 chaînes incluses par défaut</string>
-    <string name="channel_management_tier2_badge">Niveau 2</string>
-    <string name="channel_management_tier2_title">Chaînes additionnelles</string>
-    <string name="channel_management_tier2_desc">%1$d actives sur %2$d</string>
     <string name="tab_catalog">Catalogue (%1$d)</string>
-    <string name="tab_my_channels">Mes ajouts (%1$d)</string>
-    <string name="tab_tnt_channels">TNT (28)</string>
-    <string name="badge_tnt_included">Incluse par défaut</string>
-    <string name="empty_tnt_channels">Aucune chaîne TNT ne correspond à votre recherche</string>
+    <string name="tab_my_channels">Mes chaînes (%1$d)</string>
     <string name="search_catalog_channels_hint">Rechercher par nom, numéro, pays...</string>
     <string name="filter_country_all">Tous pays</string>
     <string name="filter_genre_all">Toutes catégories</string>
@@ -393,7 +382,6 @@
     <string name="confirm_clear_all_desc">Toutes vos chaînes personnalisées seront retirées du guide.</string>
     <string name="settings_custom_channels_manage_btn">Gérer le catalogue</string>
     <string name="settings_custom_channels_summary">%1$d chaînes additionnelles actives sur %2$d</string>
-    <string name="settings_custom_channels_tier1_summary">Niveau 1 : 28 chaînes TNT incluses par défaut</string>
     <string name="empty_my_channels_title">Aucune chaîne personnalisée</string>
     <string name="empty_my_channels_desc">Explorez le catalogue pour ajouter vos chaînes favorites de France, Belgique, Suisse, Canada, Afrique...</string>
     <string name="empty_search_channels">Aucune chaîne trouvée pour cette recherche</string>

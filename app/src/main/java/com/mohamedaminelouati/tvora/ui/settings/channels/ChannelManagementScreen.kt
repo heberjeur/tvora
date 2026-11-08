@@ -1,7 +1,6 @@
 package com.mohamedaminelouati.tvora.ui.settings.channels
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,7 +23,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tv
@@ -65,7 +63,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -90,7 +87,6 @@ fun ChannelManagementScreen(
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
     val filteredCatalog by viewModel.filteredCatalogChannels.collectAsStateWithLifecycle()
     val filteredCustoms by viewModel.filteredCustomChannels.collectAsStateWithLifecycle()
-    val filteredTnt by viewModel.filteredTntChannels.collectAsStateWithLifecycle()
 
     var showClearAllDialog by remember { mutableStateOf(false) }
 
@@ -138,14 +134,6 @@ fun ChannelManagementScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            TwoTierStatsBannerCard(
-                customCount = customChannels.size,
-                catalogCount = viewModel.allPresets.size,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-
             TabRow(
                 selectedTabIndex = selectedTab,
                 containerColor = MaterialTheme.colorScheme.surface,
@@ -179,128 +167,79 @@ fun ChannelManagementScreen(
                         )
                     }
                 )
-                Tab(
-                    selected = selectedTab == 2,
-                    onClick = { viewModel.setSelectedTab(2) },
-                    text = {
-                        Text(
-                            text = stringResource(R.string.tab_tnt_channels),
-                            fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal,
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-                )
             }
 
-            if (selectedTab != 2) {
-                SearchAndFilterHeader(
-                    searchQuery = searchQuery,
-                    onSearchChange = viewModel::setSearchQuery,
-                    selectedRegion = selectedRegion,
-                    onRegionChange = viewModel::setSelectedRegion,
-                    selectedTheme = selectedTheme,
-                    onThemeChange = viewModel::setSelectedTheme,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                )
+            SearchAndFilterHeader(
+                searchQuery = searchQuery,
+                onSearchChange = viewModel::setSearchQuery,
+                selectedRegion = selectedRegion,
+                onRegionChange = viewModel::setSelectedRegion,
+                selectedTheme = selectedTheme,
+                onThemeChange = viewModel::setSelectedTheme,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+
+            if (selectedTab == 0) {
+                if (filteredCatalog.isEmpty()) {
+                    EmptyStateView(
+                        message = stringResource(R.string.empty_search_channels),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(filteredCatalog, key = { it.id }) { preset ->
+                            val isAdded = customNormalized.contains(ChannelCatalog.normalizeId(preset.id))
+                            ChannelItemCard(
+                                preset = preset,
+                                isAdded = isAdded,
+                                onToggle = { viewModel.toggleChannel(preset) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
             } else {
-                SimpleSearchBar(
-                    searchQuery = searchQuery,
-                    onSearchChange = viewModel::setSearchQuery,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-            }
-
-            when (selectedTab) {
-                0 -> {
-                    if (filteredCatalog.isEmpty()) {
-                        EmptyStateView(
-                            message = stringResource(R.string.empty_search_channels),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                        )
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(filteredCatalog, key = { it.id }) { preset ->
-                                val isAdded = customNormalized.contains(ChannelCatalog.normalizeId(preset.id))
-                                ChannelItemCard(
-                                    preset = preset,
-                                    isAdded = isAdded,
-                                    onToggle = { viewModel.toggleChannel(preset) },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                if (filteredCustoms.isEmpty()) {
+                    EmptyStateView(
+                        message = stringResource(
+                            if (searchQuery.isBlank() && selectedRegion == ChannelRegion.ALL && selectedTheme == ChannelTheme.ALL) {
+                                R.string.empty_my_channels_title
+                            } else {
+                                R.string.empty_search_channels
                             }
-                        }
-                    }
-                }
-                1 -> {
-                    if (filteredCustoms.isEmpty()) {
-                        EmptyStateView(
-                            message = stringResource(
-                                if (searchQuery.isBlank() && selectedRegion == ChannelRegion.ALL && selectedTheme == ChannelTheme.ALL) {
-                                    R.string.empty_my_channels_title
-                                } else {
-                                    R.string.empty_search_channels
-                                }
-                            ),
-                            subMessage = if (searchQuery.isBlank() && selectedRegion == ChannelRegion.ALL && selectedTheme == ChannelTheme.ALL) {
-                                stringResource(R.string.empty_my_channels_desc)
-                            } else null,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                        )
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(filteredCustoms, key = { it.id }) { preset ->
-                                ChannelItemCard(
-                                    preset = preset,
-                                    isAdded = true,
-                                    onToggle = { viewModel.toggleChannel(preset) },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
-                    }
-                }
-                2 -> {
-                    if (filteredTnt.isEmpty()) {
-                        EmptyStateView(
-                            message = stringResource(R.string.empty_tnt_channels),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                        )
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(filteredTnt, key = { it.id }) { preset ->
-                                TntChannelItemCard(
-                                    preset = preset,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
+                        ),
+                        subMessage = if (searchQuery.isBlank() && selectedRegion == ChannelRegion.ALL && selectedTheme == ChannelTheme.ALL) {
+                            stringResource(R.string.empty_my_channels_desc)
+                        } else null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(filteredCustoms, key = { it.id }) { preset ->
+                            ChannelItemCard(
+                                preset = preset,
+                                isAdded = true,
+                                onToggle = { viewModel.toggleChannel(preset) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                     }
                 }
@@ -341,136 +280,6 @@ fun ChannelManagementScreen(
 }
 
 @Composable
-private fun TwoTierStatsBannerCard(
-    customCount: Int,
-    catalogCount: Int,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Card(
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            ) {
-                Column(modifier = Modifier.padding(10.dp)) {
-                    Text(
-                        text = stringResource(R.string.channel_management_tier1_badge),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2E7D32)
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = stringResource(R.string.channel_management_tier1_title),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = stringResource(R.string.channel_management_tier1_desc),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Card(
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            ) {
-                Column(modifier = Modifier.padding(10.dp)) {
-                    Text(
-                        text = stringResource(R.string.channel_management_tier2_badge),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = AccentRed
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = stringResource(R.string.channel_management_tier2_title),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = stringResource(R.string.channel_management_tier2_desc, customCount, catalogCount),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SimpleSearchBar(
-    searchQuery: String,
-    onSearchChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    OutlinedTextField(
-        value = searchQuery,
-        onValueChange = onSearchChange,
-        modifier = modifier,
-        placeholder = {
-            Text(
-                text = stringResource(R.string.search_catalog_channels_hint),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        },
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
-            )
-        },
-        trailingIcon = {
-            if (searchQuery.isNotEmpty()) {
-                IconButton(onClick = { onSearchChange("") }) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        },
-        singleLine = true,
-        shape = RoundedCornerShape(10.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = AccentRed,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-        )
-    )
-}
-
-@Composable
 private fun SearchAndFilterHeader(
     searchQuery: String,
     onSearchChange: (String) -> Unit,
@@ -481,10 +290,43 @@ private fun SearchAndFilterHeader(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
-        SimpleSearchBar(
-            searchQuery = searchQuery,
-            onSearchChange = onSearchChange,
-            modifier = Modifier.fillMaxWidth()
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = onSearchChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = {
+                Text(
+                    text = stringResource(R.string.search_catalog_channels_hint),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+            },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = { onSearchChange("") }) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            },
+            singleLine = true,
+            shape = RoundedCornerShape(10.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = AccentRed,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+            )
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -658,99 +500,6 @@ private fun ChannelItemCard(
                     Text(
                         text = stringResource(R.string.action_add_channel),
                         style = MaterialTheme.typography.labelMedium
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun TntChannelItemCard(
-    preset: PresetChannel,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (preset.iconUrl.isNotBlank()) {
-                AsyncImage(
-                    model = preset.iconUrl,
-                    contentDescription = preset.displayName,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Color.White)
-                        .padding(2.dp),
-                    contentScale = ContentScale.Fit
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = preset.displayName.take(2).uppercase(),
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = preset.displayName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = stringResource(R.string.channel_number_format, preset.channelNumber),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Card(
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF2E7D32).copy(alpha = 0.12f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = Color(0xFF2E7D32)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = stringResource(R.string.badge_tnt_included),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF2E7D32)
                     )
                 }
             }

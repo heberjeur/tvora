@@ -54,7 +54,7 @@ fun AdditionalChannelsSettingsSection(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = stringResource(R.string.settings_custom_channels_tier1_summary),
+                text = stringResource(R.string.settings_custom_channels_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
