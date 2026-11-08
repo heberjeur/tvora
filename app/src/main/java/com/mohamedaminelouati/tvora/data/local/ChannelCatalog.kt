@@ -311,9 +311,7 @@ object ChannelCatalog {
             normalizeId(it.key) == normalized
         }?.value
         if (tntNum != null) return tntNum
-        return popularExtraChannels.firstOrNull {
-            normalizeId(it.id) == normalized
-        }?.channelNumber ?: 0
+        return extraChannelsMap[normalized]?.channelNumber ?: 0
     }
 
     fun getPopularityRank(channelId: String): Int {
@@ -322,7 +320,7 @@ object ChannelCatalog {
         val normalized = normalizeId(channelId)
         return popularityRankMap.entries.firstOrNull {
             normalizeId(it.key) == normalized
-        }?.value ?: Int.MAX_VALUE
+        }?.value ?: (extraChannelsMap[normalized]?.channelNumber ?: Int.MAX_VALUE)
     }
 
     fun getDisplayName(channelId: String): String {
@@ -333,10 +331,8 @@ object ChannelCatalog {
             normalizeId(it.key) == normalized
         }?.value
         if (tntName != null) return tntName
-        val extraName = popularExtraChannels.firstOrNull {
-            normalizeId(it.id) == normalized
-        }?.displayName
-        if (extraName != null) return extraName
+        val extra = extraChannelsMap[normalized]
+        if (extra != null) return extra.displayName
         return channelId.removeSuffix(".fr")
     }
 
@@ -348,20 +344,18 @@ object ChannelCatalog {
             normalizeId(it.key) == normalized
         }?.value
         if (tntLogo != null) return tntLogo
-        return popularExtraChannels.firstOrNull {
-            normalizeId(it.id) == normalized
-        }?.iconUrl
+        return extraChannelsMap[normalized]?.iconUrl
     }
 
     fun isCatalogChannel(channelId: String): Boolean {
         if (channelNameMap.containsKey(channelId)) return true
         val normalized = normalizeId(channelId)
         if (channelNameMap.keys.any { normalizeId(it) == normalized }) return true
-        return popularExtraChannels.any { normalizeId(it.id) == normalized }
+        return extraChannelsMap.containsKey(normalized)
     }
 
     fun getAllLogoUrls(): List<String> {
-        return logoMap.values.distinct()
+        return (logoMap.values + extraChannelsMap.values.map { it.iconUrl }).filter { it.isNotBlank() }.distinct()
     }
 
     fun isFavorite(channelId: String, favoriteChannels: Set<String>): Boolean {
@@ -390,7 +384,7 @@ object ChannelCatalog {
 
     fun canonicalChannelId(id: String): String {
         val norm = normalizeId(id)
-        return when (norm) {
+        val direct = when (norm) {
             "canalplus" -> "CanalPlus.fr"
             "tmc" -> "TMC.fr"
             "tfx" -> "TFX.fr"
@@ -424,8 +418,12 @@ object ChannelCatalog {
             "euronews" -> "Euronews.fr"
             "tv5monde" -> "TV5Monde.fr"
             "france24" -> "France24.fr"
-            else -> id
+            else -> null
         }
+        if (direct != null) return direct
+        val preset = extraChannelsMap[norm]
+        if (preset != null) return preset.id
+        return id
     }
 
     fun getChannelAliases(channelId: String): List<String> {
@@ -478,30 +476,9 @@ object ChannelCatalog {
         val iconUrl: String
     )
 
-    val popularExtraChannels: List<PresetChannel> = listOf(
-        PresetChannel("ParisPremiere.fr", "Paris Première", 29, "https://www.programme-tv.net/imgre/fit/~2~channel~ecf598fd002ccb9a.png/480x480/quality/100/paris-premiere.png"),
-        PresetChannel("RTL9.fr", "RTL9", 30, "https://www.programme-tv.net/imgre/fit/~2~channel~39e76725dfcc33a3.png/480x480/quality/100/rtl-9.png"),
-        PresetChannel("Teva.fr", "Téva", 31, "https://www.programme-tv.net/imgre/fit/~2~channel~4421904d874fa072.png/480x480/quality/100/teva.png"),
-        PresetChannel("CanalPlusCinema.fr", "Canal+ Cinéma", 32, "https://www.programme-tv.net/imgre/fit/~2~channel~0b078790aeb2d121.png/480x480/quality/100/canal-cinema.png"),
-        PresetChannel("CanalPlusSport.fr", "Canal+ Sport", 33, "https://www.programme-tv.net/imgre/fit/~2~channel~2b97b0fb1264c28d.png/480x480/quality/100/canal-sport.png"),
-        PresetChannel("CanalPlusSeries.fr", "Canal+ Séries", 34, "https://focus.telerama.fr/500x500/0000/00/01/clear-1563.png"),
-        PresetChannel("beINSPORTS1.fr", "beIN SPORTS 1", 35, "https://www.programme-tv.net/imgre/fit/~2~channel~8884f09c3361af44.png/480x480/quality/100/bein-sports-1.png"),
-        PresetChannel("beINSPORTS2.fr", "beIN SPORTS 2", 36, "https://www.programme-tv.net/imgre/fit/~2~channel~2fa633f39d6c3033.png/480x480/quality/100/bein-sports-2.png"),
-        PresetChannel("Eurosport1.fr", "Eurosport 1", 37, "https://www.programme-tv.net/imgre/fit/~2~channel~277882f801bd3f7b.png/480x480/quality/100/eurosport-1.png"),
-        PresetChannel("Eurosport2.fr", "Eurosport 2", 38, "https://www.programme-tv.net/imgre/fit/~2~channel~196acf0142c66a68.png/480x480/quality/100/eurosport-2.png"),
-        PresetChannel("TvBreizh.fr", "TV Breizh", 39, "https://www.programme-tv.net/imgre/fit/~2~channel~eda4c23255b4fed2.png/480x480/quality/100/tvbreizh.png"),
-        PresetChannel("UshuaiaTV.fr", "Ushuaïa TV", 40, "https://www.programme-tv.net/imgre/fit/~2~channel~778073cbbd827d7a.png/480x480/quality/100/ushuaia-tv.png"),
-        PresetChannel("Histoire.fr", "Histoire TV", 41, "https://www.programme-tv.net/imgre/fit/~2~channel~354060da3ea6eca2.png/480x480/quality/100/histoire-tv.png"),
-        PresetChannel("AB1.fr", "AB1", 42, "https://www.programme-tv.net/imgre/fit/~2~channel~a15b4a2cb74dfd54.png/480x480/quality/100/ab-1.png"),
-        PresetChannel("WarnerTV.fr", "Warner TV", 43, "https://www.programme-tv.net/imgre/fit/~2~channel~6d75450123e766d6.png/480x480/quality/100/warner-tv.png"),
-        PresetChannel("ComediePlus.fr", "Comédie+", 44, "https://www.programme-tv.net/imgre/fit/~2~channel~b419616020702bc2.png/480x480/quality/100/comedie.png"),
-        PresetChannel("PlanetePlus.fr", "Planète+", 45, "https://www.programme-tv.net/imgre/fit/~2~channel~475677d45988adc5.png/480x480/quality/100/planete.png"),
-        PresetChannel("NationalGeographic.fr", "National Geographic", 46, "https://www.programme-tv.net/imgre/fit/~2~channel~c00912008deb7144.png/480x480/quality/100/national-geographic.png"),
-        PresetChannel("13eRue.fr", "13ème Rue", 47, "https://www.programme-tv.net/imgre/fit/~2~channel~c7a8275787244ffe.png/480x480/quality/100/13eme-rue.png"),
-        PresetChannel("Syfy.fr", "Syfy", 48, "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-states/syfy-us.png"),
-        PresetChannel("DisneyChannel.fr", "Disney Channel", 49, "https://www.programme-tv.net/imgre/fit/~2~channel~ab11120cc94674c8.png/480x480/quality/100/disney-channel.png"),
-        PresetChannel("Mangas.fr", "Mangas", 50, "https://www.programme-tv.net/imgre/fit/~2~channel~a624ee4f7be827c4.png/480x480/quality/100/mangas.png"),
-        PresetChannel("BFMBusiness.fr", "BFM Business", 51, "https://www.programme-tv.net/imgre/fit/~2~channel~7eb91da112d351e5.png/480x480/quality/100/bfm-business.png"),
-        PresetChannel("Euronews.fr", "Euronews", 52, "https://www.programme-tv.net/imgre/fit/~2~channel~648eb1fd8a151da0.png/480x480/quality/100/euronews.png")
-    )
+    val popularExtraChannels: List<PresetChannel> = PresetChannelsData.all
+
+    private val extraChannelsMap: Map<String, PresetChannel> by lazy {
+        popularExtraChannels.associateBy { normalizeId(it.id) }
+    }
 }

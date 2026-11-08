@@ -117,8 +117,12 @@ fun AddChannelDialog(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 val filteredPresets = remember(searchQuery, existingNormalized) {
+                    val query = searchQuery.trim()
                     ChannelCatalog.popularExtraChannels.filter { preset ->
-                        searchQuery.isBlank() || preset.displayName.contains(searchQuery, ignoreCase = true)
+                        query.isBlank() ||
+                            preset.displayName.contains(query, ignoreCase = true) ||
+                            preset.id.contains(query, ignoreCase = true) ||
+                            preset.channelNumber.toString() == query
                     }
                 }
 
