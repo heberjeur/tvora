@@ -46,6 +46,11 @@ object ChannelClassification {
 
     fun getRegion(channelId: String): ChannelRegion {
         val lower = channelId.lowercase()
+        if (lower.contains("cstar")) return ChannelRegion.FRANCE
+        if (lower.contains("canalplus") || lower.contains("canal+")) {
+            if (lower.endsWith(".ch")) return ChannelRegion.SWITZERLAND
+            return ChannelRegion.FRANCE
+        }
         if (belgianSpecialIds.contains(lower) || lower.endsWith(".be")) return ChannelRegion.BELGIUM
         if (lower.endsWith(".ch")) return ChannelRegion.SWITZERLAND
         if (lower.endsWith(".ca")) return ChannelRegion.CANADA
@@ -81,6 +86,13 @@ object ChannelClassification {
             ).any { text.contains(it) }
         ) {
             return ChannelTheme.KIDS
+        }
+
+        if (text.contains("canalplus") || text.contains("canal+")) {
+            if (listOf("docs", "planete").any { text.contains(it) }) {
+                return ChannelTheme.DISCOVERY
+            }
+            return ChannelTheme.CINEMA
         }
 
         if (listOf(
