@@ -81,6 +81,18 @@ class EpgRepositoryImpl @Inject constructor(
         repositoryScope.launch {
             try {
                 programDao.normalizeAllChannelIds()
+                userPreferences.sanitizeCustomChannels()
+                val deadAndDupes = listOf(
+                    "CStar.ch",
+                    "LaChaineParlementaire.fr",
+                    "NT1.fr",
+                    "Numero23.fr",
+                    "LEquipe21.fr",
+                    "Cherie25.ch"
+                )
+                deadAndDupes.forEach { id ->
+                    channelDao.deleteChannelById(id)
+                }
             } catch (_: Exception) {
             }
             userPreferences.appLanguage.distinctUntilChanged().collect { lang ->
@@ -121,52 +133,47 @@ class EpgRepositoryImpl @Inject constructor(
             channelDao.getChannelsByPackage(channelPackage.id),
             userPreferences.customChannels
         ) { dbList, customList ->
-            val customMap = customList.associateBy { ChannelCatalog.normalizeId(it.id) }
+            val dbMap = dbList.associateBy { ChannelCatalog.normalizeId(it.id) }
             val tntNormalized = ChannelCatalog.tntChannelIds.map { ChannelCatalog.normalizeId(it) }.toSet()
 
             val mapped = mutableListOf<Channel>()
             val seenNormalized = mutableSetOf<String>()
 
-            dbList.forEach { entity ->
-                val norm = ChannelCatalog.normalizeId(entity.id)
+            ChannelCatalog.tntChannelIds.forEach { tntId ->
+                val norm = ChannelCatalog.normalizeId(tntId)
                 if (seenNormalized.add(norm)) {
-                    val custom = customMap[norm]
-                    if (custom != null) {
-                        mapped.add(custom.copy(id = ChannelCatalog.canonicalChannelId(custom.id), iconUrl = ChannelCatalog.getLogoUrl(custom.id) ?: custom.iconUrl))
-                    } else if (tntNormalized.contains(norm)) {
-                        val tntNumber = ChannelCatalog.getChannelNumber(entity.id)
-                        val resolvedNumber = if (tntNumber > 0) tntNumber else entity.channelNumber
-                        mapped.add(
-                            entity.toDomain().copy(
-                                id = ChannelCatalog.canonicalChannelId(entity.id),
-                                channelNumber = resolvedNumber,
-                                displayName = ChannelCatalog.getDisplayName(entity.id),
-                                iconUrl = ChannelCatalog.getLogoUrl(entity.id) ?: entity.iconUrl
-                            )
+                    val canonical = ChannelCatalog.canonicalChannelId(tntId)
+                    val dbEntity = dbMap[norm]
+                    val isFav = dbEntity?.isFavorite ?: false
+                    mapped.add(
+                        Channel(
+                            id = canonical,
+                            displayName = ChannelCatalog.getDisplayName(canonical),
+                            iconUrl = ChannelCatalog.getLogoUrl(canonical) ?: dbEntity?.iconUrl ?: "",
+                            packageId = channelPackage.id,
+                            channelNumber = ChannelCatalog.getChannelNumber(canonical),
+                            isFavorite = isFav
                         )
-                    }
+                    )
                 }
             }
 
             customList.forEach { custom ->
                 val norm = ChannelCatalog.normalizeId(custom.id)
-                if (seenNormalized.add(norm)) {
-                    mapped.add(custom.copy(id = ChannelCatalog.canonicalChannelId(custom.id), iconUrl = ChannelCatalog.getLogoUrl(custom.id) ?: custom.iconUrl))
-                }
-            }
-
-            ChannelCatalog.tntChannelIds.forEach { tntId ->
-                val norm = ChannelCatalog.normalizeId(tntId)
-                if (seenNormalized.add(norm)) {
-                    val canonical = ChannelCatalog.canonicalChannelId(tntId)
+                if (!tntNormalized.contains(norm) && !ChannelCatalog.isDeadChannel(custom.id) && seenNormalized.add(norm)) {
+                    val canonical = ChannelCatalog.canonicalChannelId(custom.id)
+                    val dbEntity = dbMap[norm]
+                    val isFav = dbEntity?.isFavorite ?: custom.isFavorite
+                    val resolvedNumber = ChannelCatalog.getChannelNumber(canonical).takeIf { it > 28 }
+                        ?: custom.channelNumber.takeIf { it > 28 }
+                        ?: (mapped.size + 1)
                     mapped.add(
-                        Channel(
+                        custom.copy(
                             id = canonical,
-                            displayName = ChannelCatalog.getDisplayName(tntId),
-                            iconUrl = ChannelCatalog.getLogoUrl(tntId) ?: "",
-                            packageId = channelPackage.id,
-                            channelNumber = ChannelCatalog.getChannelNumber(tntId),
-                            isFavorite = false
+                            displayName = ChannelCatalog.getDisplayName(canonical).ifEmpty { custom.displayName },
+                            iconUrl = ChannelCatalog.getLogoUrl(canonical) ?: custom.iconUrl,
+                            channelNumber = resolvedNumber,
+                            isFavorite = isFav
                         )
                     )
                 }
@@ -212,19 +219,26 @@ class EpgRepositoryImpl @Inject constructor(
 
     override suspend fun removeCustomChannel(channelId: String) {
         userPreferences.removeCustomChannel(channelId)
-        channelDao.deleteChannelById(channelId)
+        val aliases = ChannelCatalog.getChannelAliases(channelId)
+        aliases.forEach { channelDao.deleteChannelById(it) }
     }
 
     override suspend fun removeCustomChannels(channelIds: Set<String>) {
         if (channelIds.isEmpty()) return
         userPreferences.removeCustomChannels(channelIds)
-        channelIds.forEach { channelDao.deleteChannelById(it) }
+        channelIds.forEach { chId ->
+            val aliases = ChannelCatalog.getChannelAliases(chId)
+            aliases.forEach { channelDao.deleteChannelById(it) }
+        }
     }
 
     override suspend fun clearCustomChannels() {
         val current = userPreferences.customChannels.first()
         userPreferences.clearCustomChannels()
-        current.forEach { channelDao.deleteChannelById(it.id) }
+        current.forEach { custom ->
+            val aliases = ChannelCatalog.getChannelAliases(custom.id)
+            aliases.forEach { channelDao.deleteChannelById(it) }
+        }
     }
 
     override fun getNowPlaying(): Flow<List<Program>> {

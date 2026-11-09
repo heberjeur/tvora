@@ -58,7 +58,7 @@ class ChannelManagementViewModel @Inject constructor(
                 preset.channelNumber.toString() == trimmed
 
             matchesRegion && matchesTheme && matchesQuery
-        }
+        }.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.displayName })
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), allPresets)
 
     val filteredCustomChannels: StateFlow<List<PresetChannel>> = combine(
@@ -79,7 +79,7 @@ class ChannelManagementViewModel @Inject constructor(
                 preset.channelNumber.toString() == trimmed
 
             matchesRegion && matchesTheme && matchesQuery
-        }
+        }.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.displayName })
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setSearchQuery(query: String) {

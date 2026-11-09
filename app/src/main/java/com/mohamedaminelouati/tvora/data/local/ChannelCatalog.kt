@@ -327,20 +327,43 @@ object ChannelCatalog {
         return favoriteChannels.any { normalizeId(it) == normalized }
     }
 
+    fun isDeadChannel(channelId: String): Boolean {
+        val lower = channelId.trim().lowercase()
+        return lower in listOf(
+            "nt1.fr", "nt1",
+            "numero23.fr", "numero23",
+            "lequipe21.fr", "lequipe21",
+            "d17.fr", "d17",
+            "direct8.fr", "direct8",
+            "directstar.fr", "directstar",
+            "cstar.ch",
+            "lachaineparlementaire.fr"
+        )
+    }
+
+    fun isTntChannel(channelId: String): Boolean {
+        val norm = normalizeId(channelId)
+        return tntChannelIds.any { normalizeId(it) == norm }
+    }
+
     fun normalizeId(id: String): String {
-        val norm = id.trim().lowercase().removeSuffix(".fr")
+        val lower = id.trim().lowercase()
+        val stripped = lower
+            .removeSuffix(".frdrom")
+            .removeSuffix(".fr")
             .replace("+", "plus")
-            .replace("[^a-z0-9]".toRegex(), "")
-        return when (norm) {
+        val clean = stripped.replace("[^a-z0-9]".toRegex(), "")
+        return when (clean) {
             "canalplus", "canal", "c" -> "canalplus"
             "nt1", "tfx" -> "tfx"
             "lachaineparlementaire", "lcp" -> "lcp"
             "lequipe21", "lequipe" -> "lequipe"
             "numero23", "rmcstory" -> "rmcstory"
             "cherie25", "rmclife" -> "cherie25"
+            "cstar", "d17", "cstarch" -> "cstar"
             "13emerue", "13erue" -> "13erue"
             "scifi", "syfy" -> "syfy"
-            else -> norm
+            else -> clean
         }
     }
 

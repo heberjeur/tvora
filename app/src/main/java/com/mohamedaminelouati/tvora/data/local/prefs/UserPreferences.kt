@@ -424,18 +424,23 @@ class UserPreferences @Inject constructor(
             try {
                 val array = JSONArray(raw)
                 val result = mutableListOf<Channel>()
+                val seenNorm = mutableSetOf<String>()
                 for (i in 0 until array.length()) {
                     val obj = array.getJSONObject(i)
-                    result.add(
-                        Channel(
-                            id = obj.getString("id"),
-                            displayName = obj.getString("displayName"),
-                            iconUrl = obj.optString("iconUrl", "").ifEmpty { null },
-                            packageId = obj.optString("packageId", "community_enriched"),
-                            channelNumber = obj.optInt("channelNumber", 0),
-                            isFavorite = obj.optBoolean("isFavorite", false)
+                    val id = obj.getString("id")
+                    val norm = ChannelCatalog.normalizeId(id)
+                    if (!ChannelCatalog.isTntChannel(id) && !ChannelCatalog.isDeadChannel(id) && seenNorm.add(norm)) {
+                        result.add(
+                            Channel(
+                                id = ChannelCatalog.canonicalChannelId(id),
+                                displayName = obj.getString("displayName"),
+                                iconUrl = obj.optString("iconUrl", "").ifEmpty { null },
+                                packageId = obj.optString("packageId", "community_enriched"),
+                                channelNumber = obj.optInt("channelNumber", 0),
+                                isFavorite = obj.optBoolean("isFavorite", false)
+                            )
                         )
-                    )
+                    }
                 }
                 result
             } catch (e: Exception) {
@@ -451,6 +456,7 @@ class UserPreferences @Inject constructor(
     }
 
     suspend fun addCustomChannel(channel: Channel) {
+        if (ChannelCatalog.isTntChannel(channel.id) || ChannelCatalog.isDeadChannel(channel.id)) return
         context.dataStore.edit { preferences ->
             val raw = preferences[keyCustomChannels]
             val current = if (!raw.isNullOrBlank()) {
@@ -520,7 +526,8 @@ class UserPreferences @Inject constructor(
     }
 
     suspend fun addCustomChannels(channels: List<Channel>) {
-        if (channels.isEmpty()) return
+        val valid = channels.filter { !ChannelCatalog.isTntChannel(it.id) && !ChannelCatalog.isDeadChannel(it.id) }
+        if (valid.isEmpty()) return
         context.dataStore.edit { preferences ->
             val raw = preferences[keyCustomChannels]
             val current = if (!raw.isNullOrBlank()) {
@@ -548,7 +555,7 @@ class UserPreferences @Inject constructor(
                 mutableListOf()
             }
 
-            channels.forEach { channel ->
+            valid.forEach { channel ->
                 val index = current.indexOfFirst { ChannelCatalog.normalizeId(it.id) == ChannelCatalog.normalizeId(channel.id) }
                 if (index >= 0) {
                     current[index] = channel
@@ -570,6 +577,27 @@ class UserPreferences @Inject constructor(
                 array.put(obj)
             }
             preferences[keyCustomChannels] = array.toString()
+        }
+    }
+
+    suspend fun sanitizeCustomChannels() {
+        context.dataStore.edit { preferences ->
+            val raw = preferences[keyCustomChannels] ?: return@edit
+            try {
+                val array = JSONArray(raw)
+                val newArray = JSONArray()
+                val seen = mutableSetOf<String>()
+                for (i in 0 until array.length()) {
+                    val obj = array.getJSONObject(i)
+                    val id = obj.getString("id")
+                    val norm = ChannelCatalog.normalizeId(id)
+                    if (!ChannelCatalog.isTntChannel(id) && !ChannelCatalog.isDeadChannel(id) && seen.add(norm)) {
+                        newArray.put(obj)
+                    }
+                }
+                preferences[keyCustomChannels] = newArray.toString()
+            } catch (_: Exception) {
+            }
         }
     }
 
